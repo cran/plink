@@ -1,0 +1,51 @@
+.onLoad <- function(lib,pkg) {
+    require(methods)
+    require(lattice)
+    load(plink)
+}
+
+
+import("methods","lattice")
+
+export(
+    "combine.pars",
+    "as.weight",
+    "as.poly.mod",
+    "is.poly.mod",
+    "is.sep.pars",
+    "is.irt.pars",
+    "is.link",
+    "is.irt.prob"
+)
+
+exprtClasses(
+    "poly.mod",
+    "sep.pars",
+    "irt.pars",
+    "irt.prob",
+    "link",
+    "list.poly",
+    "list.dat",
+    "list.num",
+    "num.null"
+)
+
+exportMethods(
+    "drm",
+    "gpcm",
+    "grm",
+    "nrm",
+    "mcm",
+    "mixed",
+    "sep.pars",
+    "as.irt.pars",
+    "plink"
+)
+
+S3method(plot,irt.prob)
+S3method(plot,sep.pars)
+S3method(plot,irt.pars)
+S3method(summary,irt.pars)
+S3method(summary,sep.pars)
+S3method(summary,list)
+S3method(summary,link)
