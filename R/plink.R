@@ -358,7 +358,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			b1kr <- b1r[pm.it[[j]],]
 			b2kr <- b2r[pm.it[[j]],]
 			
-			if (pm.mod=="mcm") {
+			if (pm.mod[j]=="mcm") {
 				a <- c(length(a1k[,-1][!is.na(a1k[,-1])]),mean(a1k[,-1],na.rm=T),mean(a2k[,-1],na.rm=T),.sd(a1k[,-1]),.sd(a2k[,-1]))
 				b <- c(length(b1k[,-1][!is.na(b1k[,-1])]),mean(b1k[,-1],na.rm=T),mean(b2k[,-1],na.rm=T),.sd(b1k[,-1]),.sd(b2k[,-1]))
 				c <- c(length(c1k[,-1][!is.na(c1k[,-1])]),mean(c1k[,-1],na.rm=T),mean(c2k[,-1],na.rm=T),.sd(c1k[,-1]),.sd(c2k[,-1]))

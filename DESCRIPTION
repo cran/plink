@@ -1,5 +1,5 @@
 Package: plink
-Version: 0.0-1
+Version: 0.0-2
 Date: 2007-09-13
 Title: IRT Separate Calibration Linking Methods
 Depends: R (>= 2.4.1), methods, lattice
@@ -13,4 +13,4 @@ Description: This package uses unidimensional item response theory methods to co
 LazyLoad: Yes
 LazyData: Yes
 License: GPL version 2 or newer
-Packaged: Thu Sep 13 05:49:11 2007; Jonathan Weeks
+Packaged: Wed Sep 19 14:48:24 2007; Jonathan Weeks
