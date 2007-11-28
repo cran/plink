@@ -470,7 +470,10 @@ combine.pars <- function(x, common, grp.names=NULL) {
 	for (i in 1:length(x)) {
 		if (!is.sep.pars(x[[i]]) & !is.irt.pars(x[[i]])) stop(paste("list element",i,"is not an object of class {irt.pars} or class {sep.pars}"))
 	}
-	if (is.matrix(common)) common <- list(common)
+	if (is.matrix(common) | is.data.frame(common)) common <- list(common)
+	for (i in 1:length(common)) {
+		if (is.data.frame(common[[i]])) common[[i]] <- as.matrix(common[[i]])
+	} 
 	pars <- cat <- pm <- com <- list(NULL)
 	location <- NULL
 	n <- length(x)

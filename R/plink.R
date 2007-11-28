@@ -1,4 +1,4 @@
-setGeneric("plink", function(x, common, rescale, ability, weights, startvals, score=1, base.grp=1, symmetric=TRUE, grp.names, mn=c(FALSE,FALSE), ...) standardGeneric("plink"))
+setGeneric("plink", function(x, common, rescale, ability, weights, startvals, score=1, base.grp=1, symmetric=TRUE, grp.names=NULL, mn=c(FALSE,FALSE), ...) standardGeneric("plink"))
 
 setMethod("plink", signature(x="list", common="list"), function(x, common, rescale, ability, weights, startvals, score, base.grp, symmetric, grp.names, mn, ...) {
 	x <- combine.pars(x, common, ...)
@@ -10,6 +10,10 @@ setMethod("plink", signature(x="list", common="matrix"), function(x, common, res
 	callGeneric()
 })
 
+setMethod("plink", signature(x="list", common="data.frame"), function(x, common, rescale, ability, weights, startvals, score, base.grp, symmetric, grp.names, mn, ...) {
+	x <- combine.pars(x, common, ...)
+	callGeneric()
+})
 
 setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, rescale, ability, weights, startvals, score, base.grp, symmetric, grp.names, mn, ...) {
 
@@ -269,8 +273,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	ng <- x@groups
 	if (missing(rescale)) rescale <- NULL
 	if (missing(ability)) ability <- NULL
-	if (missing(grp.names)) grp.names <- names(x@pars)
-	if (is.null(grp.names)) grp.names <- paste("group",1:ng,sep="")
+	if (!hasArg(grp.names)) grp.names <- paste("group",1:ng,sep="")
 	if (missing(weights)) weights <- as.weight()
 	dots <- list(...)
 	if (!is.null(dots$D)) D <- dots$D else D <- 1.7
@@ -450,15 +453,20 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		link.out[[i]] <- new("link", MM=mm, MS=ms, HB=hb$par, SL=sl$par, descriptives=descrip, iterations=it[!is.na(it)], convergence=con[!is.na(con)], base.grp=base.grp, include.mcm.nrm=mn)
 		
 		if (i==base.grp) {
-			names(link.out)[i] <- paste(grp.names[i+1],"/",grp.names[i],"*",sep="")
+			names(link.out)[[i]] <- paste(grp.names[i],"*/",grp.names[i+1],sep="")
 		} else if (i < base.grp) {
 			if ((i+1)==base.grp) {
-				names(link.out)[i] <- paste(grp.names[i],"/",grp.names[i+1],"*",sep="")
+				names(link.out)[[i]] <- paste(grp.names[i],"/",grp.names[i+1],"*",sep="")
 			} else {
-				names(link.out)[i] <- paste(grp.names[i],"/",grp.names[i+1],sep="")
+				names(link.out)[[i]] <- paste(grp.names[i],"/",grp.names[i+1],sep="")
 			}
 		} else if (i > base.grp) {
-			names(link.out)[i] <- paste(grp.names[i+1],"/",grp.names[i],sep="")
+			if ((i-1)==base.grp) {
+				names(link.out)[[i]] <- paste(grp.names[i],"/",grp.names[i-1],"*",sep="")
+			} else {
+				names(link.out)[[i]] <- paste(grp.names[i],"/",grp.names[i-1],sep="")
+				
+			}
 		}
 		
 	}
@@ -520,10 +528,10 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				}
 			}
 			out.pars[[i]] <- tmp1
-			names(out.pars)[i] <- grp.names[i]
+			names(out.pars)[[i]] <- grp.names[i]
 			if (!is.null(ability)) {
 				out.ability[[i]] <- tmpa
-				names(out.ability)[i] <- grp.names[i]
+				names(out.ability)[[i]] <- grp.names[i]
 			}
 		}
 	} else {
@@ -556,11 +564,11 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 					}
 				}
 				out.ability[[i]] <- tmpa
-				names(out.ability)[i] <- grp.names[i]
+				names(out.ability)[[i]] <- grp.names[i]
 			}
 		}
 	}
-			
+	
 	if (ng==2) {
 		if (!is.null(ability)) {
 			if (!is.null(rescale)) {

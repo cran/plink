@@ -3,6 +3,7 @@
 \alias{plink}
 \alias{plink-methods}
 \alias{plink,list,matrix-method}
+\alias{plink,list,data.frame-method}
 \alias{plink,list,list-method}
 \alias{plink,irt.pars,ANY-method}
 \title{Separate Calibration}
@@ -16,9 +17,13 @@ of item and ability parameters.
 
 \usage{
 plink(x, common, rescale, ability, weights, startvals, score=1, base.grp=1, 
-	symmetric=TRUE, grp.names, mn=c(FALSE,FALSE), ...)
+	symmetric=TRUE, grp.names=NULL, mn=c(FALSE,FALSE), ...)
 
 ## S4 method for signature 'list', 'matrix'
+plink(x, common, rescale, ability, weights, startvals, score, base.grp, 
+	symmetric, grp.names, mn, ...)
+
+## S4 method for signature 'list', 'data.frame'
 plink(x, common, rescale, ability, weights, startvals, score, base.grp, 
 	symmetric, grp.names, mn, ...)
 
@@ -117,6 +122,9 @@ theta values instead of equally spaced or random values.
       can include multiple groups. \code{common} is the matrix of common items between
       the two groups in \code{x}.  See details for more information on \code{common}.}
 
+    \item{x = "list", common = "data.frame"}{See the method for signature \code{x}="list", 
+      \code{common}="matrix".}
+
     \item{x = "list", common = "list"}{This method is used when \code{x} includes two or
       more list elements. When \code{x} has length two, \code{common} (although a single
       matrix) should be a list with length one. If \code{x} has more than two list elements
@@ -139,18 +147,7 @@ theta values instead of equally spaced or random values.
 }
 
 \value{
-Returns an object of class \code{\linkS4class{link}} or a list of length two or three.
-If \code{ability} and \code{rescale} are missing, the function returns an object of 
-class \code{\linkS4class{link}}.  If \code{ability} is specified and \code{rescale} is
-missing, a list with length two is returned with the first element \code{link} being 
-an object of class \code{link} and the second element \code{ability} being a list of 
-rescaled theta values. If \code{rescale} is supplied and \code{ability} is missing, a
-list of length two is returned with the \code{link} object as the first element and an
-object of class \code{\linkS4class{irt.pars}} of rescaled item parameters in the second
-list element \code{pars}. If \code{ability} and \code{rescale} are supplied, a list of
-length three is returned with the \code{link} object as the first element, the list of
-rescaled theta values as the second element, and the \code{irt.pars} object of rescaled
-item parameters as the third list element.
+  Returns an object of class \code{\linkS4class{link}}
 }
 
 \references{ 
@@ -188,7 +185,6 @@ pm <- as.poly.mod(36)
 x <- as.irt.pars(KB04$pars, KB04$common, cat=list(rep(2,36),rep(2,36)), 
   poly.mod=list(pm,pm))
 out <- plink(x, rescale="SL")
-pars <- out$pars@pars # Get the rescaled item parameters from the irt.pars object
 summary(out, descrip=TRUE)
 
 
@@ -204,7 +200,7 @@ pm5 <- as.poly.mod(41)
 pm6 <- as.poly.mod(43)
 pm <- list(pm1, pm2, pm3, pm4, pm5, pm6)
 x <- as.irt.pars(pars, common, cat, pm, grp.names=paste("grade",3:8,sep=""))
-out <- plink(x, base.grp=4)
+out <- plink(x)
 summary(out)
 
 

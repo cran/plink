@@ -37,7 +37,11 @@ summary.list <- function(object, descrip=FALSE, ...) {
 				tmpa <- rbind(obj@MM,obj@MS,obj@HB,obj@SL)
 				rownames(tmpa) <- c("MM","MS","HB","SL")
 			}
-			if (obj@base.grp==1) cat("Group1*/Group2\n") else cat("Group1/Group2*\n")
+			if (tmp[[1]]@base.grp==1) {
+				cat("Group 1* / Group 2\n")
+			} else {
+				cat("Group 1 / Group 2*\n")
+			}
 			print(format(tmpa),quote=FALSE)
 			cat("\n")
 			if (descrip==TRUE) {
@@ -166,7 +170,11 @@ summary.link <- function(object, descrip=FALSE, ...) {
 		tmp <- rbind(object@MM,object@MS,object@HB,object@SL)
 		rownames(tmp) <- c("MM","MS","HB","SL")
 	}
-	if (object@base.grp==1) cat("Group1*/Group2\n") else cat("Group1/Group2*\n")
+	if (object@base.grp==1) {
+		cat("Group 1* / Group 2\n")
+	} else {
+		cat("Group 1 / Group 2*\n")
+	}
 	print(format(tmp),quote=FALSE)
 	cat("\n")
 	if (descrip==TRUE) print(object@descriptives,quote=FALSE)

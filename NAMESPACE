@@ -18,7 +18,7 @@ export(
     "is.irt.prob"
 )
 
-exprtClasses(
+exportClasses(
     "poly.mod",
     "sep.pars",
     "irt.pars",

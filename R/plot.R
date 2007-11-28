@@ -1,7 +1,7 @@
 plot.irt.prob <- function(x, y, ..., combine=NULL, item.names=NULL, item.lab=TRUE, panels=20) {
 	require(lattice)
 	options(graphics.record=TRUE)
-	if (exists(".SavedPlots")) rm(.SavedPlots,envir=.GlobalEnv)
+	if (exists(".SavedPlots",where=1)) rm(".SavedPlots",pos=1)
 	if (item.lab==TRUE) strip <- strip.custom(bg="lightblue") else strip <- FALSE
 	
 	if (length(combine)) {

@@ -47,11 +47,6 @@ separately.
 
 \author{ Jonathan Weeks \email{weeksjp@gmail.com} }
 
-\note{For the summary of linking constants, the group labels identify the 'From' group
-first then the 'To' group. For example 'Group1/Group2' indicates that the linking
-constants transformed the group 1 parameters to the group 2 scale. The asterisk in the
-labels identifies the base group.}
-
 \seealso{
 \code{\link{as.irt.pars}}, \code{\linkS4class{irt.pars}}, \code{\link[=sep.pars-methods]{sep.pars}},
 \code{\linkS4class{sep.pars}}, \code{\linkS4class{link}}
