@@ -2,7 +2,7 @@
 \alias{combine.pars}
 \title{Combine Item Parameters for Multiple Groups}
 \description{
-This function combines objects of class \code{"/linkS4class{irt.pars}"} and/or 
+This function combines objects of class \code{"\linkS4class{irt.pars}"} and/or 
 \code{"\link{sep.pars}"} into a single \code{"irt.pars"} object}
 
 \usage{

@@ -15,7 +15,10 @@ export(
     "is.sep.pars",
     "is.irt.pars",
     "is.link",
-    "is.irt.prob"
+    "is.irt.prob",
+    "link.con",
+    "link.pars",
+    "link.ability"
 )
 
 exportClasses(

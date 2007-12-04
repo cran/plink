@@ -186,6 +186,7 @@ x <- as.irt.pars(KB04$pars, KB04$common, cat=list(rep(2,36),rep(2,36)),
   poly.mod=list(pm,pm))
 out <- plink(x, rescale="SL")
 summary(out, descrip=TRUE)
+pars.out <- link.pars(out)
 
 
 # Create object with six groups (all dichotomous items)
@@ -202,7 +203,7 @@ pm <- list(pm1, pm2, pm3, pm4, pm5, pm6)
 x <- as.irt.pars(pars, common, cat, pm, grp.names=paste("grade",3:8,sep=""))
 out <- plink(x)
 summary(out)
-
+constants <- link.con(out) # Extract linking constants
 
 # Create an irt.pars object and a sep.pars object for two groups of
 # nominal response model items. Compare symmetric and non-symmetric minimization
@@ -225,8 +226,8 @@ pm <- as.poly.mod(60, "mcm", 1:60)
 x <- as.irt.pars(act.mcm, common=matrix(1:60,60,2), cat=list(rep(6,60),
   rep(6,60)), poly.mod=list(pm,pm))
 out <- plink(x, ability=list(theta,theta), rescale="HB", symmetric=FALSE)
-pars <- out$pars@pars
-ability <- out$ability
+pars.out <- link.pars(out)
+ability.out <- link.ability(out)
 summary(out, descrip=TRUE)
 
 
