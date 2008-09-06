@@ -7,7 +7,7 @@ parameters and characteristics of these parameters.}
 
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("sep.pars", ...)}, but this is 
-not encouraged. Use the function \code{link{sep.pars}} instead.
+not encouraged. Use the function \code{\link{sep.pars}} instead.
 }
 
 \section{Slots}{
@@ -72,7 +72,7 @@ Class \code{"\linkS4class{poly.mod}"}, directly.\cr
 Class \code{"\linkS4class{list.poly}"}, by class "poly.mod", distance 2.
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{
 \code{\link{sep.pars}}, \code{\linkS4class{irt.pars}}

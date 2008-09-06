@@ -135,7 +135,7 @@ drm(x, theta, D, incorrect, print.mod, ...)
   Copenhagen, Denmark: Danish Institute for Educational Research
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \note{ 
 The indices 0 and 1 are used in the column labels for incorrect and correct responses 

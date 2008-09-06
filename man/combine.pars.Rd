@@ -47,7 +47,7 @@ group in the adjacent element in \code{x}.
 Returns an object of class \code{\linkS4class{irt.pars}}
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{\code{\linkS4class{irt.pars}}, \code{\link{as.irt.pars}}, \code{\linkS4class{sep.pars}},
 \code{\link[=sep.pars-methods]{sep.pars}} }

@@ -46,7 +46,7 @@ Class \code{"\linkS4class{poly.mod}"}, directly.
 Class \code{"\linkS4class{list.poly}"}, by class "poly.mod", distance 2.
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{
 \code{\link{as.irt.pars}}, \code{\link{as.poly.mod}}

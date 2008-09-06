@@ -39,7 +39,7 @@ This function plots item characteristic curves or item category curves using the
 	\code{NULL}, all panels will be plotted on a single page.}
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \note{When multiple pages are created, the PgUp and PgDn buttons can be used to view the 
 plots on different pages}

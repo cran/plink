@@ -155,7 +155,7 @@ gpcm(x, cat, theta, D, location, print.mod, ...)
   New York: Springer-Verlag
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \note{ 
 The determination of the model (partial credit or generalized partial credit) is based on

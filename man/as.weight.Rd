@@ -57,7 +57,7 @@ n x 2 matrix of weights corresponding to \code{weight1} and \code{weight2}.
   New York: Springer
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \note{When \code{normal.wt} equals \code{TRUE}, \code{theta1} and \code{theta2} are
 standardized to determine normal density weights}

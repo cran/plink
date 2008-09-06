@@ -38,9 +38,9 @@ summary.list <- function(object, descrip=FALSE, ...) {
 				rownames(tmpa) <- c("MM","MS","HB","SL")
 			}
 			if (tmp[[1]]@base.grp==1) {
-				cat("Group 1* / Group 2\n")
+				cat("Group 2/Group 1*\n")
 			} else {
-				cat("Group 1 / Group 2*\n")
+				cat("Group 1/Group 2*\n")
 			}
 			print(format(tmpa),quote=FALSE)
 			cat("\n")
@@ -126,7 +126,7 @@ summary.sep.pars <- function(object, descrip=FALSE, ...) {
 				cat(paste("Number of",object@mod.lab[i],"Items:",object@n[i+ml],"\n\n"))
 				j <- i+ml
 			} else {
-				cat(paste("Polytomous Model:",object@mod.lab[2],"\n\n"))
+				cat(paste("Polytomous Model:",object@mod.lab[1],"\n\n"))
 				j <- 3
 			}
 			if (descrip==TRUE) {
@@ -147,11 +147,9 @@ summary.sep.pars <- function(object, descrip=FALSE, ...) {
 					}
 					rownames(dt) <- c("Mean","SD","Min","Max")
 					dt <- round(dt,4)
-					if (length(object@mod.lab[object@mod.lab!="drm"])>1) {
+					if (length(object@mod.lab[object@mod.lab!="drm"])>=1) {
 						cat(paste(object@mod.lab[i],"Item Parameter Descriptives:\n"))
-					} else {
-						cat("Polytomous Item Parameter Descriptives:\n")
-					}
+					} 
 					print(format(dt),quote=F)
 					cat("\n")
 				} else if (object@n[j]==1) { 
@@ -171,9 +169,9 @@ summary.link <- function(object, descrip=FALSE, ...) {
 		rownames(tmp) <- c("MM","MS","HB","SL")
 	}
 	if (object@base.grp==1) {
-		cat("Group 1* / Group 2\n")
+		cat("Group 2/Group 1*\n")
 	} else {
-		cat("Group 1 / Group 2*\n")
+		cat("Group 1/Group 2*\n")
 	}
 	print(format(tmp),quote=FALSE)
 	cat("\n")

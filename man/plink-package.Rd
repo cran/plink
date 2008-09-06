@@ -1,7 +1,7 @@
 \name{plink-package}
 \alias{plink-package}
 \docType{package}
-\title{Separate Calibration Linking Methods}
+\title{IRT Separate Calibration Linking Methods}
 \description{This package uses item response theory methods to compute linking constants and 
   conduct chain linking of tests for multiple groups under a nonequivalent groups common item 
   design. It allows for mean/mean, mean/sigma, Haebara, and Stocking-Lord calibrations of 
@@ -23,6 +23,6 @@ can be used to summarize item parameters (including descriptive statistics) and 
 and \code{plot} can be used to create item/category characteristic curves.
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com}} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com}} }
 
 \keyword{ package }

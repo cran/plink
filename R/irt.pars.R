@@ -99,3 +99,4 @@ setMethod("as.irt.pars", signature(x="list", common="list"), function(x, common,
 	}
 	return(combine.pars(tmp,common,grp.names))
 })
+

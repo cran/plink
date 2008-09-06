@@ -147,7 +147,9 @@ theta values instead of equally spaced or random values.
 }
 
 \value{
-  Returns an object of class \code{\linkS4class{link}}
+  Returns an object of class \code{\linkS4class{link}}. The labels for the linking constants are 
+  specficied  in the following manner "group1/group2", meaning the group1 parameters were transformed 
+  to the group2 test. The base group is indicated by an asterisk.
 }
 
 \references{ 
@@ -176,7 +178,7 @@ theta values instead of equally spaced or random values.
   \emph{Applied Psychological Measurement}, \emph{7}(2), 201-210.
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \examples{
 # Create irt.pars object with two groups (all dichotomous items)

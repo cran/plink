@@ -124,7 +124,7 @@ grm(x, cat, theta, catprob, D, location, ...)
   New York: Springer-Verlag
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{ 
 \code{\link[=mixed-methods]{mixed}:} compute probabilities for mixed-format items\cr

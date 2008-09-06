@@ -16,7 +16,7 @@ setMethod("sep.pars", signature(x="irt.pars"), function(x, cat, poly.mod, locati
 		for (i in 1:x@groups) {
 			out[[i]] <- sep.pars(x@pars[[i]], x@cat[[i]], x@poly.mod[[i]], x@location[[i]], loc.out, ...)
 		}
-		names(out) <- paste("Group",1:x@groups,sep="")
+		names(out) <- names(x@pars)
 		return(out)
 	} else {
 		out <- sep.pars(x@pars, x@cat, x@poly.mod, x@location, loc.out, ...)

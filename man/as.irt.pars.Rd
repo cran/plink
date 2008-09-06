@@ -10,7 +10,7 @@
 \alias{as.irt.pars,list,list-method}
 \title{irt.pars objects}
 \description{
-This function attempts to turn the given values into a irt.pars object
+This function attempts to turn the given values into an irt.pars object
 }
 \usage{
 as.irt.pars(x, common, cat, poly.mod, location = FALSE, grp.names = NULL, ...)
@@ -276,15 +276,15 @@ as.irt.pars(x, common, cat, poly.mod, location = FALSE, grp.names = NULL, ...)
   single set of common items links them together.  If item 4 in group one (row 4 in slot \code{pars}) 
   is the same as item 6 in group two, the first row of \code{common} would be \code{"4,6"}.
 
-  If all the objects in \code{x} are of class \code{sep.pars} or \code{irt.pars}, \code{cat}, 
-  \code{poly.mod}, and \code{location} do not need to be included.}
+  If all the objects in \code{x} are of class \code{sep.pars} or \code{irt.pars}, the arguments
+  \code{cat}, \code{poly.mod}, and \code{location} do not need to be included.}
 }}
 
 \value{
 Returns an object of class \code{\linkS4class{irt.pars}}
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{\code{\linkS4class{irt.pars}}, \code{\link{as.poly.mod}}, \code{\linkS4class{poly.mod}}, 
 \code{\linkS4class{sep.pars}} }

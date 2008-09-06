@@ -110,7 +110,7 @@ nrm(x, cat, theta, ...)
   New York: Springer
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com}} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com}} }
 
 \seealso{ 
 \code{\link[=mixed-methods]{mixed}:} compute probabilities for mixed-format items\cr

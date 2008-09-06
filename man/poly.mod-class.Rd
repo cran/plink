@@ -35,7 +35,7 @@ not encouraged. Use the function \code{link{as.poly.mod}} instead.
 }
 
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \note{
 The names of the list elements for \code{items} must correspond to the elements in \code{model}. 

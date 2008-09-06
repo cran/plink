@@ -1,7 +1,8 @@
 plot.irt.prob <- function(x, y, ..., combine=NULL, item.names=NULL, item.lab=TRUE, panels=20) {
 	require(lattice)
-	options(graphics.record=TRUE)
-	if (exists(".SavedPlots",where=1)) rm(".SavedPlots",pos=1)
+	graphics.off()
+	par(ask=TRUE)
+	cat("Press <Enter> to continue...\n") 
 	if (item.lab==TRUE) strip <- strip.custom(bg="lightblue") else strip <- FALSE
 	
 	if (length(combine)) {
@@ -45,7 +46,6 @@ plot.irt.prob <- function(x, y, ..., combine=NULL, item.names=NULL, item.lab=TRU
 	
 	if (!is.null(panels)) {
 		if (ni>panels) {
-			cat("Use PgUp and PgDn to view different plot pages\n")
 			xyplot(values~theta|id,out,type="l",as.table=TRUE,ylab="Probability",xlab="Theta",groups=cid,par.strip.text=list(cex=0.7),strip=strip,layout=c(0,panels),...)
 		} else {
 			xyplot(values~theta|id,out,type="l",as.table=TRUE,ylab="Probability",xlab="Theta",groups=cid,par.strip.text=list(cex=0.7),strip=strip,...)

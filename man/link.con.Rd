@@ -27,7 +27,7 @@ Returns a matrix or list
 \code{link.ability} extracts the rescaled ability estimates (if present)
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{\code{\linkS4class{link}}, \code{\link[=plink-methods]{plink}} }
 

@@ -40,7 +40,7 @@ The IRT models associted with the codes:
 Returns an object of class \code{\linkS4class{poly.mod}}
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{ \code{\linkS4class{poly.mod}} }
 

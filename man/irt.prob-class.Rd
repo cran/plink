@@ -36,7 +36,7 @@ Class \code{"\linkS4class{poly.mod}"}, directly.\cr
 Class \code{"\linkS4class{list.poly}"}, by class "poly.mod", distance 2.
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{
 \code{\link[=drm-methods]{drm}:} for dichotomous response models (1PL, 2PL, and 3PL)\cr

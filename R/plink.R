@@ -273,7 +273,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	ng <- x@groups
 	if (missing(rescale)) rescale <- NULL
 	if (missing(ability)) ability <- NULL
-	if (!hasArg(grp.names)) grp.names <- paste("group",1:ng,sep="")
+	if (!hasArg(grp.names)) grp.names <- names(x@pars)
 	if (missing(weights)) weights <- as.weight()
 	dots <- list(...)
 	if (!is.null(dots$D)) D <- dots$D else D <- 1.7
@@ -453,7 +453,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		link.out[[i]] <- new("link", MM=mm, MS=ms, HB=hb$par, SL=sl$par, descriptives=descrip, iterations=it[!is.na(it)], convergence=con[!is.na(con)], base.grp=base.grp, include.mcm.nrm=mn)
 		
 		if (i==base.grp) {
-			names(link.out)[[i]] <- paste(grp.names[i],"*/",grp.names[i+1],sep="")
+			names(link.out)[[i]] <- paste(grp.names[i+1],"/",grp.names[i],"*",sep="")
 		} else if (i < base.grp) {
 			if ((i+1)==base.grp) {
 				names(link.out)[[i]] <- paste(grp.names[i],"/",grp.names[i+1],"*",sep="")
@@ -461,12 +461,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				names(link.out)[[i]] <- paste(grp.names[i],"/",grp.names[i+1],sep="")
 			}
 		} else if (i > base.grp) {
-			if ((i-1)==base.grp) {
-				names(link.out)[[i]] <- paste(grp.names[i],"/",grp.names[i-1],"*",sep="")
-			} else {
-				names(link.out)[[i]] <- paste(grp.names[i],"/",grp.names[i-1],sep="")
-				
-			}
+			names(link.out)[[i]] <- paste(grp.names[i+1],"/",grp.names[i],sep="")
 		}
 		
 	}

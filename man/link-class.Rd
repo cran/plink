@@ -46,7 +46,7 @@ not encouraged.  Use the function \code{link[=plink-methods{plink}} instead.
   }
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{
 \code{\link[=plink-methods]{plink}}

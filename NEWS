@@ -1,0 +1,49 @@
+Changes in version: plink_0.0-5
+
+  o Corrections made to the output of group names in the plink function
+
+  o Correction made to the indexing of group names in the sep.pars function
+
+  o Updates to various labels printed by the summary functions
+
+  o Some corrections/additions to the .Rd files.
+
+  o Citation file added
+
+==============================
+
+Changes in version: plink_0.0-4
+
+  o The functions link.con, link.pars, and link.ability added for extracting
+    information from the plink output
+
+  o Corrections made to the output of group names in the plink function
+
+  o Corrections made to the printing of group names in the summary.link function
+
+  o Corrections made to the handling of .SavedPlots in th plot.irt.prob function
+
+  o The combine.pars function was updated to handle data.frames
+
+  o Some corrections/additions to the .Rd files.
+
+==============================
+
+Changes in version: plink_0.0-3
+
+  o Signature x="list", common="data.frame" was added to the plink function
+
+  o Some corrections/additions to the .Rd files.
+
+==============================
+
+Changes in version: plink_0.0-2
+
+  o A correction to an index variable in the plink function was made (only affects the mcm model)
+
+==============================
+
+Changes in version: plink_0.0-1
+
+  o Description was updated
+

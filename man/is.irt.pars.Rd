@@ -24,7 +24,7 @@ is.link(x)
 Returns a logical value
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{\code{\linkS4class{irt.pars}}, \code{\linkS4class{sep.pars}}, \code{\linkS4class{poly.mod}},
 \code{\linkS4class{irt.prob}}, \code{\linkS4class{link}} }

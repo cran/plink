@@ -227,7 +227,7 @@ sep.pars(x, cat, poly.mod, location, loc.out, ...)
   Returns an object of class \code{\linkS4class{sep.pars}}
 }
 
-\author{ Jonathan Weeks \email{weeksjp@gmail.com} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \examples{
 # Create object for three dichotomous (1PL) items with difficulties -1, 0, 1
