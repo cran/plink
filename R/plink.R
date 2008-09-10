@@ -84,16 +84,18 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				SS <- Q1/L1
 			}
 		} else if (transform=="SL") {
+			L1 <- sum(weights$weights[,1])
 			TCC.to <- apply(scr*prob.to, 1, sum)
 			TCC.from <- apply(scr*prob.from.t, 1, sum)
 			Q1 <-sum(weights$weights[,1]*(TCC.to - TCC.from)^2)
 			if (symmetric==TRUE) {
+				L2 <- sum(weights$weights[,2])
 				TCC.to <- apply(scr*prob.to.f, 1, sum)
 				TCC.from <- apply(scr*prob.from, 1, sum)
 				Q2 <-sum(weights$weights[,2]*(TCC.from- TCC.to)^2)
-				SS <- Q1+Q2
+				SS <- (Q1/L1)+(Q2/L2)
 			} else {
-				SS <- Q1
+				SS <- Q1/L1
 			}
 		}
 	return(SS)

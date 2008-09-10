@@ -1,8 +1,8 @@
 Package: plink
-Version: 0.0-5
-Date: 2008-09-06
+Version: 0.0-6
+Date: 2008-09-10
 Title: IRT Separate Calibration Linking Methods
-Depends: R (>= 2.7.2), methods, lattice
+Depends: R (>= 2.7.2), methods, statmod, lattice
 Author: Jonathan Weeks <weeksjp@gmail.com>
 Maintainer: Jonathan Weeks <weeksjp@gmail.com>
 Description: This package uses item response theory methods to compute linking constants and conduct
@@ -13,4 +13,4 @@ Description: This package uses item response theory methods to compute linking c
 LazyLoad: Yes
 LazyData: Yes
 License: GPL (>= 2)
-Packaged: Sun Sep  7 16:45:01 2008; Jonathan Weeks
+Packaged: Wed Sep 10 05:17:16 2008; Jonathan Weeks

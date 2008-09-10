@@ -186,7 +186,7 @@ theta values instead of equally spaced or random values.
 pm <- as.poly.mod(36)
 x <- as.irt.pars(KB04$pars, KB04$common, cat=list(rep(2,36),rep(2,36)), 
   poly.mod=list(pm,pm))
-out <- plink(x, rescale="SL")
+out <- plink(x, rescale="SL", base.grp=2)
 summary(out, descrip=TRUE)
 pars.out <- link.pars(out)
 

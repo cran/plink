@@ -1,11 +1,12 @@
 .onLoad <- function(lib,pkg) {
     require(methods)
     require(lattice)
+    require(statmod)
     load(plink)
 }
 
 
-import("methods","lattice")
+import("methods","statmod","lattice")
 
 export(
     "combine.pars",
