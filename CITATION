@@ -4,11 +4,11 @@ citEntry(entry = "Manual",
          title        = "plink: {IRT} separate calibration linking methods",
          author       = "Jonathan P. Weeks",
          year         = "2008",
-         note         = "R package version 0.0-6",
+         note         = "R package version 0.1-0",
          url          = "http://cran.r-project.org/web/packages/plink/index.html",
          
          textVersion  = paste("Jonathan P. Weeks (2008).",
                         "plink: IRT separate calibration linking methods.",
-                        "(R package version 0.0-6).",
+                        "(R package version 0.1-0).",
                         "URL http://cran.r-project.org/web/packages/plink/index.html")
 )

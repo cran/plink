@@ -1,3 +1,14 @@
+Changes in version: plink_0.1-0
+
+  o Functions read.bilog and read.parscale added for importing
+    item/ability parameters
+
+  o Bug fix in the sep.pars function for loc.out = TRUE
+
+  o Some corrections/additions to the .Rd files.
+
+==============================
+
 Changes in version: plink_0.0-6
 
   o Update to how weights can be computed in the as.weight function

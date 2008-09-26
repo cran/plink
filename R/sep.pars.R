@@ -165,7 +165,7 @@ setMethod("sep.pars", signature(x="matrix"), function(x, cat, poly.mod, location
 			if (mod[i]=="gpcm"|mod[i]=="grm") {
 				if (loc.out==TRUE) {
 					pbm <- apply(pb,1,mean,na.rm=TRUE)
-					pb <- cbind(pbm,pbm-pb)
+					pb <- cbind(pbm,pb-pbm)
 				}
 			}
 			pa <- as.matrix(pa)

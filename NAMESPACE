@@ -19,7 +19,9 @@ export(
     "is.irt.prob",
     "link.con",
     "link.pars",
-    "link.ability"
+    "link.ability",
+    "read.bilog",
+    "read.parscale"
 )
 
 exportClasses(

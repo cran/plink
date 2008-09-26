@@ -36,14 +36,19 @@ sep.pars(x, cat, poly.mod, location, loc.out, ...)
 \arguments{
   \item{x}{Object containing item parameters. See below for more details. }
 
-  \item{cat}{write stuff here }
+  \item{cat}{vector identifying the number of response categories for each item.  If 
+    multiple-choice model items are included, \code{cat} for these items should equal 
+    the number of response categories plus one (the additional category is for 
+    'do not know') }
 
-  \item{poly.mod}{write stuff here}
+  \item{poly.mod}{object of class \code{\link[=poly.mod-class]{poly.mod}} identifying 
+    the items associated with each IRT model}
 
-  \item{location}{if \code{TRUE}, the step parameters are deviations from a difficulty
+  \item{location}{if \code{TRUE}, the step parameters are deviations from a location
   	parameter }
 
-  \item{loc.out}{write stuff here }
+  \item{loc.out}{if \code{TRUE}, the step/threshold parameters will be reformated to 
+	be deviations from a location parameter}
 
   \item{...}{further arguments passed to or from other methods }
 }
