@@ -1,19 +1,22 @@
 setGeneric("mcm", function(x, cat, theta=seq(-4,4,.05), ...) standardGeneric("mcm"))
 
 setMethod("mcm", signature(x="matrix", cat="numeric"), function(x, cat, theta, ...) {
-	if(!hasArg(poly.mod)) pm <- as.poly.mod(nrow(x),"mcm")
+	dots <- list(...)
+	if(is.null(dots$poly.mod)) pm <- as.poly.mod(nrow(x),"mcm") else pm <- dots$poly.mod
 	x <- sep.pars(x, cat, pm, ...)
 	callGeneric()
 })
 
 setMethod("mcm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, ...) {
-	if(!hasArg(poly.mod)) pm <- as.poly.mod(nrow(x),"mcm")
+	dots <- list(...)
+	if(is.null(dots$poly.mod)) pm <- as.poly.mod(nrow(x),"mcm") else pm <- dots$poly.mod
 	x <- sep.pars(x, cat, pm, ...)
 	callGeneric()
 })
 
 setMethod("mcm", signature(x="list", cat="numeric"), function(x, cat, theta, ...) {
-	if(!hasArg(poly.mod)) pm <- as.poly.mod(nrow(as.matrix(x[[1]])),"mcm")
+	dots <- list(...)
+	if(is.null(dots$poly.mod)) pm <- as.poly.mod(nrow(as.matrix(x[[1]])),"mcm") else pm <- dots$poly.mod
 	x <- sep.pars(x, cat, pm, ...)
 	callGeneric()
 })

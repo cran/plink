@@ -23,6 +23,6 @@ can be used to summarize item parameters (including descriptive statistics) and 
 and \code{plot} can be used to create item/category characteristic curves.
 }
 
-\author{ Jonathan P. Weeks \email{weeksjp@gmail.com}} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com}}
 
 \keyword{ package }

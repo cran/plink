@@ -138,8 +138,7 @@ theta values instead of equally spaced or random values.
       identifying the common items between the items in the first \code{irt.pars} object
       and the first group in the second \code{irt.pars} object. The second element in 
       \code{common} should identify the common items between the fourth group in the 
-      second \code{irt.pars} object and the items in the \code{sep.pars} object.
-      }
+      second \code{irt.pars} object and the items in the \code{sep.pars} object.}
 
     \item{x = "irt.pars", common = "ANY"}{This method is intended for an \code{irt.pars}
       object with multiple groups.}
@@ -155,7 +154,7 @@ theta values instead of equally spaced or random values.
 \references{ 
   Haebara, T. (1980). 
   Equating logistic ability scales by a weighted least squares method. 
-  \emph{Japanese Psychological Research}, /emph{22}(3), 144-149.
+  \emph{Japanese Psychological Research}, \emph{22}(3), 144-149.
 
   Kim, S. & Lee, W.-C. (2006). 
   An Extension of Four IRT Linking Methods for Mixed-Format Tests. 

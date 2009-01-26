@@ -1,3 +1,9 @@
+Changes in version: plink_0.1-1
+
+  o Some corrections/additions to the .Rd files.
+
+==============================
+
 Changes in version: plink_0.1-0
 
   o Functions read.bilog and read.parscale added for importing

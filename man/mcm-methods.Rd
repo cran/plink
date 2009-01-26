@@ -138,7 +138,7 @@ mcm(x, cat, theta, ...)
   \emph{Handbook of Modern Item Response Theory}. New York: Springer-Verlag
 }
 
-\author{ Jonathan P. Weeks \email{weeksjp@gmail.com}} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com}}
 
 \seealso{ 
 \code{\link[=mixed-methods]{mixed}:} compute probabilities for mixed-format items\cr

@@ -1,25 +1,29 @@
 setGeneric("drm", function(x, theta=seq(-4,4,.05), D=1.7, incorrect=FALSE, print.mod=FALSE, ...) standardGeneric("drm"))
 
 setMethod("drm", signature(x="numeric"), function(x, theta, D, incorrect, print.mod, ...) {
-	if(!hasArg(poly.mod)) pm <- as.poly.mod(length(x))
+	dots <- list(...)
+	if(is.null(dots$poly.mod)) pm <- as.poly.mod(length(x)) else pm <- dots$poly.mod
 	x <- sep.pars(x, poly.mod=pm, ...)
 	callGeneric()
 })
 
 setMethod("drm", signature(x="matrix"), function(x, theta, D, incorrect, print.mod, ...) {
-	if(!hasArg(poly.mod)) pm <- as.poly.mod(nrow(x))
+	dots <- list(...)
+	if(is.null(dots$poly.mod)) pm <- as.poly.mod(nrow(x)) else pm <- dots$poly.mod
 	x <- sep.pars(x, poly.mod=pm, ...)
 	callGeneric()
 })
 
 setMethod("drm", signature(x="data.frame"), function(x, theta, D, incorrect, print.mod, ...) {
-	if(!hasArg(poly.mod)) pm <- as.poly.mod(nrow(x))
+	dots <- list(...)
+	if(is.null(dots$poly.mod)) pm <- as.poly.mod(nrow(x)) else pm <- dots$poly.mod
 	x <- sep.pars(x, poly.mod=pm, ...)
 	callGeneric()
 })
 
 setMethod("drm", signature(x="list"), function(x, theta, D, incorrect, print.mod, ...) {
-	if(!hasArg(poly.mod)) pm <- as.poly.mod(nrow(as.matrix(x[[1]])))
+	dots <- list(...)
+	if(is.null(dots$poly.mod)) pm <- as.poly.mod(nrow(as.matrix(x[[1]]))) else pm <- dots$poly.mod
 	x <- sep.pars(x, poly.mod=pm, ...)
 	callGeneric()
 })

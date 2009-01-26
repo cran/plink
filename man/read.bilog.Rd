@@ -21,7 +21,7 @@ read.parscale(file, ability=FALSE, pars.only=TRUE, as.irt.pars=FALSE, loc.out=TR
 	any other information like standard errors will be dropped)}
 
   \item{as.irt.pars}{if \code{TRUE}, the parameters will be output as an 
-	code{\linkS4class{irt.pars}} object (this is only applicable to item
+	\code{\linkS4class{irt.pars}} object (this is only applicable to item
 	parameters)}
 
   \item{loc.out}{if \code{TRUE}, the step/threshold parameters will be reformated to 

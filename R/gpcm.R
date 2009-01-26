@@ -1,19 +1,22 @@
 setGeneric("gpcm", function(x, cat, theta=seq(-4,4,.05), D=1.7, location=FALSE, print.mod=FALSE, ...) standardGeneric("gpcm"))
 
 setMethod("gpcm", signature(x="matrix", cat="numeric"), function(x, cat, theta, D, location, print.mod, ...) {
-	if(!hasArg(poly.mod)) pm <- as.poly.mod(nrow(x),"gpcm")
+	dots <- list(...)
+	if(is.null(dots$poly.mod)) pm <- as.poly.mod(nrow(x),"gpcm") else pm <- dots$poly.mod
 	x <- sep.pars(x, cat, pm, location, ...)
 	callGeneric()
 })
 
 setMethod("gpcm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, D, location, print.mod, ...) {
-	if(!hasArg(poly.mod)) pm <- as.poly.mod(nrow(x),"gpcm")
+	dots <- list(...)
+	if(is.null(dots$poly.mod)) pm <- as.poly.mod(nrow(x),"gpcm") else pm <- dots$poly.mod
 	x <- sep.pars(x, cat, pm, location, ...)
 	callGeneric()
 })
 
 setMethod("gpcm", signature(x="list", cat="numeric"), function(x, cat, theta, D, location, print.mod, ...) {
-	if(!hasArg(poly.mod)) pm <- as.poly.mod(nrow(as.matrix(x[[1]])),"gpcm")
+	dots <- list(...)
+	if(is.null(dots$poly.mod)) pm <- as.poly.mod(nrow(as.matrix(x[[1]])),"gpcm") else pm <- dots$poly.mod
 	x <- sep.pars(x, cat, pm, location, ...)
 	callGeneric()
 })

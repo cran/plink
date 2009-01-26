@@ -213,7 +213,7 @@ as.irt.pars(x, common, cat, poly.mod, location = FALSE, grp.names = NULL, ...)
       is included, it must be in the first column with the remaining columns containing the 
       threshold deviation values.  If no location parameter is included, the threshold
       parameters should begin in column one. (See the method for x = 'matrix' above for more 
-      information on the formatting for this object).}
+      information on the formatting for this object).
         
       If \code{x} includes multiple models and there are three list elements, the third element 
       should conatain a vector of \code{NA} for all the GRM items.}
@@ -278,7 +278,8 @@ as.irt.pars(x, common, cat, poly.mod, location = FALSE, grp.names = NULL, ...)
 
   If all the objects in \code{x} are of class \code{sep.pars} or \code{irt.pars}, the arguments
   \code{cat}, \code{poly.mod}, and \code{location} do not need to be included.}
-}}
+	}
+}
 
 \value{
 Returns an object of class \code{\linkS4class{irt.pars}}

@@ -72,7 +72,7 @@ Additional arguments for the above models can be passed to this method as well.
   Returns an object of class \code{\linkS4class{irt.prob}}
 }
 
-\author{ Jonathan P. Weeks \email{weeksjp@gmail.com}} }
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com}}
 
 \seealso{ 
 \code{\link[=plot.irt.prob]{plot}:} plot item characteristic/category curves\cr

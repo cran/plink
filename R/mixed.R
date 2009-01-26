@@ -63,7 +63,7 @@ setMethod("mixed", signature(x="sep.pars"), function(x, cat, poly.mod, theta, ..
 		p <- cbind(p,as.matrix(tmp))
 	}
 	if ("drm"%in%mod) {
-		if (hasArg(incorrect)) {
+		if (!is.null(dots$incorrect)) {
 			if (dots$incorrect==FALSE) cat[x@items$drm] <- 1
 		} else {
 			cat[x@items$drm] <- 1
@@ -71,7 +71,7 @@ setMethod("mixed", signature(x="sep.pars"), function(x, cat, poly.mod, theta, ..
 	}
 	
 	if ("grm"%in%mod) {
-		if (hasArg(catprob)) {
+		if (!is.null(dots$catprob)) {
 			if (dots$catprob==FALSE)  cat[x@items$grm] <- cat[x@items$grm]-1
 		} else {
 			cat[x@items$grm] <- cat[x@items$grm]-1
