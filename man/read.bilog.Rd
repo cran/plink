@@ -1,15 +1,20 @@
 \name{read.bilog}
 \alias{read.bilog}
 \alias{read.parscale}
+\alias{read.testfact}
 \title{Import Parameters from IRT Software}
 \description{
-This function imports item and/or ability parameters from BILOG-MG and PARSCALE.
+This function imports item and/or ability parameters from BILOG-MG, PARSCALE, 
+and TESTFACT.
 }
 
 \usage{
-read.bilog(file, ability=FALSE, pars.only=TRUE, as.irt.pars=FALSE)
+read.bilog(file, ability = FALSE, pars.only = TRUE, as.irt.pars = FALSE)
 
-read.parscale(file, ability=FALSE, pars.only=TRUE, as.irt.pars=FALSE, loc.out=TRUE)
+read.parscale(file, ability = FALSE, pars.only = TRUE, as.irt.pars = FALSE, loc.out = TRUE)
+
+read.testfact(file, ability = FALSE, dimensions = 2, guessing = FALSE, bifactor = FALSE, 
+    as.irt.pars = FALSE)
 }
 
 \arguments{
@@ -26,6 +31,13 @@ read.parscale(file, ability=FALSE, pars.only=TRUE, as.irt.pars=FALSE, loc.out=TR
 
   \item{loc.out}{if \code{TRUE}, the step/threshold parameters will be reformated to 
 	be deviations from a location parameter }
+
+  \item{dimensions}{number of modeled dimensions}
+
+  \item{guessing}{logical value indicating whether a guessing parameter was modeled}
+
+  \item{bifactor}{logical value indicating whether the bifactor model was used to
+      estimate the item/ability parameters}
 }
 
 \value{

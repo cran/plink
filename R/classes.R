@@ -4,7 +4,7 @@ setClass("poly.mod",representation(model="character", items="list"))
 	out <- TRUE
 	if (length(object@model)!=length(object@items)) out <- "Number of models does not match the number of model items."
 	if (length(which(object@model %in% c("drm","grm","gpcm","nrm","mcm") ))!=length(object@model)) {
-		out <- "One or more of the specified models is not {drm, gpcm, grm, nrm, mcm}"
+		out <- "One or more of the specified models is not {drm, grm, gpcm, nrm, mcm}"
 	}
 	return(out)
 }
@@ -29,7 +29,7 @@ is.poly.mod <- function(x) {
 
 
 # sep.pars
-setClass("sep.pars", representation(a="matrix", b="matrix", c="matrix", cat="numeric", n="numeric", mod.lab="character", loc.out="logical"), prototype(loc.out=FALSE), contains="poly.mod")
+setClass("sep.pars", representation(a="matrix", b="matrix", c="matrix", cat="numeric", n="numeric", mod.lab="character", loc.out="logical", dimensions="numeric"), prototype(loc.out=FALSE, dimensions=1), contains="poly.mod")
 .Valid.sep.pars <- function(object) {
 	if (length(object@mod.lab)==length(object@model)) TRUE else paste("Number of model labels does not match the number of models.")
 }
@@ -41,7 +41,7 @@ is.sep.pars <- function(x) {
 
 
 # irt.prob
-setClass("irt.prob",representation(prob="data.frame",p.cat="numeric", mod.lab="character"), contains="poly.mod")
+setClass("irt.prob",representation(prob="data.frame", p.cat="numeric", mod.lab="character", dimensions="numeric", pars="list"), contains="poly.mod")
 .Valid.irt.prob<- function(object) {
 	if (length(object@mod.lab)==length(object@model)) TRUE else paste("Number of model labels does not match the number of models.")
 }
@@ -55,9 +55,9 @@ is.irt.prob <- function(x) {
 setClassUnion("list.num",c("list","numeric"))
 setClassUnion("list.mat",c("list","matrix","data.frame","numeric","NULL"))
 setClassUnion("list.poly",c("list","poly.mod"))
-setClass("irt.pars",representation(pars="list.mat", cat="list.num", poly.mod="list.poly", common="list.mat", location="logical", groups="numeric"))
+setClass("irt.pars",representation(pars="list.mat", cat="list.num", poly.mod="list.poly", common="list.mat", location="logical", groups="numeric", dimensions="numeric"))
 
-setMethod("initialize", "irt.pars", function(.Object, pars, cat, poly.mod, common=NULL, location=NULL, groups=1) {
+setMethod("initialize", "irt.pars", function(.Object, pars, cat, poly.mod, common=NULL, location=NULL, groups=1, dimensions=1) {
 	
 	# Reformat pars to be a mtrix or a list of matrices
 	if (is.data.frame(pars)|is.numeric(pars)) pars <- as.matrix(pars)
@@ -201,13 +201,18 @@ setMethod("initialize", "irt.pars", function(.Object, pars, cat, poly.mod, commo
 			stop("There are more than two sets of item parameters. {common} should be a list.")
 		}
 	}
-		
+	
+	if (length(dimensions)!=groups) {
+		stop("The number of elements in the vector {dimensions} must be equal to the number of groups.")
+	}
+	
 	.Object@pars <- pars
 	.Object@cat <- cat
 	.Object@poly.mod <- poly.mod
 	.Object@common <- common
 	.Object@location <- location
 	.Object@groups<- n
+	.Object@dimensions <- dimensions
 	.Object
 })
 
@@ -219,7 +224,7 @@ is.irt.pars <- function(x) {
 #link
 setClassUnion("num.null",c("matrix","numeric","NULL"))
 setClassUnion("list.dat",c("list","data.frame"))
-setClass("link", representation(MM="numeric", MS="numeric", HB="numeric", SL="num.null", descriptives="list.dat", iterations="numeric", convergence="character", base.grp="numeric", include.mcm.nrm="logical") )
+setClass("link", representation(constants="list", descriptives="list.dat", iterations="numeric", objective="numeric", convergence="character", base.grp="numeric", n="numeric", grp.names="character", mod.lab="character", dilation="character", include.mcm.nrm="logical") )
 
 is.link <- function(x) {
 	is(x, "link")

@@ -12,7 +12,7 @@ not encouraged. Use the function \code{\link{sep.pars}} instead.
 
 \section{Slots}{
   \describe{
-    \item{\code{a}:}{matrix of discrimination parameters}
+    \item{\code{a}:}{matrix of discrimination/slope parameters}
 
     \item{\code{b}:}{matrix of difficulty, threshold, step, and category parameters 
 	(depending on the associated IRT model)}
@@ -38,6 +38,8 @@ not encouraged. Use the function \code{\link{sep.pars}} instead.
 	slot \code{b} for the graded response model and generalized partial credit model include a 
 	location parameter. }
 
+    \item{\code{dimensions}:}{numeric value identifying the number of modeled dimensions.}
+
     \item{\code{model}:}{character vector identifying all the models associated with the 
 	corresponding set of item parameters. The only acceptable models are 
 	\code{drm, gpcm, grm, mcm, and nrm} (see class \code{"poly.mod"} for more information).}
@@ -49,22 +51,22 @@ not encouraged. Use the function \code{\link{sep.pars}} instead.
 }
 
 \details{
-\code{a} will be an n x 1 matrix for n items if there are no nomial responce model or multiple-choice 
-model items. Otherwise, if nrm or mcm items are included, \code{a} will be an n x m matrix with m 
-equal to the maximum number of response categories across items. If nrm or mcm items are included, 
-the discrimination parameters for the dictomous response models, the graded response model, partial 
-credit model and generalized partial credit model are listed in the first column will all other 
-columns filled with \code{NA}s.
+\code{a} will be an n x m matrix for n items and m dimensions if there are no nomial responce model 
+or multiple-choice model items.  Otherwise, if nrm or mcm items are included, \code{a} will be an 
+n x (k x m) matrix with k equal to the maximum number of response categories across items. If nrm or 
+mcm items are included, the discrimination/slope parameters for the dictomous response models, the 
+graded response model, partial credit model and generalized partial credit model (and the multidimensional
+extensions of these models) are listed in the first m columns with all other columns filled with \code{NA}s.
 
-\code{b} is an n x m matrix of difficulty, threshold, step, or category parameters (depending on the
-corresponding model) for n items with m equal to the maximum number of \code{b} parameters across
-all items. For items with \code{b} less than m, the row is right-filled with \code{NA}s.
+\code{b} is an n x (k x m) matrix of difficulty, threshold, step, or category parameters (depending on 
+the corresponding model) for n items and m dimensions with k equal to the maximum number of \code{b} 
+parameters across all items. For items with \code{b} less than k x m, the row is right-filled with \code{NA}s.
 
 \code{c} will be an n x 1 matrix for n items if there are no multiple-choice model items. Otherwise, 
-if mcm items are included, \code{c} will be an n x m matrix with m equal to the maximum number of 
+if mcm items are included, \code{c} will be an n x k matrix with k equal to the maximum number of 
 response categories across items minus one. If mcm items are included, the lower asmptote parameters 
-for the dictomous response models, are listed in the first column will all other columns filled with 
-\code{NA}s. The \code{c} values for the 1PL and 2PL equal zero.
+for the dictomous response models, are listed in the first column with all other columns filled with 
+\code{NA}s. The \code{c} values for the 1PL, 2PL, M1PL, and M2PL equal zero.
 }
 
 \section{Extends}{

@@ -13,21 +13,25 @@ not encouraged.  Use one of the functions \code{drm, gpcm, grm, mcm, nrm, or mix
 
 \section{Slots}{
   \describe{
-      \item{\code{prob}:}{data.frame of item probabilities with dimensions n x j+1 for n theta 
-        values, for j items (the first column contains theta values)}
+      \item{\code{prob}:}{data.frame of item probabilities with n rows and j+m columns for n theta 
+        values and j items (the first m column contains theta values for m dimensions)}
 
       \item{\code{p.cat}:}{vector identifying the number of categories for each item for which 
         probabilities were computed}
 
       \item{\code{mod.lab}:}{character vector of labels for the model(s).}
 
+      \item{\code{dimensions}:}{numeric value identifying the number of modeled dimensions}
+
+      \item{\code{pars}:}{list of the item parameters used to compute the probabilities}
+
       \item{\code{model}:}{character vector identifying all the models used to compute the 
         probabilities in \code{prob}.  The only acceptable models are 
         \code{drm, gpcm, grm, mcm, and nrm} (see class \code{\linkS4class{poly.mod}} for more 
         information).}
 
-    \item{\code{items}:}{list with the same length as \code{model}, where each element 
-	identifies the items associated with the model(s) specified in \code{model}.}
+      \item{\code{items}:}{list with the same length as \code{model}, where each element 
+	  identifies the items associated with the model(s) specified in \code{model}.}
   }
 }
 
@@ -39,6 +43,7 @@ Class \code{"\linkS4class{list.poly}"}, by class "poly.mod", distance 2.
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{
+These models provide information on both unidimensional and multidimensional formulations\cr
 \code{\link[=drm-methods]{drm}:} for dichotomous response models (1PL, 2PL, and 3PL)\cr
 \code{\link[=gpcm-methods]{gpcm}:} for the partial credit/generalized partial credit model\cr
 \code{\link[=grm-methods]{grm}:} for the graded response model\cr

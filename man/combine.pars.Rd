@@ -6,7 +6,7 @@ This function combines objects of class \code{"\linkS4class{irt.pars}"} and/or
 \code{"\link{sep.pars}"} into a single \code{"irt.pars"} object}
 
 \usage{
-combine.pars(x, common, grp.names = NULL)
+combine.pars(x, common, grp.names)
 }
 
 \arguments{
@@ -51,9 +51,5 @@ Returns an object of class \code{\linkS4class{irt.pars}}
 
 \seealso{\code{\linkS4class{irt.pars}}, \code{\link{as.irt.pars}}, \code{\linkS4class{sep.pars}},
 \code{\link[=sep.pars-methods]{sep.pars}} }
-
-\examples{
-
-}
 
 \keyword{ misc }

@@ -155,3 +155,43 @@ read.parscale <- function(file, ability=FALSE, pars.only=TRUE, as.irt.pars=FALSE
 	}
 	return(pars)
 }
+
+read.testfact <- function(file, ability=FALSE, dimensions=2, guessing=FALSE, bifactor=FALSE, as.irt.pars=FALSE) {
+	if (ability==FALSE) {
+		if (guessing==TRUE) dims <- dimensions+2 else dims <- dimensions+1
+		pars <- read.fwf(file, c(15,rep(9,dims)), skip=1)
+		pars <- pars[,-1]
+		if (guessing==TRUE) {
+			pars <- pars[,c(3:dims,1,2)]
+			colnames(pars) <- c(paste("a",1:dimensions,sep=""),"d","c")
+		} else {
+			pars <- pars[,c(2:dims,1)]
+			colnames(pars) <- c(paste("a",1:dimensions,sep=""),"d")
+		}
+	} else {
+		if (bifactor==FALSE) {
+			dims <- rep(c(11,1),dimensions)
+			pars <- read.fwf(file, c(10,dims))
+			pars <- pars[seq(2,nrow(pars),by=3),seq(2,ncol(pars),by=2)]
+			for (i in 1:ncol(pars)) {
+				pars[,i] <- as.numeric(as.character(pars[,i]))
+			}
+		} else {
+			pars <- read.fwf(file, c(18,7,7))
+			pars <- pars[seq(2,nrow(pars),by=2),2:3]
+			for (i in 1:ncol(pars)) {
+				pars[,i] <- as.numeric(as.character(pars[,i]))
+			}
+		}
+		colnames(pars) <- paste("theta",1:dimensions,sep="")
+	}
+	
+	if (as.irt.pars==TRUE) {
+		if (ability==FALSE) {
+			n <- nrow(pars)
+			pm <- as.poly.mod(n)
+			pars <- as.irt.pars(pars, cat=rep(2,n), poly.mod=pm, dimensions=dimensions)
+		}
+	}
+	return(pars)
+}

@@ -8,32 +8,36 @@
 \alias{plink,irt.pars,ANY-method}
 \title{Separate Calibration}
 \description{
-This function conducts separate calibration of IRT single-format or 
-mixed-format item parameters for multiple groups using the Mean/Mean, 
-Mean/Sigma, Haebara, and Stocking-Lord methods. The function includes
-symmetric and non-symmetric optimization and chain-linked rescaling
-of item and ability parameters.
+This function conducts separate calibration of unidimensional or multidimensional
+IRT single-format or mixed-format item parameters for multiple groups.  The  
+unidimensional methods include the Mean/Mean, Mean/Sigma, Haebara, and Stocking-Lord 
+methods.  The multidimensional methods include the Reckase-Martineau method and
+extensions of the Haebara and Stocking-Lord method using a single dilation parameter
+(Li & Lissitz, 2000), multiple dilation parameters (Min, 2003), or the 
+Oshima, Davey, & Lee (2000) approach.  The methods allow for symmetric and non-symmetric 
+optimization and chain-linked rescaling of item and ability parameters.
 }
 
 \usage{
-plink(x, common, rescale, ability, weights, startvals, score=1, base.grp=1, 
-	symmetric=TRUE, grp.names=NULL, mn=c(FALSE,FALSE), ...)
+plink(x, common, rescale, ability, method, weights, startvals, score = 1, 
+      base.grp = 1, symmetric = TRUE, grp.names = NULL, mn.exclude = FALSE, 
+      dilation = "ODL", dim.order = NULL, ...)
 
 ## S4 method for signature 'list', 'matrix'
-plink(x, common, rescale, ability, weights, startvals, score, base.grp, 
-	symmetric, grp.names, mn, ...)
+plink(x, common, rescale, ability, method, weights, startvals, score, 
+	base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
 
 ## S4 method for signature 'list', 'data.frame'
-plink(x, common, rescale, ability, weights, startvals, score, base.grp, 
-	symmetric, grp.names, mn, ...)
+plink(x, common, rescale, ability, method, weights, startvals, score, 
+	base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
 
 ## S4 method for signature 'list', 'list'
-plink(x, common, rescale, ability, weights, startvals, score, base.grp, 
-	symmetric, grp.names, mn, ...)
+plink(x, common, rescale, ability, method, weights, startvals, score,
+	base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
-plink(x, common, rescale, ability, weights, startvals, score, base.grp, 
-	symmetric, grp.names, mn, ...)
+plink(x, common, rescale, ability, method, weights, startvals, score,
+	base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
 }
 
 \arguments{
@@ -43,22 +47,27 @@ plink(x, common, rescale, ability, weights, startvals, score, base.grp,
   \item{common}{matrix or list of common items. See below for more details. }
 
   \item{rescale}{if missing (default), the parameters in \code{x} will not be 
-    transformed to the base scale. To transform the parameters use \code{"MM","MS","HB","SL"}
-    for the mean/mean, mean/sigma, Haebara, and Stocking-Lord linking constants
-    respectively.}
+    transformed to the base scale. To transform the parameters use 
+    \code{"MM","MS","HB","SL","RM"} for the mean/mean, mean/sigma, Haebara, 
+    Stocking-Lord, and Reckase-Martineau linking constants respectively.}
 
   \item{ability}{list of theta values with length equal to the number of groups. 
     If supplied, these values will be transformed to the base scale using the
     constants identified in \code{rescale} or the Haebara constants if \code{rescale}
     is missing.}
 
+  \item{method}{character vector identifying the linking methods to use. Values can
+    include \code{"MM","MS","HB","SL","RM"} for the mean/mean, mean/sigma, Haebara, 
+    Stocking-Lord, and Reckase-Martineau linking constants respectively, or if
+    missing, constants will be estimated for all methods.}
+
   \item{weights}{list containing information about the theta values and weights
     to use for the characteristic curve methods. See below for more details. }
 
   \item{score}{if \code{score} = \code{1}, score responses for the Stocking-Lord
     method with zero for the lowest category and k-1 for the highest, k, category
-    for each item. If \code{score} = \code{2}, score responses with one for the
-    lowest category and k for the highest, k, category for each item. A vector of
+    for each item.  If \code{score} = \code{2}, score responses with one for the
+    lowest category and k for the highest, k, category for each item.  A vector of
     scores for each response category can be supplied, but this is only recommended
     for advanced users.}
 
@@ -69,14 +78,20 @@ plink(x, common, rescale, ability, weights, startvals, score, base.grp,
   \item{base.grp}{integer identifying the group for the base scale}
 
   \item{symmetric}{if \code{TRUE} use symmetric minimization for the characteristic 
-    curve methods. See Kim and Lee (2006) for more information}
+    curve methods.  See Kim and Lee (2006) for more information}
 
   \item{grp.names}{character vector of group names }
 
-  \item{mn}{logical vector of length two. If the first element is \code{FALSE}, do use
-    nominal response model and multiple-choice model parameters when estimating
-    mean/mean and mean/sigma linking constants. If the second element is \code{FALSE},
-    do not use NRM and MCM parameters with the Stocking-Lord calibration.}
+  \item{mn.exclude}{if \code{TRUE}, do not use the nominal response model and/or 
+    multiple-choice model parameters when estimating the unidimensional linking constants}
+
+  \item{dilation}{character value identifying whether the Oshima, Davey, & Lee (2000)
+    approach \code{ODL}, the Li and Lissitz (2000) approach \code{LL}, or the Min (2003)
+    approach \code{MIN} should be used to estimate the linking constants for the 
+    multidimensional Haebara and Stocking-Lord methods.}
+
+  \item{dim.order}{matrix for identifying the ordering of factors across groups.  See 
+    below for details.}
 
   \item{...}{further arguments passed to or from other methods }
 }
@@ -138,11 +153,18 @@ theta values instead of equally spaced or random values.
       identifying the common items between the items in the first \code{irt.pars} object
       and the first group in the second \code{irt.pars} object. The second element in 
       \code{common} should identify the common items between the fourth group in the 
-      second \code{irt.pars} object and the items in the \code{sep.pars} object.}
+      second \code{irt.pars} object and the items in the \code{sep.pars} object.
+      }
 
     \item{x = "irt.pars", common = "ANY"}{This method is intended for an \code{irt.pars}
       object with multiple groups.}
   }
+}
+
+\note{
+  When estimating linking constants for more than two dimensions, using the characteristic curve
+  methods can be quite slow. In these instances it is advisable to use the Reckase-Martineau (2004)
+  approach or reduce the number of quadrature points (e.g., using weights=as.weight(n=5) ).
 }
 
 \value{
@@ -164,6 +186,10 @@ theta values instead of equally spaced or random values.
   \emph{Test Equating, Scaling, and Linking} (2nd ed.).
   New York: Springer
 
+  Li, Y. H., & Lissitz, R. W. (2000). 
+  An evaluation of the accuracy of multidimensional IRT linking. 
+  \emph{Applied Psychological Measurement}, \emph{24}(2), 115-138.
+
   Loyd, B. H. & Hoover, H. D. (1980). 
   Vertical Equating Using the Rasch Model. 
   \emph{Journal of Educational Measurement}, \emph{17}(3), 179-193.
@@ -171,6 +197,19 @@ theta values instead of equally spaced or random values.
   Marco, G. L. (1977). 
   Item Characteristic Curve Solutions to Three Intractable Testing Problems.
   \emph{Journal of Educational Measurement}, \emph{14}(2), 139-160.
+
+  Min, K. -S. (2003). 
+  \emph{The impact of scale dilation on the quality of the linking of 
+  multidimensional item response theory calibrations}. 
+  Unpublished Dissertation, Michigan State University, East Lansing, MI. 
+
+  Oshima, T. C., Davey, T., & Lee, K. (2000). 
+  Multidimensional linking: Four practical approaches. 
+  \emph{Journal of Educational Measurement}, \emph{37}(4), 357-373.
+
+  Reckase, M. D., & Martineau, J. A. (2004). 
+  \emph{The vertical scaling of science achievement tests}.
+  Research report for the Center for Education and National Research Council.
 
   Stocking, M. L. & Lord, F. M. (1983). 
   Developing a common metric in item response theory. 
@@ -180,6 +219,7 @@ theta values instead of equally spaced or random values.
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \examples{
+###### Unidimensional Examples ######
 # Create irt.pars object with two groups (all dichotomous items)
 # rescale the item parameters using the Stocking-Lord linking constants
 pm <- as.poly.mod(36)
@@ -235,13 +275,88 @@ summary(out, descrip=TRUE)
 # Compute linking constants for two groups using mixed-format items and 
 # a mixed placement of common items. Compare calibrations with the
 # inclusion or exclusion of NRM items. This example uses the dgn dataset.
-pm1=as.poly.mod(55,c("drm","gpcm","nrm"),dgn$items$group1)
-pm2=as.poly.mod(55,c("drm","gpcm","nrm"),dgn$items$group2)
-x=as.irt.pars(dgn$pars,dgn$common,dgn$cat,list(pm1,pm2))
+pm1 <- as.poly.mod(55,c("drm","gpcm","nrm"),dgn$items$group1)
+pm2 <- as.poly.mod(55,c("drm","gpcm","nrm"),dgn$items$group2)
+x <- as.irt.pars(dgn$pars,dgn$common,dgn$cat,list(pm1,pm2))
 out <- plink(x) # Run with NRM items included in the calibration
-out1 <- plink(x,mn=c(TRUE,TRUE)) # Run with NRM items excluded from the calibration
+out1 <- plink(x,mn.exclude=TRUE) # Run with NRM items excluded from the calibration
 summary(out)
 summary(out1)
+
+
+# Compute linking constants for six groups using mixed-format items and 
+# a mixed placement of common items. This example uses the reading dataset.
+# See the information on the dataset for an interpretation of the output.
+pm1 <- as.poly.mod(41, c("drm", "gpcm"), reading$items[[1]])
+pm2 <- as.poly.mod(70, c("drm", "gpcm"), reading$items[[2]])
+pm3 <- as.poly.mod(70, c("drm", "gpcm"), reading$items[[3]])
+pm4 <- as.poly.mod(70, c("drm", "gpcm"), reading$items[[4]])
+pm5 <- as.poly.mod(72, c("drm", "gpcm"), reading$items[[5]])
+pm6 <- as.poly.mod(71, c("drm", "gpcm"), reading$items[[6]])
+pm <- list(pm1, pm2, pm3, pm4, pm5, pm6)
+x <- as.irt.pars(reading$pars, reading$common, reading$cat, pm)
+out <- plink(x)
+summary(out)
+
+
+###### Multidimensional Examples ######
+# Reckase Chapter 9
+pm <- as.poly.mod(80, "drm", list(1:80))
+x <- as.irt.pars(reckase9$pars, reckase9$common, list(rep(2,80),rep(2,80)), 
+list(pm,pm), dimensions=2)
+# Compute constants using Reckase & Martineau (2004) and Oshima, Davey, & Lee (2000)
+# Rescale the item parameters using the RM method
+out <- plink(x, rescale="RM")
+summary(out, descrip=TRUE)
+# Extract the rescaled item parameters
+pars.out <- link.pars(out)
+
+# Compute constants using Li & Lissitz (2000)
+# Rescale item parameters and ability estimates using the "HB" method
+ability <- matrix(rnorm(40),20,2)
+out <- plink(x, method=c("HB","SL"), dilation="LL", rescale="HB", 
+   ability=list(ability,ability))
+summary(out)
+# Extract rescaled ability estimates
+ability.out <- out$ability
+
+# Compute constants using Reckase & Martineau (2004) and Min (2003) 
+# with non-symmetric calibration
+out <- plink(x, dilation="MIN", symmetric=FALSE)
+summary(out, descrip=TRUE)
+
+
+
+# Compute linking constants for two groups using mixed-format items modeled with
+# the M3PL and MGPCM. Only compute constants using the Reckase-Martineau (RM) method.
+pm <- as.poly.mod(60,c("drm","gpcm"), list(c(1:60)[md.mixed$cat==2],c(1:60)[md.mixed$cat>2]))
+x <- as.irt.pars(md.mixed$pars, matrix(1:60,60,2), list(md.mixed$cat, md.mixed$cat), 
+list(pm, pm), dimensions=4, grp.names=c("Form.X","Form.Y"))
+out <- plink(x,method=c("RM","HB"),dilation="MIN",weights=as.weight(n=5))
+summary(out, descrip=TRUE)
+
+
+
+# Illustration of construct shift and how to specify common dimensions
+pm <- as.poly.mod(80, "drm", list(1:80))
+pars <- cbind(round(runif(80),2),reckase9$pars[[1]])
+x <- as.irt.pars(list(pars,reckase9$pars[[2]]), reckase9$common, 
+list(rep(2,80),rep(2,80)), list(pm,pm), dimensions=c(3,2))
+dim.order <- matrix(c(1,2,3,NA,1,2),2,3,byrow=TRUE)
+out <- plink(x,dim.order=dim.order)
+
+# Assume that all we know is that the first dimension in group 1
+# is a unique dimension (i.e., we do not know if the first dimension 
+# in group 2 maps to the first or second dimension in group 1 
+# (all of the numbered values in dim.order will equal one)
+dim.order <- matrix(c(1,1,1,NA,1,1),2,3,byrow=TRUE)
+out <- plink(x,dim.order=dim.order)
+
+# Assume that there is only one common dimension
+dim.order <- matrix(c(1,2,3,NA,NA,1,NA,2),2,4,byrow=TRUE)
+out <- plink(x,dim.order=dim.order, rescale="HB")
+# Extract rescaled item parameters
+pars.out <- link.pars(out)
 }
 
 \keyword{methods}

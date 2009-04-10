@@ -10,26 +10,27 @@
 \title{Nominal Response Model Probabilities}
 \description{
 This function computes the probability of responding in a specific category for one or more 
-items for a given set of theta values using the nominal response model.
+items for a given set of theta values using the nominal response model or multidimensional
+nominal response model.
 }
 
 \usage{
-nrm(x, cat, theta = seq(-4,4,0.05), ...)
+nrm(x, cat, theta, dimensions = 1, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
-nrm(x, cat, theta, ...)
+nrm(x, cat, theta, dimensions, ...)
 
 ## S4 method for signature 'data.frame', 'numeric'
-nrm(x, cat, theta, ...)
+nrm(x, cat, theta, dimensions, ...)
 
 ## S4 method for signature 'list', 'numeric'
-nrm(x, cat, theta, ...)
+nrm(x, cat, theta, dimensions, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
-nrm(x, cat, theta, ...)
+nrm(x, cat, theta, dimensions, ...)
 
 ## S4 method for signature 'sep.pars', 'ANY'
-nrm(x, cat, theta, ...)
+nrm(x, cat, theta, dimensions, ...)
 }
 
 \arguments{
@@ -37,9 +38,11 @@ nrm(x, cat, theta, ...)
 
   \item{cat}{vector identifying the number of response categories for each item } 
 
-  \item{theta}{vector of theta values for which probabilities will be computed. 
+  \item{theta}{vector, matrix, or list of theta values for which probabilities will be computed. 
   If \code{theta} is not specified, an equal interval range of values from -4 to 4 is used 
-  with an increment of 0.05 }
+  with an increment of 0.5. See details below for more information. }
+
+  \item{dimensions}{number of modeled dimensions }
 
   \item{...}{further arguments passed to or from other methods }
 }
@@ -48,32 +51,40 @@ nrm(x, cat, theta, ...)
 \section{Methods}{
   \describe{
 
-    \item{x = "matrix", cat = "numeric"}{This method allows one to specify an n x k matrix
-	for n items and k equal two times the maximum number of response categories across
-	items (e.g. if some items have four response categories and others have five 
-	categories, k will equal 10). The first k/2 columns are for category discrimination 
-	parameters. For any items with fewer categories than the maximum, the remaining
-	cells in the k/2 row should be \code{NA}. The remaining columns are for the
-	category difficulty parameters. Similarly, items with fewer response categories
-	than the maximum should have \code{NA}s in the remaining cells. For example, for 
-	one four category and one five category item, the first four columns for the four
-	response item would include the discrimination parameters. The fifth column for
-	this item would be \code{NA}. The next four columns would include the category
-	difficulty values, and the last column would be \code{NA}. }
+    \item{x = "matrix", cat = "numeric"}{This method allows one to specify an n x (m x 2k) 
+      matrix for n items, m dimensions, and k equal to the maximum number of response 
+      categories across items.  The first (m x k) columns are for category slope parameters
+      and the remaining columns are for the category difficulty parameters.  For any items 
+      with fewer categories than the maximum, the remaining cells in each block of (m x k) 
+      columns should be \code{NA}.  
+
+      \describe{
+        \item{Unidimensional Specification:}{Say we have one four category item and one 
+        five category item, the first four columns of the four response item would include 
+        the slope parameters. The fifth column for this item would be \code{NA}.  The next 
+        four columns would include the category difficulty values, and the last column would 
+        be \code{NA}. }
+
+        \item{Multidimensional Specification:}{In the multidimensional case, the columns for 
+        the slope and difficulty parameters should be grouped first by dimension and then by 
+        category.  Using the same example for the two items with two dimensions there will be 
+        20 columns.  The first four columns for the four category item would include the slope 
+        parameters associated with the first dimension for each of the four categories 
+        respectively.  Columns 9-10 would be \code{NA}.  Columns 11-14 would include the 
+        category difficulties associated with the first dimension and columns 19-20 would 
+        be \code{NA}. }
+    }
+}
 
     \item{x = "data.frame", cat = "numeric"}{See the method for x = "matrix" }
 
     \item{x = "list", cat = "numeric"}{This method is for a list with two elements. The 
-	first element is and n x k matrix of category discrimination values for n items 
-	and k equal to the maximum number of response categories across items. The second 
-	list element is an n x k matrix of category difficulty parameters. For either 
-	element, for items with fewer categories than the maximum, the remaining cells in
-	the rows should be \code{NA}. For example, for one four category and one five 
-	category item, the first four columns for the four response item in the first list
-	element would include the discrimination parameters. The fifth column for
-	this item would be \code{NA}.The first four columns for the four response item in 
-	the second list element would include the category difficulty parameters. The fifth 
-	column for this item would be \code{NA}. }
+	first element is an n x (m x k) matrix of category slope values for n items, m 
+      dimensions, and k equal to the maximum number of response categories across items.
+      The second list element is an n x (m x k) matrix of category difficulty parameters. 
+      For either element, for items with fewer categories than the maximum, the remaining 
+      cells in the rows should be \code{NA} (see the examples for method x = "matrix" for
+      specification details). }
 
     \item{x = "irt.pars", cat = "ANY"}{This method can be used to compute probabilities 
 	for the nrm items in an object of class \code{"irt.pars"}. If \code{x} contains 
@@ -88,6 +99,17 @@ nrm(x, cat, theta, ...)
 	will be displayed stating that probabilities will be computed for the nrm
 	items only.}
   }
+}
+
+\details{
+\code{theta} can be specified as a vector, matrix, or list.  For the unidimensional case, \code{theta}
+should be a vector. If a matrix or list of values is supplied, they will be converted to a single vector
+of theta values.  For the multidimensional case, if a vector of values is supplied it will be assumed
+that this same set of values should be used for each dimension.  Probabilities will be computed for each
+combination of theta values.  Similarly, if a list is supplied, probabilites will be computed for each
+combination of theta values.  In instances where probabilities are desired for specific combinations of 
+theta values, a j x m matrix should be specified for j ability points and m dimensions where the columns 
+are ordered from dimension 1 to m.
 }
 
 \value{
@@ -105,12 +127,21 @@ nrm(x, cat, theta, ...)
   In W.J. van der Linden & Hambleton, R. K. (Eds.) 
   \emph{Handbook of Modern Item Response Theory}. New York: Springer-Verlag
 
+  Bolt, D. M. & Johnson, T. J. (in press)
+  Applications of a MIRT model to self-report measures: 
+  Addressing score bias and DIF due to individual differences in response style. 
+  \emph{Applied Psychological Measurement}.
+
   Kolen, M. J., & Brennan, R. L. (2004)
   \emph{Test Equating, Scaling, and Linking.}
   New York: Springer
+
+  Takane, Y., & De Leeuw, J. (1987)
+  On the relationship between item response theory and factor analysis of discretized variables. 
+  \emph{Psychometrika}, \emph{52}(3), 393-408.
 }
 
-\author{ Jonathan P. Weeks \email{weeksjp@gmail.com}}
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{ 
 \code{\link[=mixed-methods]{mixed}:} compute probabilities for mixed-format items\cr
@@ -119,6 +150,7 @@ nrm(x, cat, theta, ...)
 }
 
 \examples{
+###### Unidimensional Example ######
 ## Item parameters from Bock (1972, p. 46,47)
 a <- matrix(c(.905, .522, -.469, -.959, NA, .828, .375, -.357, -.079, -.817),
   2,5,byrow=TRUE)
@@ -128,7 +160,14 @@ pars <- cbind(a,c)
 x <- nrm(pars, c(4,5))
 plot(x,auto.key=list(space="right"))
 
-
+###### Multidimensional Example ######
+# From Bolt & Johnson (in press)
+pars <- matrix(c(-1.28, -1.029, -0.537, 0.015, 0.519, 0.969, 1.343,
+1.473, -0.585, -0.561, -0.445, -0.741, -0.584, 1.444,
+0.29, 0.01, 0.04, 0.34, 0, -0.04, -0.63),1,21)
+x <- nrm(pars, cat=7, dimensions=2)
+# Plot separated surfaces
+plot(x,separate=TRUE,drape=TRUE)
 }
 
 \keyword{methods}

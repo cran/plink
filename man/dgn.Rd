@@ -1,10 +1,10 @@
 \name{dgn}
 \alias{dgn}
 \docType{data}
-\title{Mixed-Format Item Parameters}
+\title{Unidimensional Mixed-Format Item Parameters}
 \description{
-This dataset includes item parameters for two groups estimated under the
-three parameter logistic model, the generalized partial credit model, and 
+This (unidimensional) dataset includes item parameters for two groups estimated under 
+the three parameter logistic model, the generalized partial credit model, and 
 the nominal response model. There are 15 common items (7 drm, 3 gpcm, 5 nrm).
 This dataset is for illustrative purposes to show how items from diferent
 response models can be mixed together and common items can be in different
@@ -13,12 +13,13 @@ positions across groups.
 
 \usage{dgn}
 \format{
-A list of length four. The first element is a list of length two with item
-parameter estimates for groups 1 and 2 respectively. The second list element
-is a list identifying the number of response categories for the two groups.
-The third element, specifies which items correspond to the different item
-response models for each group respectively. The last element is a matrix
-of common items between the two groups.
+A list of length four.  The first element is a list of length two with item
+parameter estimates for groups 1 and 2 respectively.  The gpcm items do not
+include a location parameter.  The second list element is a list identifying 
+the number of response categories for the two groups.  The third element, 
+specifies which items correspond to the different item response models for each 
+group respectively.  The last element is a matrix of common items between the two 
+groups.
 }
 
 \references{

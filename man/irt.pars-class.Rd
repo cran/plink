@@ -25,20 +25,23 @@ not encouraged.  Use the function \code{link{as.irt.pars}} instead.
       objects identifying the items associated with each IRT model (see class \code{poly.mod} 
       for more information)}
 
-    \item{\code{common}:}{a j x 2 matrix for j common items or list of matrices identifying the 
+    \item{\code{common}:}{a j x 2 matrix for j common items or a list of matrices identifying the 
       common items between pairs of item parameters}
 
     \item{\code{location}:}{logical vector identifying whether a given set of item parameters 
-      includes a location parameter }
+      (i.e., for a given group) includes a location parameter }
 
     \item{\code{groups}:}{the number of groups (i.e. sets of item parameters)}
+
+    \item{\code{dimensions}:}{numeric vector identifying the number of modeled dimensions}
   }
 }
 
 \details{
 Objects of class \code{irt.pars} contain all the information necesary to produce
 expected response probabilities, linking constants (when data for two or more groups are 
-included), and item/category characteristic curves.
+included), and to plot item/category characteristic curves, response surfaces, and vector
+plots.
 }
 
 \section{Extends}{

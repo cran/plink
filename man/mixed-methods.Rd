@@ -15,25 +15,25 @@ items for a given set of theta values when the items are from a mixed-format tes
 }
 
 \usage{
-mixed(x, cat, poly.mod, theta = seq(-4,4,0.05), ...)
+mixed(x, cat, poly.mod, theta, dimensions = 1, ...)
 
 ## S4 method for signature 'numeric', 'numeric'
-mixed(x, cat, poly.mod, theta, ...)
+mixed(x, cat, poly.mod, theta, dimensions, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
-mixed(x, cat, poly.mod, theta, ...)
+mixed(x, cat, poly.mod, theta, dimensions, ...)
 
 ## S4 method for signature 'data.frame', 'numeric'
-mixed(x, cat, poly.mod, theta, ...)
+mixed(x, cat, poly.mod, theta, dimensions, ...)
 
 ## S4 method for signature 'list', 'numeric'
-mixed(x, cat, poly.mod, theta, ...)
+mixed(x, cat, poly.mod, theta, dimensions, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
-mixed(x, cat, poly.mod, theta, ...)
+mixed(x, cat, poly.mod, theta, dimensions, ...)
 
 ## S4 method for signature 'sep.pars', 'ANY'
-mixed(x, cat, poly.mod, theta, ...)
+mixed(x, cat, poly.mod, theta, dimensions, ...)
 }
 
 \arguments{
@@ -47,9 +47,11 @@ mixed(x, cat, poly.mod, theta, ...)
   \item{poly.mod}{object of class \code{\link[=poly.mod-class]{poly.mod}} identifying 
     the items associated with each IRT model}
 
-  \item{theta}{vector of theta values for which probabilities will be computed.  If 
-    \code{theta} is not specified, an equal interval range of values from -4 to 4 is used 
-    with an increment of 0.05 }
+  \item{theta}{vector, matrix, or list of theta values for which probabilities will be computed. 
+  If \code{theta} is not specified, an equal interval range of values from -4 to 4 is used 
+  with an increment of 0.5. See details below for more information. }
+
+  \item{dimensions}{number of modeled dimensions }
 
   \item{...}{further arguments passed to or from other methods }
 }
@@ -57,22 +59,30 @@ mixed(x, cat, poly.mod, theta, ...)
 \details{
 The item parameters supplied to this method can be associated with a single IRT model or
 multiple models.  When the parameters are tied to only one model, the format of \code{x}
-should follow the conventions in \code{\link{drm}} for dichotomous response models (i.e.
-1PL, 2PL, 3PL), \code{\link{gpcm}} for the partial credit model and generalized partial
-credit model, \code{\link{grm}} for the graded response model, \code{\link{mcm}} for the
-multiple-choice model, and \code{\link{nrm}} for the nominal response model.  When the 
-parameters are associated with two or more models, the parameters need to be combined.
-See \code{\link{as.irt.pars}} or \code{\link{sep.pars}} for a complete description of 
-how the parameters from different models can be combined.
+(for either unidimensional or multidimensional models) should follow the conventions in 
+\code{\link{drm}} for dichotomous response models (i.e. 1PL, 2PL, 3PL), \code{\link{gpcm}} 
+for the partial credit model and generalized partial credit model, \code{\link{grm}} for 
+the graded response model, \code{\link{mcm}} for the multiple-choice model, and 
+\code{\link{nrm}} for the nominal response model.  When the parameters are associated with 
+two or more models, the parameters should be combined. See \code{\link{as.irt.pars}} or 
+for more details on how the parameters from different models can be combined.  Additional 
+arguments for the above models can be passed to this method as well.
 
-Additional arguments for the above models can be passed to this method as well.
+\code{theta} can be specified as a vector, matrix, or list.  For the unidimensional case, \code{theta}
+should be a vector. If a matrix or list of values is supplied, they will be converted to a single vector
+of theta values.  For the multidimensional case, if a vector of values is supplied it will be assumed
+that this same set of values should be used for each dimension.  Probabilities will be computed for each
+combination of theta values.  Similarly, if a list is supplied, probabilites will be computed for each
+combination of theta values.  In instances where probabilities are desired for specific combinations of 
+theta values, a j x m matrix should be specified for j ability points and m dimensions where the columns 
+are ordered from dimension 1 to m.
 }
 
 \value{
   Returns an object of class \code{\linkS4class{irt.prob}}
 }
 
-\author{ Jonathan P. Weeks \email{weeksjp@gmail.com}}
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{ 
 \code{\link[=plot.irt.prob]{plot}:} plot item characteristic/category curves\cr
@@ -80,6 +90,7 @@ Additional arguments for the above models can be passed to this method as well.
 }
 
 \examples{
+###### Unidimensional Examples ######
 # Compute probabilites for three dichotomous (3PL) items and two polytomous (gpcm) items
 # without a location parameter
 dichot <- matrix(c(1.2, .8, .9, 2.3, -1.1, -.2, .24, .19, .13),3,3)
@@ -116,8 +127,27 @@ cat <- c(2,2,2,4,5,4,5)
 pm <- as.poly.mod(7, c("drm","gpcm","nrm"), list(1:3,4:5,6:7))
 x <- mixed(pars, cat, pm, location=TRUE)
 plot(x)
-}
 
+###### Multidimensional Example ######
+# Compute response probabilities for four dichotomous items
+# modeled using the M2PL and three polytomous items modeled
+# using the multidimensional graded response model. For the 
+# later items, cumulative probabilities are computed.
+a <- matrix(c(1.66,1.72,.69,.19,.88,1.12,.68,1.21,
+     .873, .226, .516, .380, .613, .286 ),7,2,byrow=TRUE)
+d <- matrix(c(-.38,NA,NA,NA,NA,
+     -.68,NA,NA,NA,NA,
+     -.91,NA,NA,NA,NA,
+     -1.08,NA,NA,NA,NA,
+     2.255, 1.334, -.503, -2.051, -3.082,
+     1.917, 1.074, -.497, -1.521, -2.589,
+     1.624, .994, -.656, -1.978, NA),7,5,byrow=TRUE)
+cat <- c(2,2,2,2,6,6,5)
+pars <- cbind(a,d)
+pm <- as.poly.mod(7,c("drm","grm"),list(1:4,5:7))
+x <- mixed(pars, cat, pm, dimensions=2, catprob=TRUE)
+plot(x)
+}
 
 \keyword{methods}
 \keyword{distribution}

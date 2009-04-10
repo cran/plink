@@ -2,11 +2,11 @@
     require(methods)
     require(lattice)
     require(statmod)
+    require(MASS)
     load(plink)
 }
 
-
-import("methods","statmod","lattice")
+import("methods","statmod","lattice","MASS")
 
 export(
     "combine.pars",
@@ -21,7 +21,8 @@ export(
     "link.pars",
     "link.ability",
     "read.bilog",
-    "read.parscale"
+    "read.parscale",
+    "read.testfact"
 )
 
 exportClasses(

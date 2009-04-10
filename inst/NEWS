@@ -1,13 +1,76 @@
+Changes in version: plink_1.0-0
+
+  This is a major version change. All of the unidimensional item response
+  models and linking methods have been extended to the multidimensional case.
+  Arguments have been added to various functions that are relevant for the 
+  multidimensional extensions.
+
+  Item Response Models:
+
+  o Probabilities can now be computed for the following multidimensional models
+	- M1PL
+	- M2PL 
+	- M3PL 
+	- MD graded response model
+	- MD partial credit model
+    	- MD generalized partial credit model
+	- MD nominal response model
+    	- MD multiple-choice model (this model has not been formally introduced
+    	  in the literature)
+
+  o An argument {dimensions} has been added to all the functions that estimate 
+    response probabilities
+
+  Linking Methods: 
+
+  o The following multidimensional linking methods have been added
+	- Reckase-Martineau
+      - MD Haebara
+      - MD Stocking-Lord
+
+  o For the MD Haebara and MD Stocking-Lord methods there are three dilation options
+      - Oshima-Davey-Lee (estimate all elements of the rotation matrix)
+	- Li-Lissitz (orthogonal rotation with single dilation parameter)
+	- Min (orthogonal rotation with multiple dilation parameters)
+
+  Plots:
+  
+  o Multidimensional surface plots (and conditional surface plots when there 
+  are more than two dimensions) can be created
+
+  o Vector plots for two-dimensional items can be created
+
+  o Argument added for selecting a subset of items 
+
+  Misc:
+
+  o Function read.testfact added for importing item/ability parameters from TESTFACT
+
+  o An argument {method} has been added to the link.con function so the
+    linking constants for specific methods can be extraced
+
+  o The as.weight function has been simplified and adjusted to compute
+    weights for multiple dimensions
+
+  o The display of summary information now has a cleaner look
+
+  o All of the .Rd files have been updated to reflect the above changes
+ 
+==============================
+
 Changes in version: plink_0.1-1
 
-  o Some corrections/additions to the .Rd files.
+  o Data for a set of mixed-format reading tests from a large-scale
+    assessment was added.
+
+  o Some additions to the .Rd files.
 
 ==============================
 
 Changes in version: plink_0.1-0
 
   o Functions read.bilog and read.parscale added for importing
-    item/ability parameters
+    item/ability parameters from BILOG and PARSCALE respectively
 
   o Bug fix in the sep.pars function for loc.out = TRUE
 

@@ -10,25 +10,26 @@
 \title{Multiple-Choice Model Response Probabilities}
 \description{
 This function computes the probability of responding in a specific category for one or more 
-items for a given set of theta values using the multiple-choice model.}
+items for a given set of theta values using the multiple-choice model or multidimensional
+multiple-choice model.}
 
 \usage{
-mcm(x, cat, theta = seq(-4,4,0.05), ...)
+mcm(x, cat, theta, dimensions = 1, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
-mcm(x, cat, theta, ...)
+mcm(x, cat, theta, dimensions, ...)
 
 ## S4 method for signature 'data.frame', 'numeric'
-mcm(x, cat, theta, ...)
+mcm(x, cat, theta, dimensions, ...)
 
 ## S4 method for signature 'list', 'numeric'
-mcm(x, cat, theta, ...)
+mcm(x, cat, theta, dimensions, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
-mcm(x, cat, theta, ...)
+mcm(x, cat, theta, dimensions, ...)
 
 ## S4 method for signature 'sep.pars', 'ANY'
-mcm(x, cat, theta, ...)
+mcm(x, cat, theta, dimensions, ...)
 }
 
 \arguments{
@@ -37,9 +38,11 @@ mcm(x, cat, theta, ...)
   \item{cat}{vector identifying the number of response categories plus one for each item 
   (the additional category is for 'do not know') }
 
-  \item{theta}{vector of theta values for which probabilities will be computed. 
+  \item{theta}{vector, matrix, or list of theta values for which probabilities will be computed. 
   If \code{theta} is not specified, an equal interval range of values from -4 to 4 is used 
-  with an increment of 0.05 }
+  with an increment of 0.5. See details below for more information. }
+
+  \item{dimensions}{number of modeled dimensions }
 
   \item{...}{further arguments passed to or from other methods }
 }
@@ -47,80 +50,76 @@ mcm(x, cat, theta, ...)
 \section{Methods}{
   \describe{
 
-    \item{x = "matrix", cat = "numeric"}{This method allows one to specify an n x k matrix
-      for n items and k equal to three times the maximum number of response categories 
-      (including the 'do not know' category) across items minus one (e.g. if some items 
-      have four response categories and others have five categories, k will equal 14). 
+    \item{x = "matrix", cat = "numeric"}{This method allows one to specify an n x h matrix
+      for n items and h equal to [m x 2k + (k-1)] where m is the number of modeled dimensions
+      and k is equal to the maximum number of response categories (including the 'do not know' 
+      category) across items.  The first (m x k) columns are for category slope parameters,
+      the next block of (m x k) columns are for category difficulty parameters, and the 
+      remaining columns are for the lower asymptote (guessing) parameters.  For any items 
+      with fewer categories than the maximum, the remaining cells in each block of (m x k) 
+      columns or the last k columns should be \code{NA}.  
 
       \describe{
-        \item{Discrimination Parameters:}{The first (k+1)/3 columns are for category discrimination 
-        parameters.  The first column should contain the parameters for the 'do not know' category. 
-        For any items with fewer categories than the maximum, the remaining cells in the (k+1)/3 
-        row should be \code{NA}.}
+        \item{Unidimensional Specification:}{Say we have one item with four actual response
+        categories and one item with five response categories.  There will be 17 columns.  
+        The first six columns are for the category slope parameters.  The first column should 
+        contain the parameters for the 'do not know' category.  Column six for the four category 
+        item should be \code{NA}.  The next six columns (7-12) are for category difficulty 
+        parameters.  The first column of this subset of columns (column 7) should contain the 
+        category difficulties for the 'do not know' category.  Similar to the block of columns 
+        containing the slopes, the last column in this subset of columns (column 12) for the 
+        four category item should be \code{NA}.  The remaining five columns are for the lower
+        asymptote (guessing) parameters.  The last column for the four category item would 
+        be \code{NA}. }
 
-        \item{Category Difficulty Parameters:}{The second set of (k+1)/3 columns are for category 
-        difficulty parameters.  The first column of this subset of columns should contain the 
-        category difficulties for the 'do not know'  category.  Similar to the discrimination 
-        columns, items with fewer response categories than the maximum should have \code{NA}s 
-        in the remaining cells of the (k+1)/3 subset of columns.} 
-
-        \item{Guessing  Probabilities:}{The remaining ((k+1)/3)-1 columns are for the guessing
-        probabilities.  As with the discrimination and category difficulties, the remaining cells 
-        for items with fewer categories than the maximum should be filled with \code{NA}s.}
-      } 
-
-      For example, for one four category and one five category item, the first column includes 
-      the discrimination parameters for the 'do not know' categories.  Columns 2-5 contain the
-      discrimination parameters for the other categories.  The fifth column for the four 
-      response item should be \code{NA}.  The sixth column includes the category difficulties
-      for the 'do not know' category.  Columns 7-10 contain the difficulty parameters for the
-      other categories.  The tenth column for the four response item should be \code{NA}.  The
-      remaining four columns include the guessing  probabilities, although the last column
-      for the four response item should be \code{NA}.}
+        \item{Multidimensional Specification:}{In the multidimensional case, the columns for 
+        the slope and difficulty parameters should be grouped first by dimension and then by 
+        category.  Using the same example for the two items with two dimensions there will be 
+        29 columns.  The first five columns for the four category item would include the slope 
+        parameters associated with the first dimension for the 'do not know' category and each 
+        of the four actual categories respectively.  Columns 11-12 would be \code{NA}.  Columns 
+        13-17 would include the category difficulties associated with the first dimension (again
+        the parameters for the 'do not know' category should be in the first column of this 
+        block of columns) and columns 23-24 would be \code{NA}.  The remaining five columns are 
+        for the lower asymptote (guessing) parameters.  The last column for the four category 
+        item would be \code{NA}. }
+    }}
 
     \item{x = "data.frame", cat = "numeric"}{See the method for x = "matrix" }
 
-    \item{x = "list", cat = "numeric"}{This method is for a list with three elements.  The first 
-      list element is for discimination parametes, the second is for category difficulty
-      parameters, and the third is for alternative response probability parameters.
-      \describe{
-        \item{Discrimination Parameters:}{The first list element should conatain an n x k matrix of 
-        category discrimination values for n items and k equal to the maximum number of response 
-        categories (including the 'do not know' category) across all items.  The first column of this 
-        matrix should include the parameters for the 'do not know' category.  For any items with fewer 
-        categories than the maximum, the remaining cells in the row should be \code{NA}.}
-    
-       \item{Category Difficulty Parameters:}{The second list element is an n x k matrix of category 
-        difficulty parameters.  The first element of this matrix should include the category 
-        difficulties for the 'do not know' category.  Similar to the discrimination list element, 
-        items with fewer response categories than the maximum should have \code{NA}s in the remaining 
-        cells.} 
-
-      \item{Guessing  Probabilities:}{The third list element is an n x (k-1) matrix of guessing 
-        probabilities (i.e. there is no column for the 'do not know' category). As with the 
-        discrimination and category difficulties, the remaining cells for items with fewer categories 
-        than the maximum should be filled with \code{NA}s.}
-      } 
-
-      For example, for one four category and one five category item, the first four columns for 
-      the four response item in the first list element would include the discrimination parameters. 
-      The fifth column for this item would be \code{NA}.  The first four columns for the four 
-      response item in the second list element would include the category difficulty parameters. 
-      The fifth column for this item would be \code{NA}.  The first three columns for the four
-      response item in the third list element would include the guessing probabilities.  The fourth
-      column for this item would be \code{NA}.}
+    \item{x = "list", cat = "numeric"}{This method is for a list with three elements. The 
+	first element is an n x (m x k) matrix of category slope values for n items, m 
+      dimensions, and k equal to the maximum number of response categories across items
+      (including the 'do not know' category).  The second list element is an n x (m x k) 
+      matrix of category difficulty parameters and the last element is an n x (k-1) matrix
+      of lower asymptote (guessing) parameters.  For any list element, for items with fewer 
+      categories than the maximum, the remaining cells in the rows should be \code{NA} (see 
+      the examples for method x = "matrix" for specification details). }
 
     \item{x = "irt.pars", cat = "ANY"}{This method can be used to compute probabilities 
       for the mcm items in an object of class \code{"irt.pars"}.  If \code{x} contains 
       dichotomous items or items associated with another polytomous model, a warning will be 
       displayed stating that probabilities will be computed for the mcm items only.  If \code{x} 
-      contains parameters for multiple groups, a list of \code{"irt.prob"} objects will be returned.}
+      contains parameters for multiple groups, a list of \code{"irt.prob"} objects will be 
+      returned.  The argument \code{dimensions} does not need to be included for this method.}
 
     \item{x = "sep.pars", cat = "ANY"}{This method can be used to compute probabilities 
       for the mcm items in an object of class \code{sep.pars}.  If \code{x} contains 
       dichotomous items or items associated with another polytomous model, a warning will be 
-      displayed stating that probabilities will be computed for the mcm items only.}
+      displayed stating that probabilities will be computed for the mcm items only.  The argument 
+      \code{dimensions} does not need to be included for this method.}
   }
+}
+
+\details{
+\code{theta} can be specified as a vector, matrix, or list.  For the unidimensional case, \code{theta}
+should be a vector. If a matrix or list of values is supplied, they will be converted to a single vector
+of theta values.  For the multidimensional case, if a vector of values is supplied it will be assumed
+that this same set of values should be used for each dimension.  Probabilities will be computed for each
+combination of theta values.  Similarly, if a list is supplied, probabilites will be computed for each
+combination of theta values.  In instances where probabilities are desired for specific combinations of 
+theta values, a j x m matrix should be specified for j ability points and m dimensions where the columns 
+are ordered from dimension 1 to m.
 }
 
 \value{
@@ -128,6 +127,11 @@ mcm(x, cat, theta, ...)
 }
 
 \references{ 
+  Bolt, D. M. & Johnson, T. J. (in press) 
+  Applications of a MIRT model to self-report measures: 
+  Addressing score bias and DIF due to individual differences in response style. 
+  \emph{Applied Psychological Measurement}.
+
   Thissen, D., & Steinberg, L. (1984). 
   A response model for multiple choice items.
   \emph{Psychometrika}, \emph{49}(4), 501-519.
@@ -138,7 +142,12 @@ mcm(x, cat, theta, ...)
   \emph{Handbook of Modern Item Response Theory}. New York: Springer-Verlag
 }
 
-\author{ Jonathan P. Weeks \email{weeksjp@gmail.com}}
+\note{No multidimensional extension of the multiple-choice model has officially been presented in
+the literature; however, this model is consistent with how the 3PL and nominal response model
+were extended to the multidimensional context.
+}
+
+\author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{ 
 \code{\link[=mixed-methods]{mixed}:} compute probabilities for mixed-format items\cr
@@ -147,6 +156,7 @@ mcm(x, cat, theta, ...)
 }
 
 \examples{
+###### Unidimensional Examples ######
 ## Item parameters from Thissen & Steinberg (1984, p. 510)
 ## Items R,S,T,U for the whole test
 a <- matrix(c(-1.7, -1, 1.1, .3, 1.9, -2.1, -.6, 1.2, 2.3, -.8, -1.3, -.9, -.2, 1.9, .5, 
@@ -170,6 +180,17 @@ pars[[3]] <- matrix(c(.2, .4, .2, .2, .2, .2, .4, .2, .2, .4, .2, .2, .2, .2, .2
   4,4,byrow=TRUE)
 x <- mcm(pars, rep(5,4))
 plot(x,item.names=paste("Item",c("W","X","Y","Z")), auto.key=list(space="right"))
+
+
+###### Multidimensional Example ######
+## Discrimination and category parameters from Bolt & Johnson (in press)
+pars <- matrix(c(-1.28, -1.029, -0.537, 0.015, 0.519, 0.969, 1.343,
+1.473, -0.585, -0.561, -0.445, -0.741, -0.584, 1.444,
+0.29, 0.01, 0.04, 0.34, 0, -0.04, -0.63,
+0.01, 0.09, 0.09, 0.28, 0.22, 0.31),1,27)
+x <- mcm(pars, cat=7, dimensions=2)
+# Plot separated surfaces
+plot(x,separate=TRUE,drape=TRUE)
 }
 
 \keyword{methods}

@@ -5,18 +5,18 @@
 \alias{summary.link}
 \title{Summarize Item Parameters/plink Output }
 \description{
-This function summarizes the item parameters for a given object. If the object is
+This function summarizes the item parameters for a given object.  If the object is
 of class \code{"\linkS4class{link}"}, the function prints the linking constants
 }
 
 \usage{
-\method{summary}{irt.pars}(object, descrip = FALSE, ...)
+\method{summary}{irt.pars}(object, ..., descrip = FALSE)
 
-\method{summary}{sep.pars}(object, descrip = FALSE, ...)
+\method{summary}{sep.pars}(object, ..., descrip = FALSE)
 
-\method{summary}{list}(object, descrip = FALSE, ...)
+\method{summary}{list}(object, ..., descrip = FALSE)
 
-\method{summary}{link}(object, descrip = FALSE, ...)
+\method{summary}{link}(object, ..., descrip = FALSE)
 }
 
 \arguments{
@@ -31,7 +31,7 @@ of class \code{"\linkS4class{link}"}, the function prints the linking constants
 
 \details{
 The method for objects of class \code{"irt.pars"} summarizes the parameters for a single 
-group or multiple groups. If multiple groups are included in the object, parameters will 
+group or multiple groups.  If multiple groups are included in the object, parameters will 
 be summarized for each group separately.
 
 The method for objects of class \code{"sep.pars"} summarizes the parameters for a single
@@ -42,7 +42,7 @@ Objects of class \code{"list"} can include any combination of \code{"irt.pars"} 
 
 The method for objects of class \code{"link"} prints the linking constants for n-1 groups.
 If \code{descrip} = \code{TRUE}, the method summarizes the parameters for all groups 
-separately. The labels are specficied in the following manner "group1/group2", meaning
+separately.  The labels are specficied in the following manner "group1/group2", meaning
 the group1 parameters were transformed to the group2 test using the associated constants.
 The base group is indicated by an asterisk.
 }

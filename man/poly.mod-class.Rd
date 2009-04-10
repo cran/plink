@@ -2,7 +2,7 @@
 \docType{class}
 \alias{poly.mod-class}
 \title{Class "poly.mod"}
-\description{The formal S4 class for poly.mod. This class characterizes the models and 
+\description{The formal S4 class for poly.mod.  This class characterizes the models and 
 associated items for a set of item parameters.}
 
 \section{Objects from the Class}{
@@ -13,8 +13,8 @@ not encouraged. Use the function \code{link{as.poly.mod}} instead.
 \section{Slots}{
   \describe{
     \item{\code{model}:}{character vector identifying all the models associated with the 
-	corresponding set of item parameters. The only acceptable models are 
-	\code{drm, gpcm, grm, mcm, and nrm}. See below for more details.}
+	corresponding set of item parameters.  The only acceptable models are 
+	\code{drm, gpcm, grm, mcm, and nrm}.  See below for more details.}
 
     \item{\code{items}:}{list with the same length as \code{model}, where each element 
 	identifies the items(rows) in the corresponding set of item parameters associated 
@@ -33,7 +33,6 @@ not encouraged. Use the function \code{link{as.poly.mod}} instead.
     \item{\code{nrm}:}{nominal response model}
   }
 }
-
 
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
