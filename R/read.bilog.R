@@ -495,14 +495,15 @@ read.icl <- function(file, poly.mod, ability=FALSE,  loc.out=FALSE, as.irt.pars=
 		id <- 1
 		repeat{
 			if (pars[id,1]==id) {
+				if (id==nrow(pars)) break
 				id <- id+1
 			} else {
 				tmp <- pars[id,!is.na(pars[id,])]
 				tmp1 <- length(pars[id-1,!is.na(pars[id-1,])])
 				pars[id-1,(tmp1+1):(tmp1+length(tmp))] <- tmp
 				pars <- pars[-id,]
+				if ((id-1)==nrow(pars)) break
 			}
-			if (id==nrow(pars)) break
 		}
 		pars <- pars[,apply(is.na(pars),2,sum)<nrow(pars)]
 		pars <- pars[,-1]
@@ -563,7 +564,12 @@ read.bmirt <- function(file, ability=FALSE, loc.out=FALSE, pars.only=TRUE, as.ir
 		}
 		pars <- sep.pars(pars, cat=cat, poly.mod=pm, dimensions=dimensions, loc.out=loc.out)
 		# Reformat the difficulty/step parameters to coincide with the traditional formulation of multidimensional models
-		pars@b <- pars@b*-1
+		if (dimensions==1) {
+			pars@a[cat==2] <- pars@a[cat==2]/1.7
+			pars@b[cat==2] <- pars@b[cat==2]/pars@a[cat==2]
+		} else if (dimensions>1) {
+			pars@b[cat>2,] <- pars@b[cat>2,]*-1
+		}
 		pars <- as.irt.pars(pars)
 		if (as.irt.pars==FALSE) {
 			pars <- pars@pars
@@ -573,10 +579,10 @@ read.bmirt <- function(file, ability=FALSE, loc.out=FALSE, pars.only=TRUE, as.ir
 		tmp <- apply(is.na(pars),2,sum)
 		pars <- pars[,tmp!=nrow(pars)]
 		pars <- pars[,-1]
-		nms <- paste("theta",rep(1:dimensions,each=2),sep="")
-		nms[seq(2,2*dimensions,2)] <- paste(nms[seq(2,2*dimensions,2)],"se",sep=".")
+		dimensions <- ncol(pars)/2
+		nms <- c(paste("theta",rep(1:dimensions),sep=""), paste("theta",rep(1:dimensions),".se",sep=""))
 		colnames(pars) <- nms
-		if (pars.only==TRUE) pars <- pars[,seq(1,2*dimensions,2)]
+		if (pars.only==TRUE) pars <- pars[,1:dimensions]
 	}
 	return(pars)
 }

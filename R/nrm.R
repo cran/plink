@@ -65,7 +65,7 @@ setMethod("nrm", signature(x="sep.pars"), function(x, cat, theta, dimensions, ..
 		theta <- as.matrix(theta)
 		colnames(theta) <- "theta1"
 	}else if (dimensions>1) {
-		if (is.numeric(theta)) {
+		if (is.vector(theta)) {
 			tmp <- vector("list", dimensions)
 			for (i in 1:dimensions) {
 				tmp[[i]] <- theta

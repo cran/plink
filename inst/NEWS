@@ -1,3 +1,12 @@
+Changes in version: plink_1.1-1
+
+  o Bug fix for the functions read.icl and read.bmirt
+
+  o Bug fix for the matrix formulation of theta for multidimensional models
+    for drm, grm, gpcm, nrm, mcm, and mixed
+
+==============================
+
 Changes in version: plink_1.1-0
 
   o Functions read.multilog, read.icl, read.bmirt, and read.ltm added for 
