@@ -2,16 +2,16 @@
 \alias{combine.pars}
 \title{Combine Item Parameters for Multiple Groups}
 \description{
-This function combines objects of class \code{"\linkS4class{irt.pars}"} and/or 
-\code{"\link{sep.pars}"} into a single \code{"irt.pars"} object}
+This function combines objects of class \code{\linkS4class{irt.pars}} and/or 
+\code{\link{sep.pars}} into a single \code{irt.pars} object}
 
 \usage{
 combine.pars(x, common, grp.names)
 }
 
 \arguments{
-  \item{x}{an ordered list containing two or more \code{"irt.pars"} objects, two or more 
-      \code{"sep.pars"} objects, or a combination of \code{"irt.pars"} and \code{"sep.pars"} 
+  \item{x}{an ordered list containing two or more \code{irt.pars} objects, two or more 
+      \code{sep.pars} objects, or a combination of \code{irt.pars} and \code{sep.pars} 
       objects.}
 
   \item{common}{an n x 2 matrix or list of matrices identifying the common items between 
@@ -21,14 +21,14 @@ combine.pars(x, common, grp.names)
  }
 
 \details{
-Although many of the methods in this package allow for lists containing \code{"irt.pars"} 
-and \code{"sep.pars"} objects, it may be helpful to combine the item parameters for multiple 
-groups into a single object.  \code{x} can include a combination of \code{"irt.pars"} and 
-\code{"sep.pars"} objects.  The \code{"irt.pars"} objects can contain information for a 
+Although many of the methods in this package allow for lists containing \code{irt.pars} 
+and \code{sep.pars} objects, it may be helpful to combine the item parameters for multiple 
+groups into a single object.  \code{x} can include a combination of \code{irt.pars} and 
+\code{sep.pars} objects.  The \code{irt.pars} objects can contain information for a 
 single group or multiple groups.  The list elements in \code{x} should be ordered such that 
-adjacent elements correspond to adjacent groups.  If an \code{"irt.pars"} object is included 
+adjacent elements correspond to adjacent groups.  If an \code{irt.pars} object is included 
 with multiple groups, the list element following this object should contain information for a 
-group that is adjacent to the last group in the \code{"irt.pars"} object.
+group that is adjacent to the last group in the \code{irt.pars} object.
 
 If \code{x} contains only two elements, \code{common} should be a matrix.  If \code{x} contains
 more than two elements, \code{common} should be a list.  In any of the \code{common} matrices
@@ -38,8 +38,8 @@ items from the next list element in \code{x}. For example, if \code{x} contains 
 elements, a single set of common items links them together.  If item 4 in group one (row 4 in 
 slot \code{pars}) is the same as item 6 in group two, the first row of \code{common} would be \code{"4,6"}.
 
-If an \code{"irt.pars"} object is included with multiple groups, \code{common} should correspond
-to the set of common items between the last group in the \code{"irt.pars"} object and the
+If an \code{irt.pars} object is included with multiple groups, \code{common} should correspond
+to the set of common items between the last group in the \code{irt.pars} object and the
 group in the adjacent element in \code{x}.
 }
 

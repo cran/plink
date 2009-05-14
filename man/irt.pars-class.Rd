@@ -10,7 +10,7 @@ included.}
 
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("irt.pars", ...)}, but this is 
-not encouraged.  Use the function \code{link{as.irt.pars}} instead. 
+not encouraged.  Use the function \code{\link{as.irt.pars}} instead. 
 }
 \section{Slots}{
   \describe{
@@ -21,9 +21,9 @@ not encouraged.  Use the function \code{link{as.irt.pars}} instead.
       of response categories for each item for a single group or a list of response category 
       vectors for two or more groups}
 
-    \item{\code{poly.mod}:}{a \code{poly.mod} object for one group or a list of \code{poly.mod} 
-      objects identifying the items associated with each IRT model (see class \code{poly.mod} 
-      for more information)}
+    \item{\code{poly.mod}:}{a \code{\linkS4class{poly.mod}} object for one group or a list of 
+      \code{poly.mod} objects identifying the items associated with each IRT model (see class 
+      \code{\linkS4class{poly.mod}} for more information)}
 
     \item{\code{common}:}{a j x 2 matrix for j common items or a list of matrices identifying the 
       common items between pairs of item parameters}
@@ -45,8 +45,8 @@ plots.
 }
 
 \section{Extends}{
-Class \code{"\linkS4class{poly.mod}"}, directly.
-Class \code{"\linkS4class{list.poly}"}, by class "poly.mod", distance 2.
+Class \code{\linkS4class{poly.mod}}, directly.
+Class \code{\linkS4class{list.poly}}, by class \code{poly.mod}, distance 2.
 }
 
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }

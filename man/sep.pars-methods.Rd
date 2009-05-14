@@ -15,7 +15,8 @@ parameters, and lower asymptote/category probability parameters.
 }
 
 \usage{
-sep.pars(x, cat, poly.mod, dimensions = 1, location = FALSE, loc.out = FALSE, ...)
+sep.pars(x, cat, poly.mod, dimensions = 1, location = FALSE, 
+  loc.out = FALSE, ...)
 
 ## S4 method for signature 'numeric'
 sep.pars(x, cat, poly.mod, dimensions, location, loc.out, ...)
@@ -73,10 +74,12 @@ sep.pars(x, cat, poly.mod, dimensions, location, loc.out, ...)
 x <- sep.pars(c(-1,0,1))
 
 
-# Create object for three dichotomous (3PL) items and two polytomous (gpcm) items
-# without a location parameter (the parameters are formatted as a matrix)
+# Create object for three dichotomous (3PL) items and two polytomous 
+# (gpcm) items without a location parameter (the parameters are 
+# formatted as a matrix)
 dichot <- matrix(c(1.2, .8, .9, 2.3, -1.1, -.2, .24, .19, .13),3,3)
-poly <- matrix(c(.64, -1.8, -.73, .45, NA, .88, .06, 1.4, 1.9, 2.6),2,5,byrow=TRUE)
+poly <- matrix(c(.64, -1.8, -.73, .45, NA, .88, .06, 1.4, 1.9, 2.6),
+  2,5,byrow=TRUE)
 pars <- rbind(cbind(dichot,matrix(NA,3,2)),poly)
 cat <- c(2,2,2,4,5)
 pm <- as.poly.mod(5, c("drm","gpcm"), list(1:3,4:5))
@@ -84,8 +87,9 @@ x <- sep.pars(pars, cat, pm)
 summary(x)
 
 
-# Create object for three dichotomous (3PL) items and two polytomous (gpcm) items
-# without a location parameter (the parameters are included in a list)
+# Create object for three dichotomous (3PL) items and two polytomous 
+# (gpcm) items without a location parameter (the parameters are 
+# included in a list)
 a <- c(1.2, .8, .9, .64, .88)
 b <- matrix(c(
   2.3, rep(NA,3),
@@ -101,9 +105,9 @@ x <- sep.pars(pars, cat, pm)
 summary(x)
 
 
-# Create object for three dichotomous (3PL) items, four polytomous items,
-# two gpcm items and two nrm items. Include a location parameter for the 
-# gpcm items. Maintain the location parameter in the output.
+# Create object for three dichotomous (3PL) items, four polytomous 
+# items, two gpcm items and two nrm items. Include a location parameter 
+# for the gpcm items. Maintain the location parameter in the output.
 a <- matrix(c(
   1.2, rep(NA,4),
   .8, rep(NA,4),
@@ -137,12 +141,13 @@ summary(out, descrip=TRUE)
 
 
 ###### Multidimensional Examples ######
-# Create object for three dichotomous (M1PL) items for two dimensions with 
-# parameters related to item difficulties of -1, 0, 1
+# Create object for three dichotomous (M1PL) items for two dimensions 
+# with parameters related to item difficulties of -1, 0, 1
 x <- sep.pars(c(-1,0,1), dimensions=2)
 
-# Create object for three dichotomous (M3PL) items and two polytomous (MGPCM) items
-# without a location parameter for four dimensions (the parameters are included in a list)
+# Create object for three dichotomous (M3PL) items and two polytomous 
+# (MGPCM) items without a location parameter for four dimensions 
+# (the parameters are included in a list)
 a <- matrix(c(0.5038, 2.1910, 1.1317, 0.2493,
   2.9831, 0.4811, 0.3566, 0.4306,
   0.2397, 0.2663, 1.5588, 0.5295,

@@ -8,7 +8,8 @@ under the specified IRT models.  The class also includes characteristics of the 
 
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("irt.prob", ...)}, but this is
-not encouraged.  Use one of the functions \code{drm, gpcm, grm, mcm, nrm, or mixed} instead.
+not encouraged.  Use one of the functions \code{drm}, \code{gpcm}, \code{grm}, \code{mcm}, 
+\code{nrm}, or \code{mixed} instead.
 }
 
 \section{Slots}{
@@ -26,8 +27,8 @@ not encouraged.  Use one of the functions \code{drm, gpcm, grm, mcm, nrm, or mix
       \item{\code{pars}:}{list of the item parameters used to compute the probabilities}
 
       \item{\code{model}:}{character vector identifying all the models used to compute the 
-        probabilities in \code{prob}.  The only acceptable models are 
-        \code{drm, gpcm, grm, mcm, and nrm} (see class \code{\linkS4class{poly.mod}} for more 
+        probabilities in \code{prob}.  The only acceptable models are \code{drm}, \code{gpcm}, 
+        \code{grm}, \code{mcm}, and \code{nrm} (see class \code{\linkS4class{poly.mod}} for more 
         information).}
 
       \item{\code{items}:}{list with the same length as \code{model}, where each element 
@@ -36,8 +37,8 @@ not encouraged.  Use one of the functions \code{drm, gpcm, grm, mcm, nrm, or mix
 }
 
 \section{Extends}{
-Class \code{"\linkS4class{poly.mod}"}, directly.\cr
-Class \code{"\linkS4class{list.poly}"}, by class "poly.mod", distance 2.
+Class \code{\linkS4class{poly.mod}}, directly.\cr
+Class \code{\linkS4class{list.poly}}, by class \code{poly.mod}, distance 2.
 }
 
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }

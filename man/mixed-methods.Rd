@@ -91,10 +91,11 @@ are ordered from dimension 1 to m.
 
 \examples{
 ###### Unidimensional Examples ######
-# Compute probabilites for three dichotomous (3PL) items and two polytomous (gpcm) items
-# without a location parameter
+# Compute probabilites for three dichotomous (3PL) items and two 
+# polytomous (gpcm) items without a location parameter
 dichot <- matrix(c(1.2, .8, .9, 2.3, -1.1, -.2, .24, .19, .13),3,3)
-poly <- matrix(c(.64, -1.8, -.73, .45, NA, .88, .06, 1.4, 1.9, 2.6),2,5,byrow=TRUE)
+poly <- matrix(c(.64, -1.8, -.73, .45, NA, .88, .06, 1.4, 1.9, 2.6),
+  2,5,byrow=TRUE)
 pars <- rbind(cbind(dichot,matrix(NA,3,2)),poly)
 cat <- c(2,2,2,4,5)
 pm <- as.poly.mod(5, c("drm","gpcm"), list(1:3,4:5))
@@ -102,9 +103,9 @@ x <- mixed(pars, cat, pm)
 plot(x)
 
 
-# Compute probabilities for three dichotomous (3PL) items, four polytomous items,
-# two gpcm items and two nrm items. Include a location parameter for the 
-# gpcm items
+# Compute probabilities for three dichotomous (3PL) items, four 
+# polytomous items, two gpcm items and two nrm items. Include a 
+# location parameter for the gpcm items
 a <- matrix(c(
   1.2, rep(NA,4),
   .8, rep(NA,4),

@@ -14,28 +14,36 @@ This function attempts to turn the given values into an \code{\linkS4class{irt.p
 that is used primarily with the \code{\link[=plink-methods]{plink}} function. 
 }
 \usage{
-as.irt.pars(x, common, cat, poly.mod, dimensions = 1, location = FALSE, grp.names, ...)
+as.irt.pars(x, common, cat, poly.mod, dimensions = 1, 
+  location = FALSE, grp.names, ...)
 
 ## S4 method for signature 'numeric', 'missing'
-as.irt.pars(x, common, cat, poly.mod, dimensions, location, grp.names, ...)
+as.irt.pars(x, common, cat, poly.mod, dimensions, location, 
+  grp.names, ...)
 
 ## S4 method for signature 'matrix', 'missing'
-as.irt.pars(x, common, cat, poly.mod, dimensions, location, grp.names, ...)
+as.irt.pars(x, common, cat, poly.mod, dimensions, location, 
+  grp.names, ...)
 
 ## S4 method for signature 'data.frame', 'missing'
-as.irt.pars(x, common, cat, poly.mod, dimensions, location, grp.names, ...)
+as.irt.pars(x, common, cat, poly.mod, dimensions, location, 
+  grp.names, ...)
 
 ## S4 method for signature 'list', 'missing'
-as.irt.pars(x, common, cat, poly.mod, dimensions, location, grp.names, ...)
+as.irt.pars(x, common, cat, poly.mod, dimensions, location, 
+  grp.names, ...)
 
 ## S4 method for signature 'sep.pars', 'missing'
-as.irt.pars(x, common, cat, poly.mod, dimensions, location, grp.names, ...)
+as.irt.pars(x, common, cat, poly.mod, dimensions, location, 
+  grp.names, ...)
 
 ## S4 method for signature 'list', 'matrix'
-as.irt.pars(x, common, cat, poly.mod, dimensions, location, grp.names, ...)
+as.irt.pars(x, common, cat, poly.mod, dimensions, location, 
+  grp.names, ...)
 
 ## S4 method for signature 'list', 'list'
-as.irt.pars(x, common, cat, poly.mod, dimensions, location, grp.names, ...)
+as.irt.pars(x, common, cat, poly.mod, dimensions, location, 
+  grp.names, ...)
 }
 
 \arguments{
@@ -96,7 +104,7 @@ as.irt.pars(x, common, cat, poly.mod, dimensions, location, grp.names, ...)
 
 \item{x = "list", common = "missing"}{This method can include a list with one, two, or three 
   elements.  In general, these elements correspond to discrimination/slope parameters, 
-  difficulty/threshold/step/category parameters, and lower asymptote (guessing) parameters, although 
+  difficulty/threshold/ step/category parameters, and lower asymptote (guessing) parameters, although 
   this may not be the case depending on the supplied parameters.  If a combination of models are used, 
   the number of list elements should correspond with the maximum number of elements across models.  
   For example, if the 3PL model (3 list elements) and nominal response model (2 list elements) are 
@@ -166,14 +174,17 @@ Returns an object of class \code{\linkS4class{irt.pars}}
 \code{\linkS4class{sep.pars}} }
 
 \examples{
-# Create object for three dichotomous (1PL) items with difficulties -1, 0, 1
+# Create object for three dichotomous (1PL) items with difficulties 
+# equal to -1, 0, 1
 x <- as.irt.pars(c(-1,0,1))
 
 
-# Create object for three dichotomous (3PL) items and two polytomous (gpcm) items
-# without a location parameter (use signature matrix, missing)
+# Create object for three dichotomous (3PL) items and two polytomous 
+# (gpcm) items without a location parameter 
+# (use signature matrix, missing)
 dichot <- matrix(c(1.2, .8, .9, 2.3, -1.1, -.2, .24, .19, .13),3,3)
-poly <- matrix(c(.64, -1.8, -.73, .45, NA, .88, .06, 1.4, 1.9, 2.6),2,5,byrow=TRUE)
+poly <- matrix(c(.64, -1.8, -.73, .45, NA, .88, .06, 1.4, 1.9, 2.6),
+  2,5,byrow=TRUE)
 pars <- rbind(cbind(dichot,matrix(NA,3,2)),poly)
 cat <- c(2,2,2,4,5)
 pm <- as.poly.mod(5, c("drm","gpcm"), list(1:3,4:5))
@@ -181,8 +192,9 @@ x <- as.irt.pars(pars, cat=cat, poly.mod=pm)
 summary(x)
 
 
-# Create object for three dichotomous (3PL) items and two polytomous (gpcm) items
-# without a location parameter (use signature list, missing)
+# Create object for three dichotomous (3PL) items and two polytomous 
+# (gpcm) items without a location parameter 
+# (use signature list, missing)
 a <- c(1.2, .8, .9, .64, .88)
 b <- matrix(c(
   2.3, rep(NA,3),
@@ -243,7 +255,8 @@ pm4 <- as.poly.mod(40)
 pm5 <- as.poly.mod(41)
 pm6 <- as.poly.mod(43)
 pm <- list(pm1, pm2, pm3, pm4, pm5, pm6)
-x <- as.irt.pars(pars, common, cat, pm, grp.names=paste("grade",3:8,sep=""))
+x <- as.irt.pars(pars, common, cat, pm, 
+  grp.names=paste("grade",3:8,sep=""))
 
 # Create an object with two groups using mixed-format items and 
 # a mixed placement of common items. This example uses the dgn dataset.

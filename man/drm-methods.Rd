@@ -17,7 +17,8 @@ number of dimensions.
 }
 
 \usage{
-drm(x, theta, dimensions = 1, D = 1.7, incorrect = FALSE, print.mod = FALSE, ...)
+drm(x, theta, dimensions = 1, D = 1.7, incorrect = FALSE, 
+  print.mod = FALSE, ...)
 
 ## S4 method for signature 'numeric'
 drm(x, theta, dimensions, D, incorrect, print.mod, ...)
@@ -199,8 +200,8 @@ all column labels will end with .1
 x <- drm(1) 
 plot(x)
 
-# Three items with a difficulties at -2.2, -1.7, and 0.54 logits respectively
-# Assume a constant discrimination of 1 for each item
+# Three items with a difficulties at -2.2, -1.7, and 0.54 logits 
+# respectively. Assume a constant discrimination of 1 for each item
 b <- c(-2.2,-.7,1.54)
 x <- drm(b) 
 plot(x)
@@ -255,8 +256,8 @@ plot(x,combine=6,item.names="Items 1-6",auto.key=list(space="right"))
 x <- drm(1, dimensions=2) 
 plot(x)
 
-# Three items with a difficulties at -2.2, -1.7, and 0.54 logits respectively
-# Assume a constant discrimination of 1 for each item
+# Three items with a difficulties at -2.2, -1.7, and 0.54 logits 
+# respectively. Assume a constant discrimination of 1 for each item
 d <- c(-2.2,-.7,1.54)
 x <- drm(d, dimensions=2) 
 plot(x, drape=TRUE)

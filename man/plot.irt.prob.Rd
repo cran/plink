@@ -10,7 +10,8 @@ multidimensional items.
 }
 
 \usage{
-\method{plot}{irt.prob}(x, y, ..., type, separate, combine, items, item.names, item.nums, panels)
+\method{plot}{irt.prob}(x, y, ..., type, separate, combine, items, item.names, 
+  item.nums, panels)
 
 \method{plot}{sep.pars}(x, y, ..., type)
 
@@ -85,10 +86,11 @@ that the multipage plot be sent to an external graphics file.}
 
 \examples{
 ###### Unidimensional Examples ######
-# Compute probabilites for three dichotomous (3PL) items and two polytomous (gpcm) items
-# then plot the item characteristic/category curves
+# Compute probabilites for three dichotomous (3PL) items and two polytomous
+# (gpcm) items then plot the item characteristic/category curves
 dichot <- matrix(c(1.2, .8, .9, 2.3, -1.1, -.2, .24, .19, .13),3,3)
-poly <- matrix(c(.64, -1.8, -.73, .45, NA, .88, .06, 1.4, 1.9, 2.6),2,5,byrow=TRUE)
+poly <- matrix(c(.64, -1.8, -.73, .45, NA, .88, .06, 1.4, 1.9, 2.6),
+  2,5,byrow=TRUE)
 pars <- rbind(cbind(dichot,matrix(NA,3,2)),poly)
 cat <- c(2,2,2,4,5)
 pm <- as.poly.mod(5, c("drm","gpcm"), list(1:3,4:5))
@@ -134,9 +136,9 @@ plot(x, type="vectorplot3",xlim=c(-1.5,1.5),ylim=c(-1.5,1.5))
 
 
 # Compute response probabilities for a single three-category item using 
-# the multidimensional generalized partial credit model for three dimensions.
-# Plot the conditional item category surfaces in a single panel and then
-# the separated item category surfaces in separate panels
+# the multidimensional generalized partial credit model for three 
+# dimensions. Plot the conditional item category surfaces in a single 
+# panel and then the separated item category surfaces in separate panels
 pars <- matrix(c(1.1999,0.5997,0.8087,2.1730,-1.4576),1,5)
 x <- gpcm(pars,3,dimensions=3,theta=-4:4)
 

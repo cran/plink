@@ -42,7 +42,8 @@ not encouraged. Use the function \code{\link{sep.pars}} instead.
 
     \item{\code{model}:}{character vector identifying all the models associated with the 
 	corresponding set of item parameters. The only acceptable models are 
-	\code{drm, gpcm, grm, mcm, and nrm} (see class \code{"poly.mod"} for more information).}
+	\code{drm}, \code{gpcm}, \code{grm}, \code{mcm}, and \code{nrm} (see class \code{poly.mod} 
+      for more information).}
 
     \item{\code{items}:}{list with the same length as \code{model}, where each element identifies
 	 the items(rows) in the corresponding set of item parameters associated with the model(s) 
@@ -70,8 +71,8 @@ for the dictomous response models, are listed in the first column with all other
 }
 
 \section{Extends}{
-Class \code{"\linkS4class{poly.mod}"}, directly.\cr
-Class \code{"\linkS4class{list.poly}"}, by class "poly.mod", distance 2.
+Class \code{\linkS4class{poly.mod}}, directly.\cr
+Class \code{\linkS4class{list.poly}}, by class \code{poly.mod}, distance 2.
 }
 
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }

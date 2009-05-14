@@ -11,15 +11,15 @@
 
 \details{
   \describe{
-    \item{list.poly:}{combines class \code{"list"} and class \code{"\linkS4class{poly.mod}"} }
+    \item{list.poly:}{combines class \code{list} and class \code{\linkS4class{poly.mod}} }
 
-    \item{list.dat:}{combines class \code{"list"} and class \code{"data.frame"} }
+    \item{list.dat:}{combines class \code{list} and class \code{data.frame} }
 
-    \item{list.mat:}{combines class \code{"list"} and class \code{"matrix"} }
+    \item{list.mat:}{combines class \code{list} and class \code{matrix} }
 
-    \item{list.num:}{combines class \code{"list"} and class \code{"numeric"} }
+    \item{list.num:}{combines class \code{list} and class \code{numeric} }
 
-    \item{num.null:}{combines class \code{"numeric"} and class \code{"NULL"} }
+    \item{num.null:}{combines class \code{numeric} and class \code{NULL} }
   }
 }
 

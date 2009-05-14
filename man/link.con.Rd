@@ -4,8 +4,8 @@
 \alias{link.ability}
 \title{Extract Linking Information}
 \description{
-These functions extract information from an object of class "\code{link}", typically
-created using \code{\link[=plink-methods]{plink}}. }
+These functions extract information from an object of class \code{\linkS4class{irt.pars}},
+typically created using \code{\link[=plink-methods]{plink}}. }
 
 \usage{
 link.con(x, method = "ALL")

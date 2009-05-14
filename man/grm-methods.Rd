@@ -16,7 +16,8 @@ response model.
 }
 
 \usage{
-grm(x, cat, theta, dimensions = 1, catprob = FALSE, D = 1.7, location = FALSE, ...)
+grm(x, cat, theta, dimensions = 1, catprob = FALSE, D = 1.7, 
+  location = FALSE, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
 grm(x, cat, theta, dimensions, catprob, D, location, ...)
@@ -163,7 +164,8 @@ are ordered from dimension 1 to m.
 ## Item parameters from Embretson & Reise (2000, p. 101) items 9-11
 # Includes a location parameter
 a <- c(2.09,1.18,1.69)
-b <- matrix(c(-1.07,-1.03,.39,.86,1.78,1.85,-.87,-.39,.31,NA,-1.4,-.42,NA,NA,-1.74),3,5) 
+b <- matrix(c(-1.07,-1.03,.39,.86,1.78,1.85,-.87,-.39,.31,NA,
+  -1.4,-.42,NA,NA,-1.74),3,5) 
 pars <- cbind(a,b)
 rownames(pars) <- paste("Item",9:11,sep=" ")
 colnames(pars) <- c("a","b",paste("c",1:4,sep=""))

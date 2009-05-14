@@ -51,9 +51,9 @@ Returns an object of class \code{\linkS4class{poly.mod}}
 # Ten dichotomous items
 as.poly.mod(10)
 
-# The first ten items in the set of associated (not present here) item parameters
-# are dichotomous and the last five were estimated using the generalized
-# partial credit model
+# The first ten items in the set of associated (not present here) item 
+# parameters are dichotomous and the last five were estimated using the 
+# generalized partial credit model
 as.poly.mod(15, c("drm", "gpcm"), list(1:10,11:15) )
 
 # Ten multidimensional graded response model items

@@ -19,25 +19,25 @@ optimization and chain-linked rescaling of item and ability parameters.
 }
 
 \usage{
-plink(x, common, rescale, ability, method, weights, startvals, score = 1, 
-      base.grp = 1, symmetric = TRUE, grp.names = NULL, mn.exclude = FALSE, 
-      dilation = "ODL", dim.order = NULL, ...)
+plink(x, common, rescale, ability, method, weights, startvals, 
+  score = 1, base.grp = 1, symmetric = TRUE, grp.names = NULL, 
+  mn.exclude = FALSE, dilation = "ODL", dim.order = NULL, ...)
 
 ## S4 method for signature 'list', 'matrix'
-plink(x, common, rescale, ability, method, weights, startvals, score, 
-	base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
+plink(x, common, rescale, ability, method, weights, startvals, score,
+  base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
 
 ## S4 method for signature 'list', 'data.frame'
-plink(x, common, rescale, ability, method, weights, startvals, score, 
-	base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
+plink(x, common, rescale, ability, method, weights, startvals, score,
+  base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
 
 ## S4 method for signature 'list', 'list'
 plink(x, common, rescale, ability, method, weights, startvals, score,
-	base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
+  base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
 plink(x, common, rescale, ability, method, weights, startvals, score,
-	base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
+  base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
 }
 
 \arguments{
@@ -86,8 +86,8 @@ plink(x, common, rescale, ability, method, weights, startvals, score,
     multiple-choice model parameters when estimating the unidimensional linking constants}
 
   \item{dilation}{character value identifying whether the Oshima, Davey, & Lee (2000)
-    approach \code{ODL}, the Li and Lissitz (2000) approach \code{LL}, or the Min (2003)
-    approach \code{MIN} should be used to estimate the linking constants for the 
+    approach \code{"ODL"}, the Li and Lissitz (2000) approach \code{"LL"}, or the Min (2003)
+    approach \code{"MIN"} should be used to estimate the linking constants for the 
     multidimensional Haebara and Stocking-Lord methods.}
 
   \item{dim.order}{matrix for identifying the ordering of factors across groups.  See 
@@ -104,7 +104,7 @@ list elements in \code{x}.  The second column in \code{common} identifies the co
 set of common items from the next list element in \code{x}. For example, if \code{x} 
 contains only two list elements, a single set of common items links them together.  If 
 item 4 in group one (row 4 in slot \code{pars}) is the same as item 6 in group two, the 
-first row of \code{common} would be \code{"4,6"}.
+first row of \code{common} would be \code{(4,6)}.
 
 \code{weights} can be a list or a list of lists.  The purpose of this object is to specify
 the theta values to integrate over in the characteristic curve methods as well as any 
@@ -241,14 +241,15 @@ pm4 <- as.poly.mod(40)
 pm5 <- as.poly.mod(41)
 pm6 <- as.poly.mod(43)
 pm <- list(pm1, pm2, pm3, pm4, pm5, pm6)
-x <- as.irt.pars(pars, common, cat, pm, grp.names=paste("grade",3:8,sep=""))
+x <- as.irt.pars(pars, common, cat, pm, 
+  grp.names=paste("grade",3:8,sep=""))
 out <- plink(x)
 summary(out)
 constants <- link.con(out) # Extract linking constants
 
 # Create an irt.pars object and a sep.pars object for two groups of
-# nominal response model items. Compare symmetric and non-symmetric minimization
-# Note: This example may take a minute or two to run
+# nominal response model items. Compare symmetric and non-symmetric 
+# minimization. Note: This example may take a minute or two to run
 pm <- as.poly.mod(60, "nrm", 1:60)
 pars1 <- as.irt.pars(act.nrm$yr97, cat=rep(5,60), poly.mod=pm)
 pars2 <- sep.pars(act.nrm$yr98, cat=rep(5,60), poly.mod=pm)
@@ -279,7 +280,7 @@ pm1 <- as.poly.mod(55,c("drm","gpcm","nrm"),dgn$items$group1)
 pm2 <- as.poly.mod(55,c("drm","gpcm","nrm"),dgn$items$group2)
 x <- as.irt.pars(dgn$pars,dgn$common,dgn$cat,list(pm1,pm2))
 out <- plink(x) # Run with NRM items included in the calibration
-out1 <- plink(x,mn.exclude=TRUE) # Run with NRM items excluded from the calibration
+out1 <- plink(x,mn.exclude=TRUE) # Run with NRM items excluded
 summary(out)
 summary(out1)
 
@@ -302,10 +303,11 @@ summary(out)
 ###### Multidimensional Examples ######
 # Reckase Chapter 9
 pm <- as.poly.mod(80, "drm", list(1:80))
-x <- as.irt.pars(reckase9$pars, reckase9$common, list(rep(2,80),rep(2,80)), 
-list(pm,pm), dimensions=2)
-# Compute constants using Reckase & Martineau (2004) and Oshima, Davey, & Lee (2000)
-# Rescale the item parameters using the RM method
+x <- as.irt.pars(reckase9$pars, reckase9$common, 
+  list(rep(2,80),rep(2,80)), list(pm,pm), dimensions=2)
+# Compute constants using Reckase & Martineau (2004) and 
+# Oshima, Davey, & Lee (2000). Rescale the item parameters 
+# using the RM method
 out <- plink(x, rescale="RM")
 summary(out, descrip=TRUE)
 # Extract the rescaled item parameters
@@ -327,11 +329,14 @@ summary(out, descrip=TRUE)
 
 
 
-# Compute linking constants for two groups using mixed-format items modeled with
-# the M3PL and MGPCM. Only compute constants using the Reckase-Martineau (RM) method.
-pm <- as.poly.mod(60,c("drm","gpcm"), list(c(1:60)[md.mixed$cat==2],c(1:60)[md.mixed$cat>2]))
-x <- as.irt.pars(md.mixed$pars, matrix(1:60,60,2), list(md.mixed$cat, md.mixed$cat), 
-list(pm, pm), dimensions=4, grp.names=c("Form.X","Form.Y"))
+# Compute linking constants for two groups using mixed-format items 
+# modeled with the M3PL and MGPCM. Only compute constants using the 
+# Reckase-Martineau (RM) method.
+pm <- as.poly.mod(60,c("drm","gpcm"), list(c(1:60)[md.mixed$cat==2],
+  c(1:60)[md.mixed$cat>2]))
+x <- as.irt.pars(md.mixed$pars, matrix(1:60,60,2), 
+  list(md.mixed$cat, md.mixed$cat), 
+  list(pm, pm), dimensions=4, grp.names=c("Form.X","Form.Y"))
 out <- plink(x,method=c("RM","HB"),dilation="MIN",weights=as.weight(n=5))
 summary(out, descrip=TRUE)
 

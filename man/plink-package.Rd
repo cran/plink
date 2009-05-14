@@ -82,8 +82,8 @@ The package consists of three types of functions:
 
   \item{}{Utility Functions:}
   \itemize{
-    \item{}{Import item parameters and/or ability estimates from BILOG, PARSCALE, and TESTFACT 
-    (importing parameters from MULTILOG will be available in a future release)}
+    \item{}{Import item parameters and/or ability estimates from BILOG-MG 3, PARSCALE 4, MULTILOG 7, TESTFACT 4,
+    ICL, BMIRT, and the \code{ltm} package.}
 
     \item{}{Separate item parameters from matrices or lists into the slope, difficulty, category, 
     etc. values for use in computing response probabilities, descriptive statistics, etc.}

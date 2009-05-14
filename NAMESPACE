@@ -22,7 +22,11 @@ export(
     "link.ability",
     "read.bilog",
     "read.parscale",
-    "read.testfact"
+    "read.multilog",
+    "read.testfact",
+    "read.icl",
+    "read.bmirt",
+    "read.ltm"
 )
 
 exportClasses(

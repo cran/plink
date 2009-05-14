@@ -9,7 +9,7 @@ procedure.}
 
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("link", ...)}, but this is 
-not encouraged.  Use the function \code{link[=plink-methods{plink}} instead.
+not encouraged.  Use the function \code{\link[=plink-methods]{plink}} instead.
 }
 
 \section{Slots}{

@@ -7,14 +7,15 @@ associated items for a set of item parameters.}
 
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("poly.mod", ...)}, but this is 
-not encouraged. Use the function \code{link{as.poly.mod}} instead.
+not encouraged. Use the function \code{\link{as.poly.mod}} instead.
 }
 
 \section{Slots}{
   \describe{
     \item{\code{model}:}{character vector identifying all the models associated with the 
 	corresponding set of item parameters.  The only acceptable models are 
-	\code{drm, gpcm, grm, mcm, and nrm}.  See below for more details.}
+	\code{drm}, \code{gpcm}, \code{grm}, \code{mcm}, and \code{nrm}.  See below for more 
+      details.}
 
     \item{\code{items}:}{list with the same length as \code{model}, where each element 
 	identifies the items(rows) in the corresponding set of item parameters associated 

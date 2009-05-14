@@ -1,3 +1,13 @@
+Changes in version: plink_1.1-0
+
+  o Functions read.multilog, read.icl, read.bmirt, and read.ltm added for 
+    importing item/ability parameters from MULTILOG, ICL, BMIRT, and ltm
+    respectively
+
+  o Some corrections/additions to the .Rd files.
+
+==============================
+
 Changes in version: plink_1.0-0
 
   This is a major version change. All of the unidimensional item response

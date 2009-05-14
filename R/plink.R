@@ -47,13 +47,17 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				prob.from <- .Mixed(from, theta, D, incorrect, catprob)$p
 			}
 		} else {
-			if (dilation=="ODL") {
-				A <- matrix(startvals[1:(dimensions^2)],dimensions,dimensions)
-			} else if (dilation=="LL") {
-				A <- diag(rep(startvals[1],dimensions))%*%T
-			} else if (dilation=="MIN") {
-				A <- diag(startvals[1:dimensions])%*%T
-			} 
+			if (length(startvals==dimensions)) {
+				A <- diag(rep(1,dimensions))
+			} else {
+				if (dilation=="ODL") {
+					A <- matrix(startvals[1:(dimensions^2)],dimensions,dimensions)
+				} else if (dilation=="LL") {
+					A <- diag(rep(startvals[1],dimensions))%*%T
+				} else if (dilation=="MIN") {
+					A <- diag(startvals[1:dimensions])%*%T
+				} 
+			}
 			
 			# Transform the item parameters for the FROM scale
 			from.t@a <- from@a%*%ginv(A)
@@ -249,7 +253,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	}
 	
 	.Grm <- function(x, theta, catprob, D) {
-		items <- x@items$gpcm
+		items <- x@items$grm
 		dimensions <- x@dimensions
 		n <- length(items)
 		a <- as.matrix(x@a[items,1:dimensions])
@@ -731,8 +735,15 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			T <- NA
 		} else {
 			# Direct method
-			# This actually estimates the inverse of A
-			if (rasch.flag==TRUE) A <- diag(rep(1,dimensions)) else A <- .Rotate(a1,a2,FALSE)
+			tmp <- as.vector(a1)
+			if (length(tmp[tmp==1])==length(tmp)) {
+				A <- diag(rep(1,dimensions))
+				rasch.flag <- TRUE
+			} else {
+				# This actually estimates the inverse of A
+				A <- .Rotate(a1,a2,FALSE)
+			}
+			
 			tmp.b1 <- as.vector(b1)[!is.na(as.vector(b1))]
 			tmp.b2 <- as.vector(b2)[!is.na(as.vector(b2))]
 			tmp.a2 <- NULL
@@ -760,24 +771,24 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			}
 			
 			# Compute the rotation matrix for certain characteristic curve methods
-			T <- .Rotate(a1,a2,TRUE)
+			if (rasch.flag==TRUE) T <- diag(rep(1,dimensions)) else T <- .Rotate(a1,a2,TRUE)
 			
 			# Determine starting values for the characteristic curve methods
-			if (missing(startvals)) {
-				if (dilation=="ODL") {
-					startvals <- c(as.vector(A),m) 
-				} else if (dilation=="LL") {
-					startvals <- c(1,m)
-				} else if (dilation=="MIN") {
-					startvals <- c(rep(1,dimensions),m)
-				} 
+			if (rasch.flag==TRUE) {
+				if (missing(startvals)) startvals <- m else startvals <- startvals[((length(startvals)-dimensions)+1):length(startvals)]
 			} else {
-				tmp <- as.vector(a1)
-				if (length(tmp[tmp==1])==length(tmp)) {
-					startvals <- startvals[((length(startvals)-dimensions)+1):length(startvals)]
-				}
-				if (dilation!="ODL") {
-					if ((length(startvals)-dimensions)!=dimensions^2) stop(paste("The number of elements must equal",dimensions^2))
+				if (missing(startvals)) {
+					if (dilation=="ODL") {
+						startvals <- c(as.vector(A),m) 
+					} else if (dilation=="LL") {
+						startvals <- c(1,m)
+					} else if (dilation=="MIN") {
+						startvals <- c(rep(1,dimensions),m)
+					} 
+				} else {
+					if (dilation!="ODL") {
+						if ((length(startvals)-dimensions)!=dimensions^2) stop(paste("The number of elements must equal",dimensions^2))
+					}
 				}
 			}
 			
@@ -794,14 +805,14 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				constants$HB <- round(hb$par,6)
 			} else {
 				if (dilation=="ODL") {
-					A <- matrix(hb$par[1:(dimensions^2)],dimensions,dimensions)
+					if (rasch.flag==TRUE) A <- diag(rep(1,dimensions)) else A <- matrix(hb$par[1:(dimensions^2)],dimensions,dimensions)
 					m <- hb$par[-c(1:(dimensions^2))]
 				} else if (dilation=="LL") {
-					K <- diag(rep(hb$par[1],dimensions))
+					if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(rep(hb$par[1],dimensions))
 					m <- hb$par[-1]
 					A <- T%*%K
 				} else if (dilation=="MIN") {
-					K <- diag(hb$par[1:dimensions])
+					if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(hb$par[1:dimensions])
 					m <- hb$par[-c(1:dimensions)]
 					A <- T%*%K
 				} 
@@ -837,14 +848,14 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 					constants$SL <- round(sl$par,6)
 				} else {
 					if (dilation=="ODL") {
-						A <- matrix(sl$par[1:(dimensions^2)],dimensions,dimensions)
+						if (rasch.flag==TRUE) A <- diag(rep(1,dimensions)) else A <- matrix(sl$par[1:(dimensions^2)],dimensions,dimensions)
 						m <- sl$par[-c(1:(dimensions^2))]
 					} else if (dilation=="LL") {
-						K <- diag(rep(sl$par[1],dimensions))
+						if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(rep(sl$par[1],dimensions))
 						m <- sl$par[-1]
 						A <- T%*%K
 					} else if (dilation=="MIN") {
-						K <- diag(sl$par[1:dimensions])
+						if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(sl$par[1:dimensions])
 						m <- sl$par[-c(1:dimensions)]
 						A <- T%*%K
 					} 

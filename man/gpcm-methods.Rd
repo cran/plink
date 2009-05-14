@@ -7,7 +7,7 @@
 \alias{gpcm,list,numeric-method}
 \alias{gpcm,irt.pars,ANY-method}
 \alias{gpcm,sep.pars,ANY-method}
-\title{Partial Credit/Generalized Partial Credit Model Response Probabilities}
+\title{Generalized Partial Credit Model Response Probabilities}
 \description{
 This function computes the probability of responding in a specific category for one or 
 more items for a given set of theta values using the partial credit model, generalized 
@@ -16,7 +16,8 @@ on the included item parameters and the specified number of dimensions.
 }
 
 \usage{
-gpcm(x, cat, theta, dimensions = 1, D = 1.7, location = FALSE, print.mod = FALSE, ...)
+gpcm(x, cat, theta, dimensions = 1, D = 1.7, location = FALSE, 
+  print.mod = FALSE, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
 gpcm(x, cat, theta, dimensions, D, location, print.mod, ...)
@@ -215,7 +216,8 @@ plot(x)
 ## Generalized Partial Credit Model
 ## Item parameters from Embretson & Reise (2000, p. 112) items 5-7
 a <- c(.683,1.073,.583)
-b <- matrix(c(-3.513,-.041,.182,NA,-.873,.358,-.226,1.547,-4.493,-.004,NA,NA),3,4,byrow=TRUE)
+b <- matrix(c(-3.513,-.041,.182,NA,-.873,.358,-.226,
+  1.547,-4.493,-.004,NA,NA),3,4,byrow=TRUE)
 pars <- cbind(a,b) # Does not include a location parameter
 rownames(pars) <- paste("Item",5:7,sep="") 
 colnames(pars) <- c("a",paste("b",1:4,sep=""))
@@ -232,11 +234,11 @@ colnames(pars) <- c("a","b",paste("d",1:2,sep=""))
 cat <- c(3,3)
 x <- gpcm(pars,cat,location=TRUE,print.mod=TRUE)
 # Plot category curves for two items
-matplot(x@prob$theta,x@prob[,2:4],xlab="Theta",ylab="Probability",ylim=c(0,1),lty=1,
-  type="l",col="black") 
+matplot(x@prob$theta,x@prob[,2:4],xlab="Theta",ylab="Probability",
+  ylim=c(0,1),lty=1,type="l",col="black") 
 par(new=TRUE)
-matplot(x@prob$theta,x@prob[,5:7],xlab="Theta",ylab="Probability",ylim=c(0,1),lty=3,
-  type="l",col="black") 
+matplot(x@prob$theta,x@prob[,5:7],xlab="Theta",ylab="Probability",
+  ylim=c(0,1),lty=3,type="l",col="black") 
 
 
 ###### Multidimensional Examples ######
@@ -267,8 +269,8 @@ plot(x,screen=list(z=-40,x=-60), auto.key=list(space="right"))
 plot(x,items=2,separate=TRUE,drape=TRUE,panels=1)
 
 # Compute response probabilities for a single three-category item with
-# three dimensions. Plot the response surfaces for the first two dimensions
-# conditional on each theta value on the third dimension
+# three dimensions. Plot the response surfaces for the first two 
+# dimensions conditional on each theta value on the third dimension
 pars <- matrix(c(1.1999,0.5997,0.8087,2.1730,-1.4576),1,5)
 x <- gpcm(pars,3,dimensions=3,theta=-4:4)
 plot(x, screen=list(z=-30,x=-60))
