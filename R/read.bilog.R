@@ -527,10 +527,10 @@ read.icl <- function(file, poly.mod, ability=FALSE,  loc.out=FALSE, as.irt.pars=
 read.bmirt <- function(file, ability=FALSE, loc.out=FALSE, pars.only=TRUE, as.irt.pars=FALSE) {
 	if (ability==FALSE) {
 		tmp <- scan(file, skip=1, quiet=TRUE)
-		nc <- dimensions+20
+		nc <- 40
 		pars <- NULL
 		start <- 1
-		for (i in 1:(length(tmp)-2)) {
+		for (i in 3:(length(tmp)-2)) {
 			if (tmp[i]==1 & tmp[i+1]==1 & tmp[i+2]==0) {
 				len <- i-start
 				pars <- rbind(pars,c(tmp[start:(i-1)],rep(NA,nc-len)))
@@ -563,9 +563,8 @@ read.bmirt <- function(file, ability=FALSE, loc.out=FALSE, pars.only=TRUE, as.ir
 			pm <- as.poly.mod(n, c("drm","gpcm"), list(items[cat==2], items[cat>2]))
 		}
 		pars <- sep.pars(pars, cat=cat, poly.mod=pm, dimensions=dimensions, loc.out=loc.out)
-		# Reformat the difficulty/step parameters to coincide with the traditional formulation of multidimensional models
+		# Reformat the difficulty/step parameters to coincide with the traditional formulation of unidimensional and multidimensional models
 		if (dimensions==1) {
-			pars@a[cat==2] <- pars@a[cat==2]/1.7
 			pars@b[cat==2] <- pars@b[cat==2]/pars@a[cat==2]
 		} else if (dimensions>1) {
 			pars@b[cat>2,] <- pars@b[cat>2,]*-1

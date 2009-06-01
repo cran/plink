@@ -32,12 +32,13 @@ setMethod("sep.pars", signature(x="matrix"), function(x, cat, poly.mod, dimensio
 	ni <- nrow(x) # Number of items
 	if (missing(cat)) cat <- rep(2,ni) # Default to dichotomous items
 	if (missing(poly.mod)) poly.mod <- as.poly.mod(ni)
-	sort <- unlist(poly.mod@items) # Sorting vector
+	sort <- NULL # Sorting vector
 	
 	 # Extract dichotomous items
 	dichot <- as.matrix(x[poly.mod@items$drm,])
 	ndi <- length(poly.mod@items$drm)
 	if (ndi>0) {
+		sort <- c(sort,poly.mod@items$drm)
 		ncd <- length(dichot[1,!is.na(dichot[1,])]) # Number of dichotomous parameters
 		if (ncd==1) {
 			da <- matrix(1,ndi,dimensions) 
@@ -97,6 +98,7 @@ setMethod("sep.pars", signature(x="matrix"), function(x, cat, poly.mod, dimensio
 			np <- nrow(poly)
 			mc <- max(pcat)
 			if (mod[i]=="nrm") {
+				sort <- c(sort,poly.mod@items$nrm)
 				pa <-poly[,1:(mc*dimensions)]
 				pb <- poly[,(mc*dimensions+1):(mc*(dimensions+1))]
 				if (npi==1) {
@@ -105,6 +107,7 @@ setMethod("sep.pars", signature(x="matrix"), function(x, cat, poly.mod, dimensio
 				}
 				if (dimensions==1) pmod <- "Nominal Response Model" else pmod <- "Multidimensional Nominal Response Model"
 			} else if (mod[i]=="mcm") {
+				sort <- c(sort,poly.mod@items$mcm)
 				pa <- poly[,1:(mc*dimensions)]
 				pb <- poly[,(mc*dimensions+1):(mc*(dimensions+1))]
 				pc <- poly[,(mc*(dimensions+1)+1):(mc*(dimensions+1)+mc-1)]
@@ -115,6 +118,7 @@ setMethod("sep.pars", signature(x="matrix"), function(x, cat, poly.mod, dimensio
 				}
 				if (dimensions==1) pmod <- "Multiple-Choice Model" else pmod <- "Multidimensional Multiple-Choice Model"
 			} else if (mod[i]=="grm") {
+				sort <- c(sort,poly.mod@items$grm)
 				pa <- as.matrix(poly[,1:dimensions])
 				if (npi==1) pa <- t(pa)
 				if (location==FALSE) {
@@ -125,6 +129,7 @@ setMethod("sep.pars", signature(x="matrix"), function(x, cat, poly.mod, dimensio
 				}
 				if (dimensions==1) pmod <- "Graded Response Model" else pmod <- "Multidimensional Graded Response Model"
 			} else if (mod[i]=="gpcm") {
+				sort <- c(sort,poly.mod@items$gpcm)
 				len.p <- length(poly[1,][!is.na(poly[1,])])
 				if (location==FALSE) {
 					if (len.p==pcat[1]-1) {
@@ -262,11 +267,12 @@ setMethod("sep.pars", signature(x="list"), function(x, cat, poly.mod, dimensions
 	ni <- nrow(x[[1]])
 	if (missing(cat)) cat <- rep(2,ni) # Default to dichotomous items
 	if (missing(poly.mod)) poly.mod <- as.poly.mod(ni)
-	sort <- unlist(poly.mod@items) # Sorting vector
+	sort <- NULL # Sorting vector
 	
 	 # Extract dichotomous items
 	ndi <- length(poly.mod@items$drm)
 	if (ndi>0) {
+		sort <- c(sort,poly.mod@items$drm)
 		tmp <- poly.mod@items$drm
 		if (length(x)==1) {
 			da <- matrix(1,ndi,dimensions)
@@ -319,6 +325,7 @@ setMethod("sep.pars", signature(x="list"), function(x, cat, poly.mod, dimensions
 		for (i in 1:length(mod)) {
 			if (mod[i]=="drm") next
 			if (mod[i]=="nrm") {
+				sort <- c(sort,poly.mod@items$nrm)
 				pa <- x[[1]][poly.mod@items$nrm,]
 				pb <- x[[2]][poly.mod@items$nrm,]
 				if (npi==1) {
@@ -328,6 +335,7 @@ setMethod("sep.pars", signature(x="list"), function(x, cat, poly.mod, dimensions
 				np <- nrow(pb)
 				if (dimensions==1) pmod <- "Nominal Response Model" else pmod <- "Multidimensional Nominal Response Model"
 			} else if (mod[i]=="mcm") {
+				sort <- c(sort,poly.mod@items$mcm)
 				pa <- x[[1]][poly.mod@items$mcm,]
 				pb <- x[[2]][poly.mod@items$mcm,]
 				pc <- x[[3]][poly.mod@items$mcm,]
@@ -339,6 +347,7 @@ setMethod("sep.pars", signature(x="list"), function(x, cat, poly.mod, dimensions
 				np <- nrow(pb)
 				if (dimensions==1) pmod <- "Multiple-Choice Model" else pmod <- "Multidimensional Multiple-Choice Model"
 			} else if(mod[i]=="grm"){
+				sort <- c(sort,poly.mod@items$grm)
 				pa <- as.matrix(x[[1]][poly.mod@items$grm,1:dimensions])
 				pb <- as.matrix(x[[2]][poly.mod@items$grm,])
 				if (npi==1) {
@@ -351,6 +360,7 @@ setMethod("sep.pars", signature(x="list"), function(x, cat, poly.mod, dimensions
 				np <- nrow(pb)
 				if (dimensions==1) pmod <- "Graded Response Model" else pmod <- "Multidimensional Graded Response Model"
 			} else if (mod[i]=="gpcm") {
+				sort <- c(sort,poly.mod@items$gpcm)
 				if (length(x)==1) {
 					pb <- as.matrix(x[[1]][poly.mod@items$gpcm,])
 					if (npi==1) pb <- t(pb)

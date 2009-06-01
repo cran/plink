@@ -1,3 +1,18 @@
+Changes in version: plink_1.1-2
+
+  o Bug fix for the function read.bmirt when importing item parameters
+
+  o Bug fix sep.pars for the re-ordering of items
+
+  o Bug fix for plot.irt.pars regarding how arguments are passed
+
+  o Bug fix for plot.irt.prob for the default axes ranges for the
+    three vectorplots
+
+  o Some corrections to the .Rd files
+
+==============================
+
 Changes in version: plink_1.1-1
 
   o Bug fix for the functions read.icl and read.bmirt
@@ -13,7 +28,7 @@ Changes in version: plink_1.1-0
     importing item/ability parameters from MULTILOG, ICL, BMIRT, and ltm
     respectively
 
-  o Some corrections/additions to the .Rd files.
+  o Some corrections/additions to the .Rd files
 
 ==============================
 
@@ -82,7 +97,7 @@ Changes in version: plink_0.1-1
   o Data for a set of mixed-format reading tests from a large-scale
     assessment was added.
 
-  o Some additions to the .Rd files.
+  o Some additions to the .Rd files
 
 ==============================
 
@@ -93,7 +108,7 @@ Changes in version: plink_0.1-0
 
   o Bug fix in the sep.pars function for loc.out = TRUE
 
-  o Some corrections/additions to the .Rd files.
+  o Some corrections/additions to the .Rd files
 
 ==============================
 
@@ -101,7 +116,7 @@ Changes in version: plink_0.0-6
 
   o Update to how weights can be computed in the as.weight function
 
-  o Some corrections/additions to the .Rd files.
+  o Some corrections/additions to the .Rd files
 
 ==============================
 
@@ -113,7 +128,7 @@ Changes in version: plink_0.0-5
 
   o Updates to various labels printed by the summary functions
 
-  o Some corrections/additions to the .Rd files.
+  o Some corrections/additions to the .Rd files
 
   o Citation file added
 
@@ -132,7 +147,7 @@ Changes in version: plink_0.0-4
 
   o The combine.pars function was updated to handle data.frames
 
-  o Some corrections/additions to the .Rd files.
+  o Some corrections/additions to the .Rd files
 
 ==============================
 
@@ -140,7 +155,7 @@ Changes in version: plink_0.0-3
 
   o Signature x="list", common="data.frame" was added to the plink function
 
-  o Some corrections/additions to the .Rd files.
+  o Some corrections/additions to the .Rd files
 
 ==============================
 

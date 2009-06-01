@@ -13,9 +13,9 @@ multidimensional items.
 \method{plot}{irt.prob}(x, y, ..., type, separate, combine, items, item.names, 
   item.nums, panels)
 
-\method{plot}{sep.pars}(x, y, ..., type)
+\method{plot}{sep.pars}(x, y, ...)
 
-\method{plot}{irt.pars}(x, y, ..., type)
+\method{plot}{irt.pars}(x, y, ...)
 }
 
 \arguments{

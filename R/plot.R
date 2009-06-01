@@ -185,25 +185,41 @@ plot.irt.prob <- function(x, y, ..., type, separate, combine, items, item.names,
 				# Compute the reference composite
 				ref <- abs(eigen(t(a)%*%a)$vectors[,1])
 				
-				par(mai=c(0,0,0,0))
+				par(mai=c(0.25,0.25,0.25,0.25))
 				if (type=="vectorplot3") {
 					xmin <- floor(min(x1))
 					xmax <- ceiling(max(x1))
 					ymin <- floor(min(y1))
 					ymax <- ceiling(max(y1))
-					if (abs(min(x1)) < abs(xmin+.5)) xmin <- xmin+.5
-					if (abs(max(x1)) < abs(xmax-.5)) xmax<- xmax-.5
-					if (abs(min(y1)) < abs(ymin+.5)) ymin <- ymin+.5
-					if (abs(max(y1)) < abs(ymax-.5)) ymax<- ymax-.5
+					if (xmin<0) {
+						if (abs(min(x1)) < abs(xmin+.5)) xmin <- xmin+.5
+					}
+					if (xmax<0) {
+						if (abs(max(x1)) < abs(xmax-.5)) xmax<- xmax-.5
+					}
+					if (ymin<0) {
+						if (abs(min(y1)) < abs(ymin+.5)) ymin <- ymin+.5
+					}
+					if (ymax<0) {
+						if (abs(max(y1)) < abs(ymax-.5)) ymax<- ymax-.5
+					}
 				} else {
 					xmin <- floor(min(x1))
 					xmax <- ceiling(max(x2))
 					ymin <- floor(min(y1))
 					ymax <- ceiling(max(y2))
-					if (abs(min(x1)) < abs(xmin+.5)) xmin <- xmin+.5
-					if (abs(max(x2)) < abs(xmax-.5)) xmax<- xmax-.5
-					if (abs(min(y1)) < abs(ymin+.5)) ymin <- ymin+.5
-					if (abs(max(y2)) < abs(ymax-.5)) ymax<- ymax-.5
+					if (xmin<0) {
+						if (abs(min(x1)) < abs(xmin+.5)) xmin <- xmin+.5
+					}
+					if (xmax<0) {
+						if (abs(max(x2)) < abs(xmax-.5)) xmax<- xmax-.5
+					}
+					if (ymin<0) {
+						if (abs(min(y1)) < abs(ymin+.5)) ymin <- ymin+.5
+					}
+					if (ymax<0) {
+						if (abs(max(y2)) < abs(ymax-.5)) ymax<- ymax-.5
+					}
 				}
 				xmm <- c(xmin,xmax)
 				ymm <- c(ymin,ymax)
@@ -267,16 +283,31 @@ plot.irt.prob <- function(x, y, ..., type, separate, combine, items, item.names,
 	}
 }
 
-plot.sep.pars <- function(x, y, ..., type) {
+plot.sep.pars <- function(x, y, ...) {
 	x <- mixed(x, ...)
 	plot(x, ...)
 }
 
-plot.irt.pars <- function(x, y, ..., type) {
-	tmp <- mixed(x, ...)
+plot.irt.pars <- function(x, y, ...) {
 	if (x@groups>1) {
 		warning("There is more than one group in {x}. No plots were produced.")
 	} else {
+		dots <- list(...)
+		if (length(dots$theta)) {
+			theta <- dots$theta 
+		} else {
+			if (x@dimensions==1) {
+				theta <- seq(-4,4,.05) 
+			} else if (x@dimensions %in% 2:3) {
+				theta <- seq(-4,4,.5)
+			} else {
+				theta <- -4:4
+			}
+		}
+		if (length(dots$catprob)) catprob <- dots$catprob else catprob <- FALSE
+		if (length(dots$incorrect)) incorrect <- dots$incorrect else incorrect <- FALSE
+		if (length(dots$D)) D <- dots$D else D <- 1.7
+		tmp <- mixed(x, theta=theta, catprob=catprob, location=x@location, incorrect=incorrect, D=D)
 		plot(tmp, ...)
 	}
 }
