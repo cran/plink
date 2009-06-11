@@ -20,7 +20,7 @@ optimization and chain-linked rescaling of item and ability parameters.
 
 \usage{
 plink(x, common, rescale, ability, method, weights, startvals, 
-  score = 1, base.grp = 1, symmetric = TRUE, grp.names = NULL, 
+  score = 1, base.grp = 1, symmetric = FALSE, grp.names = NULL, 
   mn.exclude = FALSE, dilation = "ODL", dim.order = NULL, ...)
 
 ## S4 method for signature 'list', 'matrix'
@@ -71,9 +71,10 @@ plink(x, common, rescale, ability, method, weights, startvals, score,
     scores for each response category can be supplied, but this is only recommended
     for advanced users.}
 
-  \item{startvals}{vector of length two of starting values for the slope and 
-    intercept respectively for the characteristic curve methods. The default
-    values (if \code{startvals} is missing) are 1 and 0.}
+  \item{startvals}{vector of slope and intercept starting values for the characteristic
+    curve methods or a character vector of "MM", "MS", or "RM" to identify that
+    values from the Mean/Mean, Mean/Sigma, or Reckase-Martineau method should be used
+    for the starting values. See below for more details.}
 
   \item{base.grp}{integer identifying the group for the base scale}
 
@@ -105,6 +106,18 @@ set of common items from the next list element in \code{x}. For example, if \cod
 contains only two list elements, a single set of common items links them together.  If 
 item 4 in group one (row 4 in slot \code{pars}) is the same as item 6 in group two, the 
 first row of \code{common} would be \code{(4,6)}.
+
+\code{startvals} can be a vector of starting values for the slope(s) and intercept(s). For
+unidimensional methods, this argument should have a length of two with the first value for
+the slope and the second value for the intercept. For the multidimensional methods, the 
+length of the vector will vary depending on the dilation approach used. If \code{dilation}
+is "ODL", the first m*m values in \code{startvals}, for m dimensions, should correspond to 
+the values in the transformation matrix (starting with the value in the upper-left corner, 
+then the next value in the column, ..., then the first value in the next column, etc.). 
+The remaining m values should be for the translation vector. If \code{dilation} is "LL", the
+first value will be the slope parameter and the remaining m values wil be for the translation 
+vector. If \code{dilation} is "MIN", the first m values are the slopes for each dimension and 
+the remaining m values are for the translation vector. 
 
 \code{weights} can be a list or a list of lists.  The purpose of this object is to specify
 the theta values to integrate over in the characteristic curve methods as well as any 
@@ -162,9 +175,8 @@ theta values instead of equally spaced or random values.
 }
 
 \note{
-  When estimating linking constants for more than two dimensions, using the characteristic curve
-  methods can be quite slow. In these instances it is advisable to use the Reckase-Martineau (2004)
-  approach or reduce the number of quadrature points (e.g., using weights=as.weight(n=5) ).
+  When estimating linking constants using the characteristic curve methods, upper and lower bounds
+  are passed to \code{nlminb} equal to the starting values +/- 0.25. 
 }
 
 \value{

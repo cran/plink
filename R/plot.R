@@ -1,6 +1,5 @@
 plot.irt.prob <- function(x, y, ..., type, separate, combine, items, item.names, item.nums, panels) {
 	
-	graphics.off()
 	if (exists(".SavedPlots",where=1)) rm(".SavedPlots",pos=1)
 	
 	dimensions <- x@dimensions

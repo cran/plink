@@ -1,4 +1,4 @@
-setGeneric("plink", function(x, common, rescale, ability, method, weights, startvals, score=1, base.grp=1, symmetric=TRUE, grp.names=NULL, mn.exclude=FALSE, dilation="ODL",  dim.order=NULL, ...) standardGeneric("plink"))
+setGeneric("plink", function(x, common, rescale, ability, method, weights, startvals, score=1, base.grp=1, symmetric=FALSE, grp.names=NULL, mn.exclude=FALSE, dilation="ODL",  dim.order=NULL, ...) standardGeneric("plink"))
 
 setMethod("plink", signature(x="list", common="list"), function(x, common, rescale, ability, method, weights, startvals, score, base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...) {
 	x <- combine.pars(x, common, ...)
@@ -704,21 +704,6 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		it <- con <- obj <- NULL
 		
 		if (dimensions==1) {
-			# Determine starting values for the characteristic curve methods
-				if (missing(startvals)) {
-					startvals <- c(1,0)
-				} else {
-					if (is.character(startvals)) {
-						if (toupper(startvals)=="MM") startvals <- mm
-						if (toupper(startvals)=="MS") startvals <- ms
-					}
-				}
-				tmp <- c(a1,a2)
-				if (length(tmp[tmp==1])==length(tmp)) {
-					startvals <- startvals[2]
-					rasch.flag <- TRUE
-				}
-				
 			# Compute the mean/mean and mean/sigma constants
 			mm <- ms <- NULL
 			A1 <- mean(a2,na.rm=TRUE)/mean(a1,na.rm=TRUE)
@@ -733,6 +718,23 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			if ("MS" %in% method) constants$MS <- ms
 			dilation <- "N/A"
 			T <- NA
+			
+			# Determine starting values for the characteristic curve methods
+			if (missing(startvals)) {
+				startvals <- mm
+			} else {
+				if (is.character(startvals)) {
+					if (toupper(startvals)=="MM") startvals <- mm
+					if (toupper(startvals)=="MS") startvals <- ms
+				}
+			}
+			tmp <- c(a1,a2)
+			if (length(tmp[tmp==1])==length(tmp)) {
+				startvals <- startvals[2]
+				rasch.flag <- TRUE
+			}
+			lower <- startvals-0.25
+			upper <- startvals+0.25
 		} else {
 			# Direct method
 			tmp <- as.vector(a1)
@@ -780,15 +782,23 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				if (missing(startvals)) {
 					if (dilation=="ODL") {
 						startvals <- c(as.vector(A),m) 
+						lower <- startvals-0.25
+						upper <- startvals+0.25
 					} else if (dilation=="LL") {
 						startvals <- c(1,m)
+						lower <- c(-2,m-0.25)
+						upper <- c(2,m+0.25)
 					} else if (dilation=="MIN") {
 						startvals <- c(rep(1,dimensions),m)
+						lower <- c(rep(-2,dimensions),m-0.25)
+						upper <- c(rep(2,dimensions),m+0.25)
 					} 
 				} else {
 					if (dilation!="ODL") {
 						if ((length(startvals)-dimensions)!=dimensions^2) stop(paste("The number of elements must equal",dimensions^2))
 					}
+					lower <- startvals-0.5
+					upper <- startvals+0.5
 				}
 			}
 			
@@ -798,7 +808,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		
 		# Haebara Method
 		if ("HB" %in% method) {
-			hb <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights=wgt, score=score, transform="HB", symmetric=symmetric, D=D, incorrect=incorrect, catprob=catprob, mn.exclude=mn.exclude, dilation=dilation, T=T, ...)
+			hb <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights=wgt, score=score, transform="HB", symmetric=symmetric, D=D, incorrect=incorrect, catprob=catprob, mn.exclude=mn.exclude, dilation=dilation, T=T, lower=lower, upper=upper, ...)
 			if (dimensions==1) { 
 				if (rasch.flag==TRUE) hb$par <- c(1,hb$par)
 				names(hb$par) <- c("A","B")
@@ -841,7 +851,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		# Stocking-Lord Method
 		if ("SL" %in% method) {
 			if (chk.sl==TRUE) {
-				sl <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights=wgt, score=score, transform="SL", symmetric=symmetric, D=D, incorrect=incorrect, catprob=catprob, mn.exclude=mn.exclude, dilation=dilation, T=T, ...)
+				sl <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights=wgt, score=score, transform="SL", symmetric=symmetric, D=D, incorrect=incorrect, catprob=catprob, mn.exclude=mn.exclude, dilation=dilation, T=T, lower=lower, upper=upper, ...)
 				if (dimensions==1) { 
 					if (rasch.flag==TRUE) sl$par <- c(1,sl$par)
 					names(sl$par) <- c("A","B")
