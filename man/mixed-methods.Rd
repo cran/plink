@@ -78,6 +78,10 @@ theta values, a j x m matrix should be specified for j ability points and m dime
 are ordered from dimension 1 to m.
 }
 
+\note{In certain scenarios there may be a need to specify different scaling constants (i.e., D) for 
+different models. In these instances, arguments \code{D.drm}, \code{D.gpcm}, and \code{D.grm} can
+be included.}
+
 \value{
   Returns an object of class \code{\linkS4class{irt.prob}}
 }
@@ -100,6 +104,11 @@ pars <- rbind(cbind(dichot,matrix(NA,3,2)),poly)
 cat <- c(2,2,2,4,5)
 pm <- as.poly.mod(5, c("drm","gpcm"), list(1:3,4:5))
 x <- mixed(pars, cat, pm) 
+plot(x)
+
+# Specify a different scaling constant for the GPCM items in the
+# above example
+x <- mixed(pars, cat, pm, D.gpcm=1.7) 
 plot(x)
 
 

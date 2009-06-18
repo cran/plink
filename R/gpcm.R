@@ -1,4 +1,4 @@
-setGeneric("gpcm", function(x, cat, theta, dimensions=1, D=1.7, location=FALSE, print.mod=FALSE, ...) standardGeneric("gpcm"))
+setGeneric("gpcm", function(x, cat, theta, dimensions=1, D=1, location=FALSE, print.mod=FALSE, ...) standardGeneric("gpcm"))
 
 setMethod("gpcm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, D, location, print.mod, ...) {
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"gpcm")
@@ -39,16 +39,18 @@ setMethod("gpcm", signature(x="sep.pars"), function(x, cat, theta, dimensions, D
 		pm <- as.poly.mod(x@n[1], x@model, x@items)
 		x <- sep.pars(pars, x@cat, pm, x@dimensions, location=TRUE, loc.out=FALSE)
 	}
+	dots <- list(...)
+	if (length(dots$D.gpcm)) D <- dots$D.gpcm
 	items <- x@items$gpcm
 	n <- length(items)
 	dimensions <- x@dimensions
 	a <- as.matrix(x@a[items,1:dimensions])*D
 	b <- as.matrix(x@b[items,])
-	pars <- list(a=a/D, b=b, c=x@c[items,])
 	if (n==1) {
 		a <- t(a)
 		b <- t(b)
 	}
+	pars <- list(a=a/D, b=b, c=x@c[items,])
 	cat <- x@cat[items]
 	if (missing(theta)) {
 		if (dimensions==1) {

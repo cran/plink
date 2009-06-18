@@ -13,24 +13,24 @@ MULTILOG 7, TESTFACT 4, ICL, BMIRT, and ltm.
 }
 
 \usage{
-read.bilog(file, ability = FALSE, pars.only = TRUE, as.irt.pars = FALSE)
+read.bilog(file, ability = FALSE, pars.only = TRUE, as.irt.pars = TRUE)
 
 read.parscale(file, ability = FALSE, loc.out = FALSE, pars.only = TRUE, 
-  as.irt.pars = FALSE)
+  as.irt.pars = TRUE)
 
 read.multilog(file, cat, poly.mod, ability = FALSE, contrast = "dev", 
-  drm.3PL = TRUE, loc.out = FALSE, as.irt.pars = FALSE)
+  drm.3PL = TRUE, loc.out = FALSE, as.irt.pars = TRUE)
 
 read.testfact(file, ability = FALSE, guessing = FALSE, bifactor = FALSE, 
-  as.irt.pars = FALSE)
+  as.irt.pars = TRUE)
 
 read.icl(file, poly.mod, ability = FALSE, loc.out = FALSE, 
-  as.irt.pars = FALSE)
+  as.irt.pars = TRUE)
 
-read.bmirt(file, ability = FALSE, loc.out = FALSE, pars.only = TRUE, 
-  as.irt.pars = FALSE)
+read.bmirt(file, ability = FALSE, sign.adjust = TRUE, loc.out = FALSE, 
+  pars.only = TRUE, as.irt.pars = TRUE)
 
-read.ltm(x, loc.out = FALSE, as.irt.pars = FALSE)
+read.ltm(x, loc.out = FALSE, as.irt.pars = TRUE)
 }
 
 \arguments{
@@ -66,6 +66,10 @@ read.ltm(x, loc.out = FALSE, as.irt.pars = FALSE)
 
   \item{bifactor}{logical value indicating whether the bifactor model was used to
       estimate the item/ability parameters}
+
+  \item{sign.adjust}{logical value indicating whether the difficulty/step parameters 
+  should be multiplied by -1 to make them consistent with common formulations of 
+  multidimensional response models}
 
   \item{x}{output object from one of the following functions in the \code{ltm} package:
       \code{rasch}, \code{ltm}, \code{tpm}, \code{grm}, or \code{gpcm} }

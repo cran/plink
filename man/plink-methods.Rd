@@ -20,24 +20,29 @@ optimization and chain-linked rescaling of item and ability parameters.
 
 \usage{
 plink(x, common, rescale, ability, method, weights, startvals, 
-  score = 1, base.grp = 1, symmetric = FALSE, grp.names = NULL, 
-  mn.exclude = FALSE, dilation = "ODL", dim.order = NULL, ...)
+  score = 1, base.grp = 1, symmetric = FALSE, rescale.com = FALSE,
+  grp.names = NULL, mn.exclude = FALSE, dilation = "ODL", 
+  dim.order = NULL, ...)
 
 ## S4 method for signature 'list', 'matrix'
 plink(x, common, rescale, ability, method, weights, startvals, score,
-  base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
+  base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, 
+  dim.order, ...)
 
 ## S4 method for signature 'list', 'data.frame'
 plink(x, common, rescale, ability, method, weights, startvals, score,
-  base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
+  base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, 
+  dim.order, ...)
 
 ## S4 method for signature 'list', 'list'
 plink(x, common, rescale, ability, method, weights, startvals, score,
-  base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
+  base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, 
+  dim.order, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
 plink(x, common, rescale, ability, method, weights, startvals, score,
-  base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...)
+  base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, 
+  dim.order, ...)
 }
 
 \arguments{
@@ -80,6 +85,10 @@ plink(x, common, rescale, ability, method, weights, startvals, score,
 
   \item{symmetric}{if \code{TRUE} use symmetric minimization for the characteristic 
     curve methods.  See Kim and Lee (2006) for more information}
+
+  \item{rescale.com}{if \code{TRUE} rescale the common item parameters using the 
+    estimated linking constants; otherwise, insert the non-transformed common item
+    parameters into the set of unique transformed item parameters}
 
   \item{grp.names}{character vector of group names }
 
@@ -140,6 +149,18 @@ for adjacent groups \code{j}, \code{weights} can be a list with multiple \code{W
 In generally, including a different \code{W} for each adjacent group is unnecessary, but
 the most likely scenario for its use is when the intent is to integrate over empirical
 theta values instead of equally spaced or random values.
+
+The argument \code{dim.order} is a k x r matrix for k groups and r unique dimensions across
+groups. This object identifies the common dimensions across groups. The elements in the 
+matrix should correspond to the dimension (i.e., the column in the matrix of slope parameters)
+for a given group. For example, say there are four unique dimensions across two groups,
+each group only measures three dimensions, and there are only two common dimensions. We might
+specify a matrix as follows dim.order <- matrix(c(1:3,NA,NA,1:3),2,4). In words, this means
+that dimensions 2 and 3 in the first group correspond to dimensions 1 and 2 in the second
+group respectively. If no \code{dim.order} is specified, it is assumed that all of the 
+dimensions are common, or in instances with different numbers of factors, that the first
+m dimensions for each group are common and the remaining r-m dimensions for a given group
+are unique.
 }
 
 \section{Methods}{
@@ -260,13 +281,13 @@ summary(out)
 constants <- link.con(out) # Extract linking constants
 
 # Create an irt.pars object and a sep.pars object for two groups of
-# nominal response model items. Compare symmetric and non-symmetric 
+# nominal response model items. Compare non-symmetric and symmetric 
 # minimization. Note: This example may take a minute or two to run
 pm <- as.poly.mod(60, "nrm", 1:60)
 pars1 <- as.irt.pars(act.nrm$yr97, cat=rep(5,60), poly.mod=pm)
 pars2 <- sep.pars(act.nrm$yr98, cat=rep(5,60), poly.mod=pm)
 out <- plink(list(pars1, pars2), matrix(1:60,60,2))
-out1 <- plink(list(pars1, pars2), matrix(1:60,60,2), symmetric=FALSE)
+out1 <- plink(list(pars1, pars2), matrix(1:60,60,2), symmetric=TRUE)
 summary(out, descrip=TRUE)
 summary(out1, descrip=TRUE)
 
@@ -279,7 +300,7 @@ theta <- rnorm(100) # In practice, estimated theta values would be used
 pm <- as.poly.mod(60, "mcm", 1:60)
 x <- as.irt.pars(act.mcm, common=matrix(1:60,60,2), cat=list(rep(6,60),
   rep(6,60)), poly.mod=list(pm,pm))
-out <- plink(x, ability=list(theta,theta), rescale="HB", symmetric=FALSE)
+out <- plink(x, ability=list(theta,theta), rescale="HB")
 pars.out <- link.pars(out)
 ability.out <- link.ability(out)
 summary(out, descrip=TRUE)
@@ -336,20 +357,20 @@ ability.out <- out$ability
 
 # Compute constants using Reckase & Martineau (2004) and Min (2003) 
 # with non-symmetric calibration
-out <- plink(x, dilation="MIN", symmetric=FALSE)
+out <- plink(x, dilation="MIN")
 summary(out, descrip=TRUE)
 
 
 
 # Compute linking constants for two groups using mixed-format items 
 # modeled with the M3PL and MGPCM. Only compute constants using the 
-# Reckase-Martineau (RM) method.
+# Reckase-Martineau and the Stocking-Lord method with a MIN dilation.
 pm <- as.poly.mod(60,c("drm","gpcm"), list(c(1:60)[md.mixed$cat==2],
   c(1:60)[md.mixed$cat>2]))
 x <- as.irt.pars(md.mixed$pars, matrix(1:60,60,2), 
   list(md.mixed$cat, md.mixed$cat), 
   list(pm, pm), dimensions=4, grp.names=c("Form.X","Form.Y"))
-out <- plink(x,method=c("RM","HB"),dilation="MIN",weights=as.weight(n=5))
+out <- plink(x,method=c("RM","SL"),dilation="MIN",weights=as.weight(n=3,dimensions=4))
 summary(out, descrip=TRUE)
 
 

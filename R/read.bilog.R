@@ -1,4 +1,4 @@
-read.bilog <- function(file, ability=FALSE, pars.only=TRUE, as.irt.pars=FALSE) {
+read.bilog <- function(file, ability=FALSE, pars.only=TRUE, as.irt.pars=TRUE) {
 	if (ability==FALSE) {
 		pars <- read.fwf(file, c(8,8,rep(10,13),4,1,1),sep="\t", skip=4)
 		pars <- pars[,-15]
@@ -25,7 +25,7 @@ read.bilog <- function(file, ability=FALSE, pars.only=TRUE, as.irt.pars=FALSE) {
 	return(pars)
 }
 
-read.parscale <- function(file, ability=FALSE,  loc.out=FALSE, pars.only=TRUE, as.irt.pars=FALSE) {
+read.parscale <- function(file, ability=FALSE,  loc.out=FALSE, pars.only=TRUE, as.irt.pars=TRUE) {
 	if (ability==FALSE) {
 		nums <- as.numeric(read.fwf(file, c(8,rep(5,5)), skip=2, n=1)[-1])
 		block <- as.numeric(read.fwf(file, rep(5,nums[1]), skip=3, n=1))
@@ -148,7 +148,7 @@ read.parscale <- function(file, ability=FALSE,  loc.out=FALSE, pars.only=TRUE, a
 	return(pars)
 }
 
-read.multilog <- function(file, cat, poly.mod, ability=FALSE, contrast="dev", drm.3PL=TRUE, loc.out=FALSE, as.irt.pars=FALSE) {
+read.multilog <- function(file, cat, poly.mod, ability=FALSE, contrast="dev", drm.3PL=TRUE, loc.out=FALSE, as.irt.pars=TRUE) {
 	if (ability==FALSE) {
 		# Import and reformat item parameters as a vector
 		pars <- read.fwf(file, rep(12,30))
@@ -356,7 +356,7 @@ read.multilog <- function(file, cat, poly.mod, ability=FALSE, contrast="dev", dr
 	return(pars)
 }
 
-read.testfact <- function(file, ability=FALSE, guessing=FALSE, bifactor=FALSE, as.irt.pars=FALSE) {
+read.testfact <- function(file, ability=FALSE, guessing=FALSE, bifactor=FALSE, as.irt.pars=TRUE) {
 	if (ability==FALSE) {
 		tmp1 <- scan(file, skip=1, what="character", quiet=TRUE, nlines=1)
 		tmp2 <- scan(file, skip=2, what="character", quiet=TRUE, nlines=1)
@@ -410,7 +410,7 @@ read.testfact <- function(file, ability=FALSE, guessing=FALSE, bifactor=FALSE, a
 	return(pars)
 }
 
-read.ltm <- function(x, loc.out=FALSE, as.irt.pars=FALSE) {
+read.ltm <- function(x, loc.out=FALSE, as.irt.pars=TRUE) {
 	cls <- class(x)
 	dimensions <- 1
 	if (cls=="rasch") {
@@ -488,7 +488,7 @@ read.ltm <- function(x, loc.out=FALSE, as.irt.pars=FALSE) {
 	return(pars)
 }
 
-read.icl <- function(file, poly.mod, ability=FALSE,  loc.out=FALSE, as.irt.pars=FALSE) {
+read.icl <- function(file, poly.mod, ability=FALSE,  loc.out=FALSE, as.irt.pars=TRUE) {
 	if (ability==FALSE) {
 		pars <- read.table(file,sep="\t",fill=TRUE)
 		pars <-cbind(pars, matrix(NA,nrow(pars),2*ncol(pars)))
@@ -524,7 +524,7 @@ read.icl <- function(file, poly.mod, ability=FALSE,  loc.out=FALSE, as.irt.pars=
 	return(pars)
 }
 
-read.bmirt <- function(file, ability=FALSE, loc.out=FALSE, pars.only=TRUE, as.irt.pars=FALSE) {
+read.bmirt <- function(file, ability=FALSE, sign.adjust=TRUE, loc.out=FALSE, pars.only=TRUE, as.irt.pars=TRUE) {
 	if (ability==FALSE) {
 		tmp <- scan(file, skip=1, quiet=TRUE)
 		nc <- 40
@@ -540,16 +540,18 @@ read.bmirt <- function(file, ability=FALSE, loc.out=FALSE, pars.only=TRUE, as.ir
 		tmp <- apply(is.na(pars),2,sum)
 		pars <- pars[,tmp!=nrow(pars)]
 		cat <- pars[,2]
-		cat[cat==1] <- 2
 		pars <- pars[,-c(1,2)]
 		
 		# Determine the number of dimensions
 		tmp <- pars[1,!is.na(pars[1,])]
 		if (cat[1]==2) {
+			dimensions <- length(tmp)-1
+		} else if (cat[1]==1) {
 			dimensions <- length(tmp)-2
 		} else {
 			dimensions <- length(tmp)-cat[1]+1
 		}
+		cat[cat==1] <- 2
 		
 		n <- nrow(pars)
 		
@@ -567,7 +569,7 @@ read.bmirt <- function(file, ability=FALSE, loc.out=FALSE, pars.only=TRUE, as.ir
 		if (dimensions==1) {
 			pars@b[cat==2] <- pars@b[cat==2]/pars@a[cat==2]
 		} else if (dimensions>1) {
-			pars@b[cat>2,] <- pars@b[cat>2,]*-1
+			if (sign.adjust==TRUE) pars@b <- pars@b*-1
 		}
 		pars <- as.irt.pars(pars)
 		if (as.irt.pars==FALSE) {

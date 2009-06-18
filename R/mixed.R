@@ -115,7 +115,6 @@ setMethod("mixed", signature(x="sep.pars"), function(x, cat, poly.mod, theta, di
 			cat[x@items$grm] <- cat[x@items$grm]-1
 		}
 	}
-	
 	sort <- unlist(x@items)
 	cat1 <- cat[sort]
 	sort <- rep(sort,cat1)
@@ -124,6 +123,7 @@ setMethod("mixed", signature(x="sep.pars"), function(x, cat, poly.mod, theta, di
 	for(i in 1:length(cat1)) {
 		lab=c(lab,paste("item_",i,".",seq(1,cat[i]),sep=""))
 	}
+	if (is.vector(p) & length(cat)>1) p <- t(p)
 	p <- data.frame(p)
 	names(p) <- lab
 	p <- cbind(theta,p)

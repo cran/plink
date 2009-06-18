@@ -1,3 +1,31 @@
+Changes in version: plink_1.1-4
+
+  o Bug fix in plink for scenarios where there is only a single polytomous
+    item corresponding for a given model
+
+  o The default value for the as.irt.pars argument for the functions
+    read.bilog, read.parscale, read.multilog, read.testfact, read.icl
+    read.bmirt, and read.ltm was changed to TRUE
+
+  o The default value for D in the functions drm, gpcm, and grm was
+    changed from D = 1.7 to D = 1. NOTE: This will change estimated
+    linking constants relative to previous versions unless D is 
+    explicitly set to D = 1.7.
+
+  o Arguments D.drm, D.gpcm, and D.grm can be passed to plink, mixed,
+    and plot to specify different scaling constants for the respective
+    models
+
+  o A new argument rescale.com was added to the plink function
+
+  o A new argument sign.adjust was added to the read.bmirt function
+
+  o Functionality was added to create panels of vectorplots when the
+    items measure more than two dimensions
+
+  o Some corrections/additions to the .Rd files
+
+==============================
 
 Changes in version: plink_1.1-3
 

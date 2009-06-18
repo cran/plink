@@ -1,4 +1,4 @@
-setGeneric("grm", function(x, cat, theta, dimensions=1, catprob=FALSE, D=1.7, location=FALSE, ...) standardGeneric("grm"))
+setGeneric("grm", function(x, cat, theta, dimensions=1, catprob=FALSE, D=1, location=FALSE, ...) standardGeneric("grm"))
 
 setMethod("grm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, catprob, D, location, ...) {
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"grm")
@@ -39,16 +39,18 @@ setMethod("grm", signature(x="sep.pars"), function(x, cat, theta, dimensions, ca
 		pm <- as.poly.mod(x@n[1], x@model, x@items)
 		x <- sep.pars(pars, x@cat, pm, x@dimensions, location=TRUE, loc.out=FALSE)
 	}
+	dots <- list(...)
+	if (length(dots$D.grm)) D <- dots$D.grm
 	items <- x@items$grm
 	n <- length(items)
 	dimensions <- x@dimensions
 	a <- as.matrix(x@a[items,1:dimensions])*D
 	b <- as.matrix(x@b[items,])
-	pars <- list(a=a/D, b=b, c=x@c[items,])
 	if (n==1) {
 		a <- t(a)
 		b <- t(b)
 	}
+	pars <- list(a=a/D, b=b, c=x@c[items,])
 	cat <- x@cat[items]
 	if (missing(theta)) {
 		if (dimensions==1) {

@@ -71,7 +71,8 @@ of the vectors at the appropriate angles, relative to the axes, based on the mul
 discrimination. Setting \code{type} equal to "vectorplot2" will also include the reference
 composite based on an eigenvalue decomposition of the slope parameters. The third type of 
 vector plot is similar to the first with the key distinction that the lines are drawn from 
-the origin to the points of multidimensional difficulty.
+the origin to the points of multidimensional difficulty. When there are more than two dimensions,
+a panel of vectorplots is created for each pair of dimensions.
 }
 
 \note{When multiple pages are created, the PgUp and PgDn buttons can be used to view the 

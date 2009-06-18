@@ -17,7 +17,7 @@ number of dimensions.
 }
 
 \usage{
-drm(x, theta, dimensions = 1, D = 1.7, incorrect = FALSE, 
+drm(x, theta, dimensions = 1, D = 1, incorrect = FALSE, 
   print.mod = FALSE, ...)
 
 ## S4 method for signature 'numeric'
@@ -48,9 +48,9 @@ drm(x, theta, dimensions, D, incorrect, print.mod, ...)
 
   \item{dimensions}{number of modeled dimensions }
 
-  \item{D}{scaling constant (for the normal metric \code{D} = 1.7, for the logistic metric \code{D} = 1).
-  To maintain consistency with how the multidimensional models are typically specified, \code{D} should
-  be set to one when \code{dimensions} > 1. }
+  \item{D}{scaling constant. The default value assumes that the parameters are already in the 
+  desired metric. If the parameters are in the logistic metric, they can be transformed to a 
+  normal metric by setting D = 1.7}
 
   \item{incorrect}{if \code{TRUE}, compute probabilities for the incorrect response category) }
 
@@ -207,11 +207,11 @@ x <- drm(b)
 plot(x)
 
 # Five items with a constant discrimination equal to 1.2
-# Do not use the scaling constant
+# Use the scaling constant for the normal metric
 a <- rep(1.2,5)
 b <- c(-2,-1,0,1,2)
 pars <- list(a,b)
-x <- drm(pars,D=1)
+x <- drm(pars,D=1.7)
 plot(x,combine=5,item.names="Items 1-5")
 
 

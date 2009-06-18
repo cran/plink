@@ -16,7 +16,7 @@ response model.
 }
 
 \usage{
-grm(x, cat, theta, dimensions = 1, catprob = FALSE, D = 1.7, 
+grm(x, cat, theta, dimensions = 1, catprob = FALSE, D = 1, 
   location = FALSE, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
@@ -50,9 +50,9 @@ grm(x, cat, theta, dimensions, catprob, D, location, ...)
   \item{catprob}{if \code{TRUE}, compute category probabilities instead of cumulative
     probabilities }
 
-  \item{D}{scaling constant (for the normal metric \code{D} = 1.7, for the logistic metric \code{D} = 1).
-  To maintain consistency with how the multidimensional models are typically specified, \code{D} should
-  be set to one when \code{dimensions} > 1. }
+  \item{D}{scaling constant. The default value assumes that the parameters are already in the 
+  desired metric. If the parameters are in the logistic metric, they can be transformed to a 
+  normal metric by setting D = 1.7}
 
   \item{location}{if \code{TRUE}, the step parameters are deviations from a difficulty
     parameter }

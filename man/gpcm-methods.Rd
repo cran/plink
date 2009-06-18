@@ -16,7 +16,7 @@ on the included item parameters and the specified number of dimensions.
 }
 
 \usage{
-gpcm(x, cat, theta, dimensions = 1, D = 1.7, location = FALSE, 
+gpcm(x, cat, theta, dimensions = 1, D = 1, location = FALSE, 
   print.mod = FALSE, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
@@ -47,9 +47,9 @@ gpcm(x, cat, theta, dimensions, D, location, print.mod, ...)
 
   \item{dimensions}{number of modeled dimensions }
 
-  \item{D}{scaling constant (for the normal metric \code{D} = 1.7, for the logistic metric \code{D} = 1).
-  To maintain consistency with how the multidimensional models are typically specified, \code{D} should
-  be set to one when \code{dimensions} > 1. }
+  \item{D}{scaling constant. The default value assumes that the parameters are already in the 
+  desired metric. If the parameters are in the logistic metric, they can be transformed to a 
+  normal metric by setting D = 1.7}
 
   \item{location}{if \code{TRUE}, the step parameters are deviations from a difficulty
     parameter }
@@ -225,14 +225,14 @@ cat <- c(4,5,3)
 x <- gpcm(pars,cat,seq(-3,3,.05))
 plot(x)
 
-## Item parameters from Muraki (1992, p. 154)
+## Item parameters from Muraki (1996, p. 154)
 a <- c(1,.5)
 b <- matrix(c(.25,-1.75,1.75,.75,-1.25,1.25),2,3,byrow=TRUE)
 pars <- cbind(a,b) # Include a location parameter
 rownames(pars) <- paste("Item",1:2,sep="")
 colnames(pars) <- c("a","b",paste("d",1:2,sep=""))
 cat <- c(3,3)
-x <- gpcm(pars,cat,location=TRUE,print.mod=TRUE)
+x <- gpcm(pars,cat,location=TRUE,print.mod=TRUE, D=1.7)
 # Plot category curves for two items
 matplot(x@prob$theta,x@prob[,2:4],xlab="Theta",ylab="Probability",
   ylim=c(0,1),lty=1,type="l",col="black") 

@@ -1,4 +1,4 @@
-setGeneric("drm", function(x, theta, dimensions=1, D=1.7, incorrect=FALSE, print.mod=FALSE, ...) standardGeneric("drm"))
+setGeneric("drm", function(x, theta, dimensions=1, D=1, incorrect=FALSE, print.mod=FALSE, ...) standardGeneric("drm"))
 
 setMethod("drm", signature(x="numeric"), function(x, theta, dimensions, D, incorrect, print.mod, ...) {
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(length(x))
@@ -40,6 +40,8 @@ setMethod("drm", signature(x="irt.pars"), function(x, theta, dimensions, D, inco
 })
 
 setMethod("drm", signature(x="sep.pars"), function(x, theta, dimensions, D, incorrect, print.mod, ...) {
+	dots <- list(...)
+	if (length(dots$D.drm)) D <- dots$D.drm
 	items <- x@items$drm
 	n <- length(items)
 	dimensions <- x@dimensions

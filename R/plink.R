@@ -1,22 +1,30 @@
-setGeneric("plink", function(x, common, rescale, ability, method, weights, startvals, score=1, base.grp=1, symmetric=FALSE, grp.names=NULL, mn.exclude=FALSE, dilation="ODL",  dim.order=NULL, ...) standardGeneric("plink"))
+setGeneric("plink", function(x, common, rescale, ability, method, weights, startvals, score=1, base.grp=1, symmetric=FALSE, rescale.com=FALSE, grp.names=NULL, mn.exclude=FALSE, dilation="ODL",  dim.order=NULL, ...) standardGeneric("plink"))
 
-setMethod("plink", signature(x="list", common="list"), function(x, common, rescale, ability, method, weights, startvals, score, base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...) {
+setMethod("plink", signature(x="list", common="list"), function(x, common, rescale, ability, method, weights, startvals, score, base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, dim.order, ...) {
 	x <- combine.pars(x, common, ...)
 	callGeneric()
 })
 
-setMethod("plink", signature(x="list", common="matrix"), function(x, common, rescale, ability, method, weights, startvals, score, base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...) {
+setMethod("plink", signature(x="list", common="matrix"), function(x, common, rescale, ability, method, weights, startvals, score, base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, dim.order, ...) {
 	x <- combine.pars(x, common, ...)
 	callGeneric()
 })
 
-setMethod("plink", signature(x="list", common="data.frame"), function(x, common, rescale, ability, method, weights, startvals, score, base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...) {
+setMethod("plink", signature(x="list", common="data.frame"), function(x, common, rescale, ability, method, weights, startvals, score, base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, dim.order, ...) {
 	x <- combine.pars(x, common, ...)
 	callGeneric()
 })
 
-setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, rescale, ability, method, weights, startvals, score, base.grp, symmetric, grp.names, mn.exclude, dilation, dim.order, ...) {
-	.CC <- function(startvals, to, from, dimensions, weights, score, transform, symmetric, D, incorrect, catprob, mn.exclude, dilation, T) {
+setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, rescale, ability, method, weights, startvals, score, base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, dim.order, ...) {
+	.CC <- function(startvals, to, from, dimensions, weights, score, transform, symmetric, mn.exclude, dilation, T, ...) {
+		dots <- list(...)
+		if (length(dots$D)) D <- dots$D else D <- 1
+		if (length(dots$D.drm)) D.drm <- dots$D.drm else D.drm <- D
+		if (length(dots$D.gpcm)) D.gpcm <- dots$D.gpcm else D.gpcm <- D
+		if (length(dots$D.grm)) D.grm <- dots$D.grm else D.grm <- D
+		if (length(dots$incorrect)) incorrect <- dots$incorrect else incorrect <- FALSE
+		if (length(dots$catprob)) catprob <- dots$catprob else catprob <- TRUE
+		
 		theta <- as.matrix(weights[[1]])
 		to.f <- to
 		from.t <- from
@@ -43,8 +51,8 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				to.f@a <- as.matrix(alpha*to@a)
 				to.f@b <- as.matrix((to@b-beta)/alpha)
 				to.f@b[mcnr,] <- to@b[mcnr,]+(beta*to@a[mcnr,])
-				prob.to.f <- .Mixed(to.f, theta, D, incorrect, catprob)$p
-				prob.from <- .Mixed(from, theta, D, incorrect, catprob)$p
+				prob.to.f <- .Mixed(to.f, theta, D.drm, D.gpcm, D.grm, incorrect, catprob)$p
+				prob.from <- .Mixed(from, theta, D.drm, D.gpcm, D.grm, incorrect, catprob)$p
 			}
 		} else {
 			if (length(startvals==dimensions)) {
@@ -67,15 +75,15 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			if (symmetric==TRUE) {
 				to.f@a <- to@a%*%A
 				to.f@b <- to@b+matrix(to@a%*%startvals[((length(startvals)-dimensions)+1):length(startvals)],nrow(to@b),ncol(to@b))
-				prob.to.f <- .Mixed(to.f, theta, D, incorrect, catprob)$p
-				prob.from <- .Mixed(from, theta, D, incorrect, catprob)$p
+				prob.to.f <- .Mixed(to.f, theta, D.drm, D.gpcm, D.grm, incorrect, catprob)$p
+				prob.from <- .Mixed(from, theta, D.drm, D.gpcm, D.grm, incorrect, catprob)$p
 			}
 		}
 		
-		tmp.to <- .Mixed(to, theta, D, incorrect, catprob)
+		tmp.to <- .Mixed(to, theta, D.drm, D.gpcm, D.grm, incorrect, catprob)
 		prob.to <- tmp.to$p
 		p.cat<- tmp.to$p.cat
-		prob.from.t <- .Mixed(from.t, theta, D, incorrect, catprob)$p
+		prob.from.t <- .Mixed(from.t, theta, D.drm, D.gpcm, D.grm, incorrect, catprob)$p
 		
 		cat <- rep(p.cat,p.cat)
 		p.mod <- rep(tmp.to$p.mod,p.cat)
@@ -160,15 +168,15 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		return(T)
 	}
 	
-	.Mixed <- function(x, theta, D, incorrect, catprob) {
+	.Mixed <- function(x, theta, D.drm, D.gpcm, D.grm, incorrect, catprob) {
 		mod <- x@model
 		p <- NULL
 		p.cat <- NULL
 		p.mod <- NULL
 		for (i in 1:length(mod)) {
-			if (mod[i]=="drm") tmp <- .Drm(x, theta, D, incorrect)
-			if (mod[i]=="gpcm") tmp <- .Gpcm(x, theta, D)
-			if (mod[i]=="grm") tmp <- .Grm(x, theta, catprob, D)
+			if (mod[i]=="drm") tmp <- .Drm(x, theta, D.drm, incorrect)
+			if (mod[i]=="gpcm") tmp <- .Gpcm(x, theta, D.gpcm)
+			if (mod[i]=="grm") tmp <- .Grm(x, theta, catprob, D.grm)
 			if (mod[i]=="mcm") tmp <- .Mcm(x, theta)
 			if (mod[i]=="nrm") tmp <- .Nrm(x, theta)
 			p <- cbind(p, tmp$p)
@@ -178,7 +186,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		return(list(p=p,p.cat=p.cat,p.mod=p.mod))
 	}
 	
-	.Drm <- function(x, theta, D, incorrect) {
+	.Drm <- function(x, theta, D.drm, incorrect) {
 		items <- x@items$drm
 		dimensions <- x@dimensions
 		n <- length(items)
@@ -189,11 +197,11 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		p <- NULL
 		if (dimensions==1) {
 			for (i in 1:length(b)) {
-				cp <- c[i]+(1-c[i])/(1+exp(-D*a[i]*(theta-b[i])))
+				cp <- c[i]+(1-c[i])/(1+exp(-D.drm*a[i]*(theta-b[i])))
 				if (incorrect==TRUE) p <- cbind(p,(1-cp),cp) else p <- cbind(p,cp)
 			}
 		} else {
-			a <- a*D
+			a <- a*D.drm
 			for (i in 1:length(b)) {
 				cp <- c[i]+(1-c[i])/(1+exp(-(theta %*% a[i,]+b[i])))
 				if (incorrect==TRUE) p <- cbind(p,(1-cp),cp) else p <- cbind(p,cp)
@@ -204,12 +212,16 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		return(list(p=p,cat=cat,mod=mod))
 	}
 	
-	.Gpcm <- function(x, theta, D) {
+	.Gpcm <- function(x, theta, D.gpcm) {
 		items <- x@items$gpcm
 		dimensions <- x@dimensions
 		n <- length(items)
 		a <- as.matrix(x@a[items,1:dimensions])
 		b <- as.matrix(x@b[items,])
+		if (length(items)==1) {
+			a <- t(a)
+			b <- t(b)
+		}
 		cat <- x@cat[items]
 		# Compute category probabilities
 		p <- NULL 
@@ -219,14 +231,14 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				den <- NULL # Compute the denominator
 				for (k in 0:(cat[i]-1)) {
 					if (k==1) dif <- b[i,k] else if (k>1) dif <- dif+b[i,k]
-					d <- exp(D*a[i]*(k*theta-dif))
+					d <- exp(D.gpcm*a[i]*(k*theta-dif))
 					den <- cbind(den, d)
 				}
 				den <- apply(den,1,sum)
 				dif <- 0
 				for (k in 0:(cat[i]-1)) {
 					if (k==1) dif <- b[i,k] else if (k>1) dif <- dif+b[i,k]
-					cp <- (exp(D*a[i]*(k*theta-dif)))/den
+					cp <- (exp(D.gpcm*a[i]*(k*theta-dif)))/den
 					p <- cbind(p,cp)
 				}
 			}
@@ -236,14 +248,14 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				den <- NULL # Compute the denominator
 				for (k in 0:(cat[i]-1)) {
 					if (k>=1) dif <- dif+b[i,k]
-					d <- exp(D*k*(theta %*% a[i,])+dif)
+					d <- exp(D.gpcm*k*(theta %*% a[i,])+dif)
 					den <- cbind(den, d)
 				}
 				den <- apply(den,1,sum)
 				dif <- 0
 				for (k in 0:(cat[i]-1)) {
 					if (k>=1) dif <- dif+b[i,k]
-					cp <- exp(D*k*(theta %*% a[i,])+dif)/den
+					cp <- exp(D.gpcm*k*(theta %*% a[i,])+dif)/den
 					p <- cbind(p,cp)
 				}
 			}
@@ -252,25 +264,29 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		return(list(p=p,cat=cat,mod=mod))
 	}
 	
-	.Grm <- function(x, theta, catprob, D) {
+	.Grm <- function(x, theta, catprob, D.grm) {
 		items <- x@items$grm
 		dimensions <- x@dimensions
 		n <- length(items)
 		a <- as.matrix(x@a[items,1:dimensions])
 		b <- as.matrix(x@b[items,])
+		if (length(items)==1) {
+			a <- t(a)
+			b <- t(b)
+		}
 		cat <- x@cat[items]
 		p <- NULL 
 		if (dimensions==1) {
 			if (catprob==TRUE) { 
 				for (i in 1:n) {
 					ct <- cat[i]-1
-					cp <- 1-1/(1+exp(-D*a[i]*(theta-b[i,1])))
+					cp <- 1-1/(1+exp(-D.grm*a[i]*(theta-b[i,1])))
 					p <- cbind(p, cp)
 					for (k in 1:ct) {
 						if (k<ct) {
-							cp <- (1/(1+exp(-D*a[i]*(theta-b[i,k]))))-(1/(1+exp(-D*a[i]*(theta-b[i,k+1]))))
+							cp <- (1/(1+exp(-D.grm*a[i]*(theta-b[i,k]))))-(1/(1+exp(-D.grm*a[i]*(theta-b[i,k+1]))))
 						} else if (k==ct) {
-							cp <- 1/(1+exp(-D*a[i]*(theta-b[i,k])))
+							cp <- 1/(1+exp(-D.grm*a[i]*(theta-b[i,k])))
 						}
 						p <- cbind(p, cp)
 					}
@@ -279,7 +295,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			} else if (catprob==FALSE) { 
 				for (i in 1:n) {
 					for (k in 1:(cat[i]-1)) {
-						cp <- 1/(1+exp(-D*a[i]*(theta-b[i,k])))
+						cp <- 1/(1+exp(-D.grm*a[i]*(theta-b[i,k])))
 						p <- cbind(p, cp)
 					}
 				}
@@ -289,7 +305,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			if (catprob==TRUE) { 
 				for (i in 1:n) {
 					ct <- cat[i]-1
-					cp <- 1-1/(1+exp(-D*(theta %*% a[i,])+b[i,1]))
+					cp <- 1-1/(1+exp(-D.grm*(theta %*% a[i,])+b[i,1]))
 					p <- cbind(p, cp)
 					for (k in 1:ct) {
 						if (k<ct) {
@@ -322,6 +338,11 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		a <- as.matrix(x@a[items,]) 
 		b <- as.matrix(x@b[items,])
 		c <- as.matrix(x@c[items,])
+		if (length(items)==1) {
+			a <- t(a)
+			b <- t(b)
+			c <- t(c)
+		}
 		cat <- x@cat[items]
 		# Compute category probabilities
 		p <- NULL 
@@ -358,6 +379,10 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		n <- length(items)
 		a <- as.matrix(x@a[items,]) 
 		b <- as.matrix(x@b[items,])
+		if (length(items)==1) {
+			a <- t(a)
+			b <- t(b)
+		}
 		cat <- x@cat[items]
 		
 		# Compute category probabilities
@@ -554,14 +579,6 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	### START PLINK ###
 	ng <- x@groups
 	md <- max(x@dimensions)
-	dots <- list(...)
-	if (!is.null(dots$D)) {
-		D <- dots$D 
-	}else {
-		if (md==1) D <- 1.7 else D <- 1
-	}
-	if (!is.null(dots$incorrect)) incorrect <- dots$incorrect else incorrect <- FALSE
-	if (!is.null(dots$catprob)) catprob <- dots$catprob else catprob <- TRUE
 	 if (missing(grp.names)) grp.names <- names(x@pars)
 	
 	# Create or recode the values in dim.order
@@ -808,7 +825,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		
 		# Haebara Method
 		if ("HB" %in% method) {
-			hb <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights=wgt, score=score, transform="HB", symmetric=symmetric, D=D, incorrect=incorrect, catprob=catprob, mn.exclude=mn.exclude, dilation=dilation, T=T, lower=lower, upper=upper, ...)
+			hb <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights=wgt, score=score, transform="HB", symmetric=symmetric, mn.exclude=mn.exclude, dilation=dilation, T=T, lower=lower, upper=upper, ...)
 			if (dimensions==1) { 
 				if (rasch.flag==TRUE) hb$par <- c(1,hb$par)
 				names(hb$par) <- c("A","B")
@@ -851,7 +868,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		# Stocking-Lord Method
 		if ("SL" %in% method) {
 			if (chk.sl==TRUE) {
-				sl <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights=wgt, score=score, transform="SL", symmetric=symmetric, D=D, incorrect=incorrect, catprob=catprob, mn.exclude=mn.exclude, dilation=dilation, T=T, lower=lower, upper=upper, ...)
+				sl <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights=wgt, score=score, transform="SL", symmetric=symmetric, mn.exclude=mn.exclude, dilation=dilation, T=T, lower=lower, upper=upper, ...)
 				if (dimensions==1) { 
 					if (rasch.flag==TRUE) sl$par <- c(1,sl$par)
 					names(sl$par) <- c("A","B")
@@ -986,6 +1003,39 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				names(out.ability)[[i]] <- grp.names[i]
 			}
 		}
+		# Substitute the non-scaled parameters for the common items into the set of rescaled item parameters
+		if (rescale.com==FALSE) {
+			com <- x@common
+			if (is.matrix(com)) com <- list(com)
+			for (i in (base.grp-1):1) {
+				if (base.grp==1) break
+				out.pars[[i]]@b[com[[i]][,1],] <- out.pars[[i+1]]@b[com[[i]][,2],]
+				out.pars[[i]]@c[com[[i]][,1],] <- out.pars[[i+1]]@c[com[[i]][,2],]
+				if (dimensions==1) {
+					out.pars[[i]]@a[com[[i]][,1],] <- out.pars[[i+1]]@a[com[[i]][,2],]
+				} else {
+					do1 <- dim.order[i,!is.na(dim.order[i,]) &!is.na(dim.order[i+1,])]
+					do2 <- dim.order[i+1,!is.na(dim.order[i,]) &!is.na(dim.order[i+1,])]
+					out.pars[[i]]@a[com[[i]][,1],do1] <- out.pars[[i+1]]@a[com[[i]][,2],do2]
+					
+				}
+			}
+			
+			for (i in base.grp:(ng-1)) {
+				if (base.grp==ng) break
+				out.pars[[i+1]]@b[com[[i]][,2],] <- out.pars[[i]]@b[com[[i]][,1],]
+				out.pars[[i+1]]@c[com[[i]][,2],] <- out.pars[[i]]@c[com[[i]][,1],]
+				if (dimensions==1) {
+					out.pars[[i+1]]@a[com[[i]][,2],] <- out.pars[[i]]@a[com[[i]][,1],]
+				} else {
+					do1 <- dim.order[i,!is.na(dim.order[i,]) &!is.na(dim.order[i+1,])]
+					do2 <- dim.order[i+1,!is.na(dim.order[i,]) &!is.na(dim.order[i+1,])]
+					out.pars[[i+1]]@a[com[[i]][,2],do2] <- out.pars[[i]]@a[com[[i]][,1],do1]
+				}
+			}
+			
+		}
+		
 	} else {
 		if (!missing(ability)) {
 			if (dimensions==1) {

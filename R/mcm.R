@@ -40,12 +40,12 @@ setMethod("mcm", signature(x="sep.pars"), function(x, cat, theta, dimensions, ..
 	a <- x@a[items,] #group by dimensions then categories. i.e. for dimension m and category k (amk)
 	b <- x@b[items,]
 	c <- x@c[items,]
-	pars <- list(a=a, b=b, c=c)
 	if (n==1) {
 		a <- t(a)
 		b <- t(b)
 		c <- t(c)
 	}
+	pars <- list(a=a, b=b, c=c)
 	cat <- x@cat[items]
 	if (missing(theta)) {
 		if (dimensions==1) {
