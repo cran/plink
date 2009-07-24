@@ -34,7 +34,7 @@ not encouraged. Use the function \code{\link{sep.pars}} instead.
 
     \item{\code{mod.lab}:}{character vector of labels for the model(s).} 
 
-    \item{\code{loc.out}:}{logical value. If \code{TRUE}, the step and/or threshold parameters in 
+    \item{\code{location}:}{logical value. If \code{TRUE}, the step and/or threshold parameters in 
 	slot \code{b} for the graded response model and generalized partial credit model include a 
 	location parameter. }
 

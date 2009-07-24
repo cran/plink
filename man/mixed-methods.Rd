@@ -53,7 +53,7 @@ mixed(x, cat, poly.mod, theta, dimensions, ...)
 
   \item{dimensions}{number of modeled dimensions }
 
-  \item{...}{further arguments passed to or from other methods }
+  \item{...}{further arguments passed to or from other methods. See details below. }
 }
 
 \details{
@@ -76,11 +76,19 @@ combination of theta values.  Similarly, if a list is supplied, probabilites wil
 combination of theta values.  In instances where probabilities are desired for specific combinations of 
 theta values, a j x m matrix should be specified for j ability points and m dimensions where the columns 
 are ordered from dimension 1 to m.
-}
 
-\note{In certain scenarios there may be a need to specify different scaling constants (i.e., D) for 
-different models. In these instances, arguments \code{D.drm}, \code{D.gpcm}, and \code{D.grm} can
-be included.}
+The \code{mixed} function essentially compiles response probabilites computed using the functions
+\code{drm}, \code{grm}, \code{gpcm}, \code{nrm}, and \code{mcm} for the associated models
+respectively. All of the arguments specified in any one of these functions can be passed to 
+\code{mixed} as an additional argument. For example, the argument \code{incorrect} can be passed 
+to \code{drm} and \code{catprob} can be passed to \code{grm}. In the functions \code{drm}, \code{grm}, 
+and \code{gpcm} there is an argument \code{D} for the value of a scaling constant. In \code{mixed}, 
+a single argument \code{D} can be passed that will be applied to all applicable models, or arguments 
+\code{D.drm}, \code{D.grm}, and \code{D.gpcm} can be specified for each model respectively. If an 
+argument is specified for \code{D} and, say \code{D.drm}, the values for \code{D.grm} and \code{D.gpcm} 
+(if applicable) will be set equal to \code{D}. If only \code{D.drm} is specified, the values for 
+\code{D.grm} and \code{D.gpcm} (if applicable) will be set to 1.
+}
 
 \value{
   Returns an object of class \code{\linkS4class{irt.prob}}

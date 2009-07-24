@@ -2,20 +2,30 @@
 \alias{plot.irt.prob}
 \alias{plot.sep.pars}
 \alias{plot.irt.pars}
-\title{Plot Item Characteristic/Category Curves and Surfaces}
+\alias{plot.list}
+\title{Plot Item Stuff}
 \description{
-This function plots item characteristic curves/surfaces or item category curves/surfaces
-using the \code{lattice} package in addition to vector plots and contour plots for 
-multidimensional items. 
+This function plots item response curves/surfaces using the \code{lattice} 
+package in addition to vector plots, contour plots, and level plots for 
+multidimensional items, and comparison plots for examining parameter drift. 
 }
 
 \usage{
+## S3 method for signature 'irt.pars'
+\method{plot}{irt.pars}(x, y, ..., type, separate, combine, items, item.names, 
+    item.nums, panels, drift, groups, grp.names, sep.mod)
+
+## S3 method for signature 'irt.prob'
 \method{plot}{irt.prob}(x, y, ..., type, separate, combine, items, item.names, 
-  item.nums, panels)
+    item.nums, panels)
 
-\method{plot}{sep.pars}(x, y, ...)
+## S3 method for signature 'sep.pars'
+\method{plot}{sep.pars}(x, y, ..., type, separate, combine, items, item.names, 
+    item.nums, panels) 
 
-\method{plot}{irt.pars}(x, y, ...)
+## S3 method for signature 'list' 
+\method{plot}{list}(x, y, ..., type, separate, combine, items, item.names, 
+    item.nums, panels, drift, groups, grp.names, sep.mod) 
 }
 
 \arguments{
@@ -23,7 +33,7 @@ multidimensional items.
   later two classes, probabilities are computed using the function \code{mixed} before
   plotting the curves.}
 
-  \item{y}{this argument is not used for these methods}
+  \item{y}{this is an argument in the generic plot function, but is not used for these methods}
 
   \item{\dots}{further arguments passed to or from other methods}
 
@@ -50,6 +60,19 @@ multidimensional items.
   \item{panels}{number of panels to display in the output window. If the number of items 
   	is greater than \code{panels}, the plots will be created on multiple pages.  If 
 	\code{NULL}, all panels will be plotted on a single page.}
+
+  \item{drift}{character vector identifying the plots to create to examine item
+      parameter drift. Acceptable values are "a", "b", "c" for the various parameters
+      respectively or "pars" to compare all of these parameters.}
+
+  \item{groups}{numeric vector identifying the groups in \code{x} that should be included
+      for comparing parameter drift. The values should correspond to the group number of 
+      the lowest group of each pair of adjacent groups in \code{x}.}
+
+  \item{grp.names}{character vector of group names to use when creating the drift plots}
+
+  \item{sep.mod}{logical value. If \code{TRUE} use different markers in the drift plots
+      to identify parameters related to different item response models}
 }
 
 \details{

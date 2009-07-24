@@ -4,8 +4,8 @@
 \title{Class "link"}
 \description{The formal S4 class for link.  This class compiles the linking constants,
 item parameter descriptive statistics, and iteration/objective/convergence information
-for the moment methods and characteristic curve methods of a separate calibration linking
-procedure.}
+for the moment methods and characteristic curve methods from a separate calibration linking
+procedure. It is also able to store rescaled item and ability parameters.}
 
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("link", ...)}, but this is 

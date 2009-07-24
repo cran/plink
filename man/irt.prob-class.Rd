@@ -24,6 +24,9 @@ not encouraged.  Use one of the functions \code{drm}, \code{gpcm}, \code{grm}, \
 
       \item{\code{dimensions}:}{numeric value identifying the number of modeled dimensions}
 
+      \item{\code{D}:}{numeric vector identifying scaling constants for \code{drm}, \code{grm}, 
+        and \code{gpcm}}
+
       \item{\code{pars}:}{list of the item parameters used to compute the probabilities}
 
       \item{\code{model}:}{character vector identifying all the models used to compute the 

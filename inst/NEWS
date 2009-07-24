@@ -1,7 +1,58 @@
+Changes in version: plink_1.1-5
+
+  Bug Fixes:
+
+  o IMPORTANT - in the plink function, the incorrect parameters were
+    being optimized for the multidimensional characteristic curve methods
+
+  o Bug fix for the separation of multidimensional NRM and multidimensional
+    MCM item parameters in the sep.pars function
+
+
+  Changed Arguments:
+
+  o The default value for the rescale.com argument in plink has been
+    changed from FALSE to TRUE  
+
+  o The weights argument in plink changed to weights.t and weights.f
+
+  o The functionality of the mn.exclude argument in plink was changed
+
+
+  Plotting:
+
+  o Included functionality to plot comparisons of common item parameters, 
+    for examining parameter drift
+
+  o Now able to plot results for multiple groups
+
+  o Plot function includes additional arguments - drift, groups, 
+    grp.names, and sep.mod (see the documentation for more info)
+
+  
+  Misc:
+
+  o Updates to the class definition for irt.prob. This class now includes
+    a slot for scaling constants D
+
+  o Additional validation checks (and error comments) have been added
+    to the irt.pars class and sep.pars class
+
+  o All of the source code now includes extensive comments
+
+  o Some corrections/additions to the .Rd files
+
+==============================
+
 Changes in version: plink_1.1-4
 
-  o Bug fix in plink for scenarios where there is only a single polytomous
+  Bug Fixes:
+
+  o Fix in plink for scenarios where there is only a single polytomous
     item corresponding for a given model
+
+
+  Changed Arguments:
 
   o The default value for the as.irt.pars argument for the functions
     read.bilog, read.parscale, read.multilog, read.testfact, read.icl
@@ -12,13 +63,16 @@ Changes in version: plink_1.1-4
     linking constants relative to previous versions unless D is 
     explicitly set to D = 1.7.
 
+  o New argument rescale.com was added to the plink function
+
+  o New argument sign.adjust was added to the read.bmirt function
+
+
+  Misc:
+
   o Arguments D.drm, D.gpcm, and D.grm can be passed to plink, mixed,
     and plot to specify different scaling constants for the respective
     models
-
-  o A new argument rescale.com was added to the plink function
-
-  o A new argument sign.adjust was added to the read.bmirt function
 
   o Functionality was added to create panels of vectorplots when the
     items measure more than two dimensions
@@ -29,15 +83,21 @@ Changes in version: plink_1.1-4
 
 Changes in version: plink_1.1-3
 
-  o The plink function was modified to speed up convergence for
-    the characteristic curve methods (particularly for the multidimensional
-    methods)
+  Bug Fixes:
+
+  o Fix for the plot function related to sending plots to an external file
+
+
+  Changed Arguments:
 
   o The default value for the symmetric argument in the plink function
     was changed to FALSE
 
-  o Bug fix for the plot function related to sending plots to an external
-    file
+  Misc:
+
+  o The plink function was modified to speed up convergence for
+    the characteristic curve methods (particularly for the multidimensional
+    methods)
 
   o Some corrections/additions to the .Rd files
 
@@ -45,14 +105,18 @@ Changes in version: plink_1.1-3
 
 Changes in version: plink_1.1-2
 
-  o Bug fix for the function read.bmirt when importing item parameters
+  Bug Fixes:
 
-  o Bug fix sep.pars for the re-ordering of items
+  o Fix for the function read.bmirt when importing item parameters
 
-  o Bug fix for plot.irt.pars regarding how arguments are passed
+  o Fix in sep.pars for the re-ordering of items
 
-  o Bug fix for plot.irt.prob for the default axes ranges for the
+  o Fix for plot.irt.pars regarding how arguments are passed
+
+  o Fix for plot.irt.prob for the default axes ranges for the
     three vectorplots
+
+  Misc:
 
   o Some corrections to the .Rd files
 
@@ -60,9 +124,11 @@ Changes in version: plink_1.1-2
 
 Changes in version: plink_1.1-1
 
-  o Bug fix for the functions read.icl and read.bmirt
+  Bug Fixes:
 
-  o Bug fix for the matrix formulation of theta for multidimensional models
+  o Miscellaneous fixes for the functions read.icl and read.bmirt
+
+  o Fix for the matrix formulation of theta for multidimensional models
     for drm, grm, gpcm, nrm, mcm, and mixed
 
 ==============================

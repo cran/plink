@@ -84,20 +84,24 @@ and for \code{ltm}, the name of the output object is specified by the user.
 When item parameters are estimated in MULTILOG for models other than the 1PL, 2PL, and GRM,
 the program estimates (and returns) contrast parameters.  MULTILOG implements three types
 of contrasts: deviation, polynomial, and triangle (see Thissen & Steinberg, 1986 for more
-information). A single type of contrast can be used for all parameters (a, c, and d) for all
+information). A single type of contrast can be used for all parameters (a, b, and c) for all
 items or different contrasts can be specified for individual parameters and individual items.
 If a single type of contrast is used for all parameters for all items, a character value 
 can be specified for the \code{contrast} argument: "dev", "poly", or "tri" for the three
 types of contrasts respectively. When different contrasts are used, \code{contrast} should
-be a list of length nine where the elements are either \code{NULL} or numeric vectors 
-identifying the contrasts used for given parameters for given items.  The list elements 
-should be ordered as follows "dev.a","poly.a","tri.a","dev.c","poly.c","tri.c","dev.d",
-"poly.d","tri.d" where the first three elements correspond to the various contrasts for the
-slope parameters, the next three elements correspond to the contrasts for the category
-parameters, and the last three elements correspond to the contrasts for the lower asymptote
-(guessing parameters). It is only necessary to include item numbers for the various
-parameter/contrast combinations when deviation contrasts are not used. See below for 
-examples of how to formulate this argument.
+be a list of length nine. The list elements should be ordered as follows "dev.a","poly.a",
+"tri.a","dev.c","poly.c","tri.c","dev.d", "poly.d","tri.d" where the first three elements 
+correspond to the various contrasts for the slope parameters, the next three elements 
+correspond to the contrasts for the category parameters, and the last three elements 
+correspond to the contrasts for the lower asymptote (guessing parameters). There are two
+approaches that can be implemented using this list 1) character vectors with the model
+names "drm", "grm", "gpcm", "nrm", and "mcm" indicating that the given parameters for
+all items associated with the given model should be transformed using the specified contrast.
+In instances where a model is not included for a given parameter (for any of the contrasts)
+the parameters will be transformed using deviation contrasts.  2) numeric vectors 
+identifying the contrasts used for given parameters for given items can be specified.  
+It is only necessary to include item numbers for the various parameter/contrast combinations 
+when deviation contrasts are not used. See below for examples of how to formulate this argument.
 }
 
 \value{

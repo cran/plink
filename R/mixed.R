@@ -1,26 +1,52 @@
+##   This function computes response probabilities for items
+##   modeled using any combination of the models available 
+##   in the functions {drm}, {gpcm}, {grm}, {mcm}, and {nrm}
+
 setGeneric("mixed", function(x, cat, poly.mod, theta, dimensions=1, ...) standardGeneric("mixed"))
 
+
+
 setMethod("mixed", signature(x="numeric", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, ...) {
+	
 	x <- sep.pars(x, cat, poly.mod, dimensions, loc.out=FALSE, ...)
 	callGeneric()
+	
 })
+
+
 
 setMethod("mixed", signature(x="matrix", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, ...) {
+	
 	x <- sep.pars(x, cat, poly.mod, dimensions, loc.out=FALSE, ...)
 	callGeneric()
+	
 })
+
+
 
 setMethod("mixed", signature(x="data.frame", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, ...) {
+	
 	x <- sep.pars(x, cat, poly.mod, dimensions, loc.out=FALSE, ...)
 	callGeneric()
+	
 })
+
+
 
 setMethod("mixed", signature(x="list", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, ...) {
+	
 	x <- sep.pars(x, cat, poly.mod, dimensions, loc.out=FALSE, ...)
 	callGeneric()
+	
 })
 
-setMethod("mixed", signature(x="irt.pars"), function(x, cat, poly.mod, theta, dimensions, ...) {
+
+
+##   For this method the objects, cat and dimensionsare contained in {x} 
+##   As such, these arguments are treated as missing in the signature
+setMethod("mixed", signature(x="irt.pars", cat="ANY"), function(x, cat, poly.mod, theta, dimensions, ...) {
+	
+	##   Loop through all groups. In this scenario, a list of {irt.prob} objects will be returned
 	if (x@groups>1) {
 		out <- vector("list", x@groups)
 		for (i in 1:x@groups) {
@@ -35,27 +61,33 @@ setMethod("mixed", signature(x="irt.pars"), function(x, cat, poly.mod, theta, di
 	}
 })
 
-setMethod("mixed", signature(x="sep.pars"), function(x, cat, poly.mod, theta, dimensions, ...) {
-	if (x@loc.out==TRUE) {
+
+
+##   For this method the objects, cat and dimensionsare contained in {x} 
+##   As such, these arguments are treated as missing in the signature
+setMethod("mixed", signature(x="sep.pars", cat="ANY"), function(x, cat, poly.mod, theta, dimensions, ...) {
+
+	##   The equation to compute probabilities is not (actually) parameterized using
+	##   the location/(step or threshold)-deviation formulation. As such, in instances where a location
+	##   parameter is included, it is necessary to reformat the parameters appropriately
+	if (x@location==TRUE) {
 		pars <- list(x@a,x@b,x@c)
 		pm <- as.poly.mod(x@n[1], x@model, x@items)
 		x <- sep.pars(pars, x@cat, pm, location=TRUE, loc.out=FALSE, x@dimensions, ...)
 	}
+	
 	pars <- list(a=x@a, b=x@b, c=x@c)
 	dots <- list(...)
 	cat <- x@cat
+	
+	##   Total number of items
 	items <- seq(1,length(cat))
+	
 	mod <- x@model
 	dimensions <- x@dimensions
-	p <- NULL
-	for (i in 1:length(mod)) {
-		if (mod[i]=="drm") tmp <- suppressWarnings(drm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="gpcm") tmp <- suppressWarnings(gpcm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="grm") tmp <- suppressWarnings(grm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="mcm") tmp <- suppressWarnings(mcm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="nrm") tmp <- suppressWarnings(nrm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
-		p <- cbind(p,as.matrix(tmp))
-	}
+	
+	##   Generate theta values if {theta} is missing
+	##   Different values should be generated depending on the number of dimensions
 	if (missing(theta)) {
 		if (dimensions==1) {
 			theta <- seq(-4,4,.05) 
@@ -65,7 +97,11 @@ setMethod("mixed", signature(x="sep.pars"), function(x, cat, poly.mod, theta, di
 			theta <- -4:4
 		}
 	}
+	
 	if (dimensions==1) {
+		##   If the user (purposefully or accidentally) specifies {theta} as a matrix
+		##   or a list instead of a vector for the unidimensional case, turn all of the 
+		##   values into a vector
 		if (is.matrix(theta)) {
 			if (ncol(theta)>1) {
 				theta <- as.vector(theta)
@@ -75,8 +111,13 @@ setMethod("mixed", signature(x="sep.pars"), function(x, cat, poly.mod, theta, di
 		}
 		theta <- as.matrix(theta)
 		colnames(theta) <- "theta1"
+		
 	}else if (dimensions>1) {
 		if (is.vector(theta)) {
+			##   If, in the multidimensional case, only a vector of theta values is 
+			##   supplied, treat this as a vector for each dimension then create all
+			##   permutations of these values. If {theta} is formatted as a matrix
+			##   or list from the outset, just find the permutations
 			tmp <- vector("list", dimensions)
 			for (i in 1:dimensions) {
 				tmp[[i]] <- theta
@@ -100,6 +141,24 @@ setMethod("mixed", signature(x="sep.pars"), function(x, cat, poly.mod, theta, di
 		}
 	}
 	
+	##   Initialize object to hold the response probabilities
+	p <- NULL
+	
+	##   Loop through all of the item response models and compute response probabilities
+	for (i in 1:length(mod)) {
+		if (mod[i]=="drm") tmp <- suppressWarnings(drm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
+		if (mod[i]=="gpcm") tmp <- suppressWarnings(gpcm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
+		if (mod[i]=="grm") tmp <- suppressWarnings(grm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
+		if (mod[i]=="mcm") tmp <- suppressWarnings(mcm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
+		if (mod[i]=="nrm") tmp <- suppressWarnings(nrm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
+		p <- cbind(p,as.matrix(tmp))
+	}
+	
+	
+	##   When the argument incorrect is included, two columns of
+	##   probabilities are created for each dichotomous items. The 
+	##   number of categories (for p.cat in the output) needs to be
+	##   adjusted accordingly
 	if ("drm"%in%mod) {
 		if (length(dots$incorrect)) {
 			if (dots$incorrect==FALSE) cat[x@items$drm] <- 1
@@ -108,6 +167,10 @@ setMethod("mixed", signature(x="sep.pars"), function(x, cat, poly.mod, theta, di
 		}
 	}
 	
+	##   When the argument catprob is FALSE (i.e., for cumulative
+	##   probabilities for the graded response model), the number
+	##   of categories (for p.cat in the output) needs to be
+	##   adjusted accordingly
 	if ("grm"%in%mod) {
 		if (length(dots$catprob)) {
 			if (dots$catprob==FALSE)  cat[x@items$grm] <- cat[x@items$grm]-1
@@ -115,18 +178,36 @@ setMethod("mixed", signature(x="sep.pars"), function(x, cat, poly.mod, theta, di
 			cat[x@items$grm] <- cat[x@items$grm]-1
 		}
 	}
+	
+	##   Based on the included models, determine the value(s) that need to be returned for D
+	D <- NULL
+	if (length(dots$D.drm)) D <- c(D, D.drm=dots$D.drm)
+	if (length(dots$D.gpcm)) D <- c(D, D.gpcm=dots$D.gpcm)
+	if (length(dots$D.grm)) D <- c(D, D.grm=dots$D.grm)
+	if (is.null(D)) D <- c(D=1)
+	
+	##   Resort all of the items and categories using the original sort order
 	sort <- unlist(x@items)
 	cat1 <- cat[sort]
+	
+	##   Sort the columns in p so they correspond to the original ordering of the items
 	sort <- rep(sort,cat1)
 	p <- p[,order(sort)]
+	
+	##   Label the items and categories
 	lab=NULL
 	for(i in 1:length(cat1)) {
 		lab=c(lab,paste("item_",i,".",seq(1,cat[i]),sep=""))
 	}
+	
+	##   If there is only a single polytomous item, p needs to be transposed
 	if (is.vector(p) & length(cat)>1) p <- t(p)
+	
 	p <- data.frame(p)
 	names(p) <- lab
 	p <- cbind(theta,p)
-	p <- new("irt.prob", p.cat=cat, prob=p, mod.lab=x@mod.lab, dimensions=dimensions, pars=pars, model=x@model, items=x@items)
+	
+	p <- new("irt.prob", p.cat=cat, prob=p, mod.lab=x@mod.lab, dimensions=dimensions, D=D, pars=pars, model=x@model, items=x@items)
 	return(p)
+	
 })

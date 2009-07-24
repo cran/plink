@@ -38,7 +38,9 @@ exportClasses(
     "list.poly",
     "list.dat",
     "list.num",
-    "num.null"
+    "num.null",
+    "list.null",
+    "pars.null"
 )
 
 exportMethods(

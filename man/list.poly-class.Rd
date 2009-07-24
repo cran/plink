@@ -5,6 +5,8 @@
 \alias{list.mat-class}
 \alias{list.num-class}
 \alias{num.null-class}
+\alias{list.null-class}
+\alias{pars.null-class}
 \title{Class Combinations}
 \description{These classes are combinations of classes}
 \section{Objects from the Class}{A virtual Class: No objects may be created from it.}
@@ -20,6 +22,10 @@
     \item{list.num:}{combines class \code{list} and class \code{numeric} }
 
     \item{num.null:}{combines class \code{numeric} and class \code{NULL} }
+
+    \item{list.null:}{combines class \code{list} and class \code{NULL} }
+
+    \item{pars.null:}{combines class \code{irt.pars} and class \code{NULL} }
   }
 }
 

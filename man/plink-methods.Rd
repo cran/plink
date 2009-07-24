@@ -19,30 +19,30 @@ optimization and chain-linked rescaling of item and ability parameters.
 }
 
 \usage{
-plink(x, common, rescale, ability, method, weights, startvals, 
-  score = 1, base.grp = 1, symmetric = FALSE, rescale.com = FALSE,
-  grp.names = NULL, mn.exclude = FALSE, dilation = "ODL", 
-  dim.order = NULL, ...)
+plink(x, common, rescale, ability, method, weights.t, weights.f, 
+  startvals, score = 1, base.grp = 1, symmetric = FALSE, 
+  rescale.com = TRUE, grp.names = NULL, mn.exclude = 0, 
+  dilation = "ODL", dim.order = NULL, ...)
 
 ## S4 method for signature 'list', 'matrix'
-plink(x, common, rescale, ability, method, weights, startvals, score,
-  base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, 
-  dim.order, ...)
+plink(x, common, rescale, ability, method, weights.t, weights.f, 
+  startvals, score, base.grp, symmetric, rescale.com, grp.names, 
+  mn.exclude, dilation, dim.order, ...)
 
 ## S4 method for signature 'list', 'data.frame'
-plink(x, common, rescale, ability, method, weights, startvals, score,
-  base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, 
-  dim.order, ...)
+plink(x, common, rescale, ability, method, weights.t, weights.f, 
+  startvals, score, base.grp, symmetric, rescale.com, grp.names, 
+  mn.exclude, dilation, dim.order, ...)
 
 ## S4 method for signature 'list', 'list'
-plink(x, common, rescale, ability, method, weights, startvals, score,
-  base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, 
-  dim.order, ...)
+plink(x, common, rescale, ability, method, weights.t, weights.f, 
+  startvals, score, base.grp, symmetric, rescale.com, grp.names, 
+  mn.exclude, dilation, dim.order, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
-plink(x, common, rescale, ability, method, weights, startvals, score,
-  base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, 
-  dim.order, ...)
+plink(x, common, rescale, ability, method, weights.t, weights.f, 
+  startvals, score, base.grp, symmetric, rescale.com, grp.names, 
+  mn.exclude, dilation, dim.order, ...)
 }
 
 \arguments{
@@ -66,12 +66,17 @@ plink(x, common, rescale, ability, method, weights, startvals, score,
     Stocking-Lord, and Reckase-Martineau linking constants respectively, or if
     missing, constants will be estimated for all methods.}
 
-  \item{weights}{list containing information about the theta values and weights
-    to use for the characteristic curve methods. See below for more details. }
+  \item{weights.t}{list containing information about the theta values and weights
+    on the \emph{To} scale for use with the characteristic curve methods. 
+    See below for more details. }
 
-  \item{score}{if \code{score} = \code{1}, score responses for the Stocking-Lord
+  \item{weights.f}{list containing information about the theta values and weights
+    on the \emph{From} scale for use with the characteristic curve methods. This
+    argument will be ignored if \code{symmetric}=FALSE. See below for more details. }
+
+  \item{score}{if \code{score} = 1, score responses for the Stocking-Lord
     method with zero for the lowest category and k-1 for the highest, k, category
-    for each item.  If \code{score} = \code{2}, score responses with one for the
+    for each item.  If \code{score} = 2, score responses with one for the
     lowest category and k for the highest, k, category for each item.  A vector of
     scores for each response category can be supplied, but this is only recommended
     for advanced users.}
@@ -92,8 +97,10 @@ plink(x, common, rescale, ability, method, weights, startvals, score,
 
   \item{grp.names}{character vector of group names }
 
-  \item{mn.exclude}{if \code{TRUE}, do not use the nominal response model and/or 
-    multiple-choice model parameters when estimating the unidimensional linking constants}
+  \item{mn.exclude}{numeric value. If 0, include NRM and MCM common items in all linking
+    methods. If 1, exclude NRM and MCM common items from the moment methods. If 2, exclude
+    NRM and MCM common items from the characteristic curve methods. If 3, exclude NRM and 
+    MCM common items from all linking methods.}
 
   \item{dilation}{character value identifying whether the Oshima, Davey, & Lee (2000)
     approach \code{"ODL"}, the Li and Lissitz (2000) approach \code{"LL"}, or the Min (2003)
@@ -103,7 +110,7 @@ plink(x, common, rescale, ability, method, weights, startvals, score,
   \item{dim.order}{matrix for identifying the ordering of factors across groups.  See 
     below for details.}
 
-  \item{...}{further arguments passed to or from other methods }
+  \item{...}{further arguments passed to or from other methods. See below for details.}
 }
 
 \details{
@@ -128,27 +135,28 @@ first value will be the slope parameter and the remaining m values wil be for th
 vector. If \code{dilation} is "MIN", the first m values are the slopes for each dimension and 
 the remaining m values are for the translation vector. 
 
-\code{weights} can be a list or a list of lists.  The purpose of this object is to specify
-the theta values to integrate over in the characteristic curve methods as well as any 
-weights associated with the theta values.  See Kim and Lee (2006) or Kolen and Brennan (2004)
-for more information of these weights.The function \code{\link{as.weight}} can be used
-to facilitate the creation of this object.  If \code{weights} is missing, the default is
-to use equally spaced theta values ranging from -4 to 4 with an increment of 0.05 and 
-theta weights equal to one for all theta values.
+\code{weights.t} can be a list or a list of lists.  The purpose of this object is to specify
+the theta values on the \emph{To} scale to integrate over in the characteristic curve methods 
+as well as any weights associated with the theta values.  See Kim and Lee (2006) or Kolen 
+and Brennan (2004) for more information of these weights.  The function \code{\link{as.weight}} 
+can be used to facilitate the creation of this object.  If \code{weights.t} is missing, the 
+default is to use equally spaced theta values ranging from -4 to 4 with an increment of 0.05 
+and theta weights equal to one for all theta values.
 
-To better understand the elements of \code{weights}, let us assume for a moment that \code{x}
-has parameters for only two groups.  In this instance, \code{weights} would be a single 
-list with length two. The first element should be an n x 2 matrix of theta values 
-corresponding to group 1 and group 2 respectively.  The second list element should be an 
-n x 2 matrix of weights corresponding the the theta values.  If \code{x} contains multiple 
-groups, a single \code{weights} object can be supplied, and the same set of thetas and weights
-will be used for all adjacent groups. However, if \code{Wj} is the \code{weights} object
-for adjacent groups \code{j}, \code{weights} can be a list with multiple \code{W} objects
-(i.e. a separate list of theta values and theta weights for each adjacent group in \code{x}).
+To better understand the elements of \code{weights.t}, let us assume for a moment that \code{x}
+has parameters for only two groups and that we are using non-symmetric linking.  In this instance, 
+\code{weights.t} would be a single list with length two.  The first element should be a vector
+of theta values corresponding to points on the \emph{To} scale.  The second list element should 
+be a vector of weights corresponding the the theta values.  If \code{x} contains multiple 
+groups, a single \code{weights.t} object can be supplied, and the same set of thetas and weights
+will be used for all adjacent groups.  However, a separate list of theta values and theta weights 
+for each adjacent group in \code{x} can be supplied.
 
-In generally, including a different \code{W} for each adjacent group is unnecessary, but
-the most likely scenario for its use is when the intent is to integrate over empirical
-theta values instead of equally spaced or random values.
+The specification of \code{weights.f} is the same as that for \code{weights.t}, although the 
+theta values and weights for this object correspond to theta values on the \emph{From} scale.
+This argument is only used when \code{symmetric}=TRUE. If \code{weights.f} is missing and 
+\code{symmetric}=TRUE, the same theta values and weights used for \code{weights.t} will be
+used for \code{weights.f}.
 
 The argument \code{dim.order} is a k x r matrix for k groups and r unique dimensions across
 groups. This object identifies the common dimensions across groups. The elements in the 
@@ -161,6 +169,18 @@ group respectively. If no \code{dim.order} is specified, it is assumed that all 
 dimensions are common, or in instances with different numbers of factors, that the first
 m dimensions for each group are common and the remaining r-m dimensions for a given group
 are unique.
+
+For the characteristic curve methods, response probabilities are computed using the functions
+\code{drm}, \code{grm}, \code{gpcm}, \code{nrm}, and \code{mcm} for the associated models
+respectively. Various arguments from these functions can be passed to \code{plink}. Specifically,
+the argument \code{incorrect} can be passed to \code{drm} and \code{catprob} can be passed to
+\code{grm}. In the functions \code{drm}, \code{grm}, and \code{gpcm} there is an argument \code{D}
+for the value of a scaling constant. In \code{plink}, a single argument \code{D} can be passed
+that will be applied to all applicable models, or arguments \code{D.drm}, \code{D.grm}, and 
+\code{D.gpcm} can be specified for each model respectively. If an argument is specified for \code{D}
+and, say \code{D.drm}, the values for \code{D.grm} and \code{D.gpcm} (if applicable) will be
+set equal to \code{D}. If only \code{D.drm} is specified, the values for \code{D.grm} and 
+\code{D.gpcm} (if applicable) will be set to 1.
 }
 
 \section{Methods}{
@@ -312,8 +332,10 @@ summary(out, descrip=TRUE)
 pm1 <- as.poly.mod(55,c("drm","gpcm","nrm"),dgn$items$group1)
 pm2 <- as.poly.mod(55,c("drm","gpcm","nrm"),dgn$items$group2)
 x <- as.irt.pars(dgn$pars,dgn$common,dgn$cat,list(pm1,pm2))
-out <- plink(x) # Run with NRM items included in the calibration
-out1 <- plink(x,mn.exclude=TRUE) # Run with NRM items excluded
+# Run with NRM items included for all methods
+out <- plink(x) 
+# Run with NRM items excluded from the moment methods
+out1 <- plink(x,mn.exclude=1) 
 summary(out)
 summary(out1)
 
@@ -328,7 +350,7 @@ pm4 <- as.poly.mod(70, c("drm", "gpcm"), reading$items[[4]])
 pm5 <- as.poly.mod(72, c("drm", "gpcm"), reading$items[[5]])
 pm6 <- as.poly.mod(71, c("drm", "gpcm"), reading$items[[6]])
 pm <- list(pm1, pm2, pm3, pm4, pm5, pm6)
-x <- as.irt.pars(reading$pars, reading$common, reading$cat, pm)
+x <- as.irt.pars(reading$pars, reading$common, reading$cat, pm, base.grp=4)
 out <- plink(x)
 summary(out)
 
@@ -370,7 +392,8 @@ pm <- as.poly.mod(60,c("drm","gpcm"), list(c(1:60)[md.mixed$cat==2],
 x <- as.irt.pars(md.mixed$pars, matrix(1:60,60,2), 
   list(md.mixed$cat, md.mixed$cat), 
   list(pm, pm), dimensions=4, grp.names=c("Form.X","Form.Y"))
-out <- plink(x,method=c("RM","SL"),dilation="MIN",weights=as.weight(n=3,dimensions=4))
+out <- plink(x,method=c("RM","SL"),dilation="MIN",
+  weights.t=as.weight(n=3,dimensions=4))
 summary(out, descrip=TRUE)
 
 
