@@ -1,3 +1,6 @@
+##   This function estimates the linking constants between two or
+##   more groups of tests and can rescale item and/or ability parameters
+
 setGeneric("plink", function(x, common, rescale, ability, method, weights.t, weights.f, startvals, score=1, base.grp=1, symmetric=FALSE, rescale.com=TRUE, grp.names=NULL, mn.exclude=0, dilation="ODL",  dim.order=NULL, ...) standardGeneric("plink"))
 
 
@@ -31,8 +34,12 @@ setMethod("plink", signature(x="list", common="data.frame"), function(x, common,
 
 setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, score, base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, dim.order, ...) {
 
-	##   This is the function that will be minimized for the characteristic curve methods 
-	##   (both unidimensional and multidimensional)
+
+	##################################################################
+	##      Function that will be minimized for the characteristic curve methods
+	##                       (both unidimensional and multidimensional)
+	##################################################################
+	
 	.CC <- function(startvals, to, from, dimensions, weights.t, weights.f, score, transform, symmetric, mn.exclude, dilation, T, ...) {
 		
 		##   In general, the criterion that will minimized is Q = Q1+Q2
@@ -273,6 +280,10 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		} else {
 			##   Oblique procrustes rotation
 			T <- ginv(t(from) %*% from) %*% t(from) %*% to
+			
+			##   Check to see if X'X is positive definite
+			tmp <- eigen(t(from) %*% from)$values
+			if (min(tmp)<0) warning("The rotation matrix is not positive definite. Be hesitant in trusting these results")
 		}
 		
 		TF <- T
@@ -294,7 +305,9 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	}
 	
 	
-	
+	###########################################################
+	##             Functions used to compute response probabilities
+	###########################################################
 	
 	##   This is a stripped down version of the {mixed} function
 	.Mixed <- function(x, theta, D.drm, D.gpcm, D.grm, incorrect, catprob) {
@@ -551,8 +564,11 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	}
 	
 	
+	########################################################
+	##             Function used to computes descriptive statistics 
+	##                        for the common item parameters
+	########################################################
 	
-	##   This function computes descriptive statistics for the common item parameters
 	.Descriptives <- function(a1, a2, b1, b2, c1, c2, pm, cat, mn.exclude, dimensions) {
 	
 	if (dimensions==1) {
@@ -764,26 +780,47 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	
 	
 	
+	############################################
+	##                        START PLINK
+	############################################
 	
-	### START PLINK ###
+	##   Number of groups
 	ng <- x@groups
+	
+	##   Maximum number of dimensions across groups
 	md <- max(x@dimensions)
+	
+	##   Create group names (if necessary)
 	 if (missing(grp.names)) grp.names <- names(x@pars)
 	
-	# Create or recode the values in dim.order
-	# dim.order.RM is the originally specified dim.order
-	# The columns correspond to the total number of dimensions across groups
-	# The rows correspond to the groups
+	##   Create or recode the values in {dim.order}. The object
+	##   dim.order.RM is the originally specified dim.order
+	
+	##   The columns correspond to the total number of dimensions across groups
+	##   The rows correspond to the groups
+	
+	##   If there is more than one dimension for any group
 	if (md>1) {
 		if (is.null(dim.order)) {
 			dim.order.RM <- NULL
+			
+			##   Initialize an object to identify the common dimensions between groups
 			dim.order <- matrix(NA,ng,md)
+			
+			##   Loop through all of the groups
 			for (i in 1:ng) {
-				# Set the default ordering to be the same as the ordering of supplied slope parameters
+				##   Set the default ordering of factors to be the same as 
+				##   the ordering of supplied slope parameters. If there are
+				##   different numbers of dimensions in different groups
+				##   the right-most unmatched columns will be treated as the 
+				##   unique factors for the given group
 				dim.order[i,1:x@dimensions[i]] <- 1:x@dimensions[i]
 			}
+			
+		##   If the {dim.order} was specified
 		} else {
-			# If ones are used as placeholders for common dimensions
+			##   If ones are used as placeholders for common dimensions
+			##   create a set of incremental values 
 			if (sum(dim.order, na.rm=TRUE)==sum(x@dimensions)) {
 				dim.order.RM <- dim.order
 				for (i in 1:ng) {
@@ -795,63 +832,174 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		}
 	}
 	
-	# Extract common items
+	##   Initialize an object to store the common item
+	##   parameters for each pair of adjacent groups
 	com <- vector("list",ng-1)
-	catci <- vector("list",ng-1)
-	pm <- vector("list",ng-1)
-	for (i in 1:(ng-1)) {
-		com[[i]] <- vector("list",2)
-		if (ng==2) {
-			it.com <- x@common
-			com[[i]][[1]] <- x@pars[[i]][it.com[,1],] # Common item parameterss for the lower group
-			com[[i]][[2]] <- x@pars[[i+1]][it.com[,2],] # Common item parameters for the higher group
-			catci[[i]] <- x@cat[[i]][it.com[,1]] # Category vector for the common items
-		} else if (ng>2) {
-			it.com <- x@common[[i]]
-			com[[i]][[1]] <- x@pars[[i]][it.com[,1],] # Common item parameters for the lower group
-			com[[i]][[2]] <- x@pars[[i+1]][it.com[,2],] # Common item parameters for the higher group
-			catci[[i]] <- x@cat[[i]][it.com[,1]] # Category vector for the common items
-		}
-		if (i<base.grp) com[[i]] <- com[[i]][c(2,1)] # The first element is the "To" set and the second is the "From" set
-		mod <-  x@poly.mod[[i]]@model
-		items <- x@poly.mod[[i]]@items
-		#Extract the common item numbers for the "To" group to facilitate the creation of a poly.mod object for the common items
-		if (ng==2) it.com <- x@common[,1] else it.com <- x@common[[i]][,1] 
-		poly <- mod1 <- NULL
 	
-		# Identify the common items associated with each model
-		# Not all models need to have common items
+	##   Initialize an object to store the number of response categories 
+	##   for the common items for each pair of adjacent groups
+	catci <- vector("list",ng-1)
+	
+	##   Initialize an object to store the poly.mod objects for
+	##   the common items for each pair of adjacent groups
+	pm <- vector("list",ng-1)
+	
+	##   Loop through all of the groups (minus 1)
+	for (i in 1:(ng-1)) {
+	
+		##   Initialize a list to store the common item parameters
+		##   for each group of the adjacent paired groups
+		com[[i]] <- vector("list",2)
+		
+		##   If there are only two groups total
+		if (ng==2) {
+			##   Get the common item matrix
+			it.com <- x@common
+			
+			##   Extract the common item parameterss for the lower group
+			com[[i]][[1]] <- x@pars[[i]][it.com[,1],] 
+			
+			##   Extract the common item parameterss for the higher group
+			com[[i]][[2]] <- x@pars[[i+1]][it.com[,2],]
+			
+			##   Extract a vector of the number of response categories for the common items
+			catci[[i]] <- x@cat[[i]][it.com[,1]] 
+			
+		##   If there are more than two groups
+		} else if (ng>2) {
+			##   Get the common item matrix for the given pair of groups
+			it.com <- x@common[[i]]
+			
+			##   Extract the common item parameterss for the lower group
+			com[[i]][[1]] <- x@pars[[i]][it.com[,1],]
+			
+			##   Extract the common item parameterss for the higher group
+			com[[i]][[2]] <- x@pars[[i+1]][it.com[,2],]
+			
+			##   Extract a vector of the number of response categories 
+			##   for the common items for the given pair of groups
+			catci[[i]] <- x@cat[[i]][it.com[,1]]
+		}
+		
+		##   The ordering of parameters in com[[i]] should be such that
+		##   the first element is the "To" set and the second is the "From" set
+		##   In cases where the lower group comes before the base.group
+		##   the ordering of the list elements must be switched. For example
+		##   if there are two groups, G1 and G2 and G2 is the base group
+		##   we want to estimate constants to put the G1 parameters on the 
+		##   G2 scale. When we initially populate the object {com}, the first
+		##   element includes the parameters for G1 and the second for G2.
+		##   because G2 is the "To" scale, these elements need to be 
+		##   re-ordered so that the first list element includes the parameters
+		##   for G2 and the second includes the parameters for G1
+		
+		##   Perform the switch (if necessary)
+		if (i<base.grp) com[[i]] <- com[[i]][c(2,1)] 
+		
+		##   Identify all of the item response models used 
+		##   (for both common and unique items)
+		mod <-  x@poly.mod[[i]]@model
+		
+		##   Identify the common and unique items
+		##   associated with each item response model
+		items <- x@poly.mod[[i]]@items
+		
+		##   Extract the common item numbers for the "To" group to 
+		##   facilitate the creation of a poly.mod object for the common items
+		if (ng==2) {
+			it.com <- x@common[,1] 
+		} else {
+			it.com <- x@common[[i]][,1] 
+		}
+		
+		##   Initialize an object to store the item response
+		##   models used for the common items
+		mod1 <- NULL
+		
+		##   Initialize an object to store the item numbers associated with
+		##   the item response models used for the common items
+		poly <- NULL
+	
+		##   Identify the common items associated with each model
+		##   Not all models need to have common items
+		
+		##   Initialize an object to increment with the 
+		##   included item response models
 		step <- 1
 		for (k in 1:length(mod)) {
+			##  Determine the number of common items
+			##   associated with the given model
 			tmp <- seq(1,length(it.com))[it.com %in% items[[k]]]
+			
+			##   If no common items are associated with this model
 			if (length(tmp)==0) {
 				next 
+				
+			##   If there are common items are associated with this model
 			}else {
+				##   Add the given model
 				mod1 <- c(mod1,mod[k])
+				
+				##   Add the items associated with the given model
 				poly[[step]] <- tmp
 				step <- step+1
 			}
 		}
-		pm[[i]] <- as.poly.mod(length(it.com),mod1,poly) # Create poly.mod object for the common items
-	}
+		
+		# Create poly.mod object for the common items
+		pm[[i]] <- as.poly.mod(length(it.com),mod1,poly) }
 	
-	# Extract the common item parameters 
+	
+	##   Initialize an object to store the linking constants
+	##   and common item descriptives for each pair
+	##   of adjacent groups
 	link.out <- vector("list",ng-1)
+	
+	##   Separate the common item parameters to get the specific parameters
+	##   Loop through all of the groups
 	for (i in 1:(ng-1)) {
-		tmp1 <- sep.pars(com[[i]][[1]],catci[[i]],pm[[i]],x@dimensions[i],x@location[i]) # "To" parameters
-		tmp2 <- sep.pars(com[[i]][[2]],catci[[i]],pm[[i]],x@dimensions[i+1],x@location[i+1]) # "From" parameters
+	
+		##   The "To" parameters
+		tmp1 <- sep.pars(com[[i]][[1]],catci[[i]],pm[[i]],x@dimensions[i],x@location[i])
+		
+		##   The "From" parameters
+		tmp2 <- sep.pars(com[[i]][[2]],catci[[i]],pm[[i]],x@dimensions[i+1],x@location[i+1])
+		
+		##   The maximum number of dimensions across both groups
+		##   (the dimensions can differ from group to group)
 		tmp.md <- max(c(x@dimensions[i],x@dimensions[i+1]))
 		
-		# Identify common dimensions
+		##############################################
+		##                Identify common dimensions
+		##############################################
+		
+		##   Create a flag to identify whether (in the multidimensional
+		##   case) there is only one common dimension
 		dim.flag <- FALSE
+		
+		##   If there are any groups with more than one dimension
 		if (tmp.md>1) {
+			
+			##   Identify the common dimensions in the lower group
 			do1 <- dim.order[i,!is.na(dim.order[i,]) &!is.na(dim.order[i+1,])]
+			
+			##   Identify the common dimensions in the higher group
 			do2 <- dim.order[i+1,!is.na(dim.order[i,]) &!is.na(dim.order[i+1,])]
+			
+			##   Extract the slope parameters for the common dimensions
 			tmp1@a <- as.matrix(as.matrix(tmp1@a)[,do1])
 			tmp2@a <- as.matrix(as.matrix(tmp2@a)[,do2])
+			
+			##   Set the number of dimensions for both groups equal
+			##   to the number of common dimensions
 			tmp1@dimensions <- tmp2@dimensions <- dimensions <- length(do1)
+			
+			##   Check to see if the parameters for a given pair of groups
+			##   are unidimensional (i.e., parameterized using a slope/difficulty
+			##   rather than a slope/intercept as commonly used in the MD case)
 			for (j in i:(i+1)) {
-				# If the parameters for a given group are unidimensional
+				##   If the parameters for a given group use a slope/difficulty parameterization,
+				##   reformat them to use a slope/intercept parameterization
 				if (x@dimensions[j]==1) {
 					for (k in 1:length(pm[[i]]@model)) {
 						if (pm[[i]]@model[k]=="drm"|pm[[i]]@model[k]=="grm"|pm[[i]]@model[k]=="gpcm") {
@@ -862,7 +1010,9 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				}
 			}
 							
-			# If there is only one common dimension
+			##   If there is only one common dimension add a vector of 
+			##   zeros to the matrix of slope parameters so that the MD
+			##   linking methods can be used (this should not affect the estimation)
 			if (dimensions==1) {
 				tmp1@a <- cbind(tmp1@a,0)
 				tmp2@a <- cbind(tmp2@a,0)
@@ -873,6 +1023,8 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			dimensions <- 1
 		}
 		
+		
+		##   Extract the common item parameters for each group
 		a1 <- tmp1@a
 		a2 <- tmp2@a
 		b1 <- tmp1@b
@@ -880,11 +1032,21 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		c1 <- tmp1@c
 		c2 <- tmp2@c
 		
-		if (missing(weights.t)) wgt.t <- as.weight(dimensions=dimensions) else wgt.t <- weights.t 
-		if (missing(weights.f)) wgt.f <- wgt.t else wgt.f <- weights.f 
+		##   Identify the weights to be used for the given group for the TO scale
+		if (missing(weights.t)) {
+			wgt.t <- as.weight(dimensions=dimensions)
+		} else {
+			if (is.list(weights.t[[1]])) wgt.t <- weights.t[[i]] else wgt.t <- weights.t
+		}
 		
-		#if (is.list(weights[[1]])) wgt <- weights[[i]] else 
+		##   Identify the weights to be used for the given group for the FROM scale
+		if (missing(weights.f)) {
+			wgt.f <- wgt.t 
+		} else {
+			if (is.list(weights.f[[1]])) wgt.f <- weights.f[[i]] else wgt.f <- weights.f
+		}
 		
+		##   Use all methods (if none are specified)
 		if (missing(method)) {
 			if (dimensions==1) method <- c("MM","MS","HB","SL") else method <- c("RM","HB","SL") 
 		} else {
@@ -895,46 +1057,103 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			}
 		}
 		
-		descrip <- .Descriptives(a1,a2,b1,b2,c1,c2,pm[[i]],catci[[i]],mn.exclude,dimensions)
+		##   Compute the descriptive statistics for reporting
+		descrip <- .Descriptives(a1,a2,b1,b2,c1,c2,pm[[i]],catci[[i]],mn.exclude=0,dimensions)
 		
+		##   Compute the descriptive statistics for use in the moment methods
+		##   These may differ from those above  if parameters are excluded for NRM and MCM items
+		descrip.mm <- .Descriptives(a1,a2,b1,b2,c1,c2,pm[[i]],catci[[i]],mn.exclude,dimensions)
+		
+		
+		##   Check to see if the {rescale} method is included in the {method} argument
+		##   If not, add it to {method}
+		if (!missing(rescale)) {
+			if ((toupper(rescale)%in%method)==FALSE) {
+				method <- c(method,toupper(rescale))
+			}
+		}
+		
+		##   Initialize an object to identify whether constants should NOT
+		##   be estimated using the SL method (even if it is included in {method})
+		##   Set the default to TRUE
 		chk.sl <- TRUE
+		
+		##   If there are only NRM or MCM items, the SL method should not be used
 		if (sum((mod=="nrm"|mod=="mcm")+0)==length(mod)) {
 			chk.sl <- FALSE
+			method <- method[method!="SL"]
+			
+			##   Determine which moment methods are to be used
 			meth <- NULL
 			if ("MS" %in% method) meth <- "Mean/Sigma"
 			if ("MM" %in% method) {
 				if (length(meth)) meth <- "Mean/Sigma and Mean/Mean" else meth <- "Mean/Mean"
 			}
+			
+			##   Print a message stating that all of the NRM and/or MCM items
+			##   will be used to compute linking constants using the specified moment methods
 			if (length(meth)) cat(paste("All items were used to compute the",meth,"linking constants\n"))
 		}
 		
-		# Perform the Calibration
-		rasch.flag <- FALSE
+		########################################
+		##            Perform the Calibration
+		########################################
+		
+		##   Initialize an object to store the linking constants for each method
 		constants <- list(NULL)
+		
+		##   Initialize objects to store the iteration, convergence, and criterion
+		##   value information for the characteristic curve methods
 		it <- con <- obj <- NULL
 		
+		##   Unidimensional case
 		if (dimensions==1) {
-			# Compute the mean/mean and mean/sigma constants
+		
+			##   Initialize an object to check whether the Rasch model
+			##   or PCM (with slopes equal to 1) is being used
+			tmp <- c(a1,a2)
+			if (length(tmp[tmp==1])==length(tmp)) {
+				rasch.flag <- TRUE
+			} else {
+				rasch.flag <- FALSE
+			}
+			
+			##   Compute linking constants using the moment methods
 			mm <- ms <- NULL
-			A1 <- descrip$all[3,1]/descrip$all[2,1]
-			A2 <- descrip$all[4,2]/descrip$all[5,2]
-			#A1 <- mean(a2,na.rm=TRUE)/mean(a1,na.rm=TRUE)
-			#A2 <- .sd(b1)/.sd(b2)
-			if (rasch.flag==TRUE) A2 <- a1[1]
-			B1 <- descrip$all[2,2]-A1*descrip$all[3,2]
-			B2 <- descrip$all[2,2]-A2*descrip$all[3,2]
-			#B1 <- mean(b1,na.rm=TRUE)-A1*mean(b2,na.rm=TRUE)
-			#B2 <- mean(b1,na.rm=TRUE)-A2*mean(b2,na.rm=TRUE)
+			
+			##   Mean/Mean - A
+			A1 <- descrip.mm$all[3,1]/descrip.mm$all[2,1]
+			
+			##   Mean/Sigma  - A
+			A2 <- descrip.mm$all[4,2]/descrip.mm$all[5,2]
+			
+			##   If the Rasch model or PCM is used, set the A2 constant equal to A1
+			if (rasch.flag==TRUE) A2 <- A1
+			
+			##   Mean/Mean - B
+			B1 <- descrip.mm$all[2,2]-A1*descrip.mm$all[3,2]
+			
+			##   Mean/Sigma - B
+			B2 <- descrip.mm$all[2,2]-A2*descrip.mm$all[3,2]
+			
+			##   Format the constants for the moment methods
+			##   to be included in the output
 			mm <- round(c(A1,B1),6)
 			ms <- round(c(A2,B2),6)
 			names(mm) <- names(ms) <- c("A","B")
+			
+			##   Add these constants to the output
 			if ("MM" %in% method) constants$MM <- mm
 			if ("MS" %in% method) constants$MS <- ms
+			
+			##   These values are only needed for the multidimensional case, but
+			##   they are required for the criterion function for the characteristic curve methods
 			dilation <- "N/A"
 			T <- NA
 			
-			# Determine starting values for the characteristic curve methods
+			##   Determine starting values for the characteristic curve methods
 			if (missing(startvals)) {
+				##   Use the Mean/Sigma values
 				startvals <- ms
 			} else {
 				if (is.character(startvals)) {
@@ -942,26 +1161,46 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 					if (toupper(startvals)=="MS") startvals <- ms
 				}
 			}
-			tmp <- c(a1,a2)
-			if (length(tmp[tmp==1])==length(tmp)) {
+			
+			if (rasch.flag==TRUE) {
+				##   Only include starting values for the B constant
 				startvals <- startvals[2]
-				rasch.flag <- TRUE
 			}
-			lower <- startvals-0.25
-			upper <- startvals+0.25
+			
+		##   Multidimensional case
 		} else {
-			# Direct method
+		
+			##   Initialize an object to check whether the multidimensional 
+			##   Rasch model or MPCM (with slopes equal to 1) is being used
 			tmp <- as.vector(a1)
 			if (length(tmp[tmp==1])==length(tmp)) {
-				A <- diag(rep(1,dimensions))
 				rasch.flag <- TRUE
+			} else {
+				rasch.flag <- FALSE
+			}
+			
+			##   Compute the rotation matrix using the direct method
+			tmp <- as.vector(a1)
+			if (rasch.flag==TRUE){
+				A <- diag(rep(1,dimensions))
 			} else {
 				# This actually estimates the inverse of A
 				A <- .Rotate(a1,a2,FALSE)
 			}
 			
+			##   Reformat b1 and b2 as vectors.  This is necessary
+			##   when there are polytomous items
 			tmp.b1 <- as.vector(b1)[!is.na(as.vector(b1))]
 			tmp.b2 <- as.vector(b2)[!is.na(as.vector(b2))]
+			
+			##   When transforming b1 and b2 into vectors
+			##   there will be more rows than in the original matrices
+			##   if there are polytomous items.  As such, the matrix
+			##   of slope parameters needs to be adjusted so that
+			##   appropriate slopes are matched up with each of 
+			##   the reformatted b parameters.  For the direct method
+			##   it is only necessary to re-specify the matrix of 
+			##   slopes for the "From" group
 			tmp.a2 <- NULL
 			for (j in 1:dimensions) {
 				tmp.a2a <- (!is.na(b2))*a2[,j]
@@ -969,77 +1208,121 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				tmp.a2a <- as.vector(tmp.a2a)[!is.na(as.vector(tmp.a2a))]
 				tmp.a2 <- cbind(tmp.a2,tmp.a2a)
 			}
+			
+			##   Compute the translation vector using the direct method
 			y <- tmp.b2-tmp.b1 
 			X <- tmp.a2%*%A
 			m <- ginv(t(X)%*%X)%*%t(X)%*%y
+			
+			##   Format the constants for the moment methods
+			##   to be included in the output
 			m <- as.vector(m)
 			A <- ginv(A)
 			rownames(A) <- rep("",dimensions)
 			colnames(A) <- c(rep("",dimensions-1),"A")
 			names(m) <- paste("m",1:dimensions,sep="")
 			if ("RM" %in% method) {
+				##   When there are two or more common dimensions between the groups
 				if (dim.flag==FALSE) {
 					constants$RM <- list(A=round(A,6),m=round(m,6))
+					
+				##   When there is only one common dimension between the groups
 				} else {
 					constants$RM <- c(round(A[1,1],6),round(m[1],6))
 					names(constants$RM) <- c("A","m")
 				}
 			}
 			
-			# Compute the rotation matrix for certain characteristic curve methods
-			if (rasch.flag==TRUE) T <- diag(rep(1,dimensions)) else T <- .Rotate(a1,a2,TRUE)
 			
-			# Determine starting values for the characteristic curve methods
+			##   Compute the rotation matrix for the characteristic curve methods
+			##   using the LL or MIN dilation (i.e., an orthogonal rotation matrix)
 			if (rasch.flag==TRUE) {
-				if (missing(startvals)) startvals <- m else startvals <- startvals[((length(startvals)-dimensions)+1):length(startvals)]
+				T <- diag(rep(1,dimensions)) 
+			} else {
+				T <- .Rotate(a1,a2,TRUE)
+			}
+			
+			##   Determine starting values for the characteristic curve methods
+			if (rasch.flag==TRUE) {
+				if (missing(startvals)) {
+					##   Use the values from the direct method
+					startvals <- m 
+				} else {
+					startvals <- startvals[((length(startvals)-dimensions)+1):length(startvals)]
+				}
 			} else {
 				if (missing(startvals)) {
+				
+					##   Oshima, Davey, & Lee method
 					if (dilation=="ODL") {
+						##   Use all of the constants from the direct method
 						startvals <- c(as.vector(A),m) 
-						lower <- startvals-0.25
-						upper <- startvals+0.25
+						
+					##   Li & Lissitz method
 					} else if (dilation=="LL") {
+						##   Use the values from the translation vector from the direct method
 						startvals <- c(1,m)
-						lower <- c(-2,m-0.25)
-						upper <- c(2,m+0.25)
+						
+					##   Min method
 					} else if (dilation=="MIN") {
+						##   Use the values from the translation vector from the direct method
 						startvals <- c(rep(1,dimensions),m)
-						lower <- c(rep(-2,dimensions),m-0.25)
-						upper <- c(rep(2,dimensions),m+0.25)
+					
 					} 
 				} else {
 					if (dilation!="ODL") {
+						##   Check to see if the correct number of starting values have been specified
 						if ((length(startvals)-dimensions)!=dimensions^2) stop(paste("The number of elements must equal",dimensions^2))
 					}
-					lower <- startvals-0.5
-					upper <- startvals+0.5
 				}
 			}
 			
 		}
 		
-		# Characteristic curve methods
 		
-		# Haebara Method
+		##   Characteristic curve methods
+		
+		##   Haebara Method
 		if ("HB" %in% method) {
-			hb <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, score=score, transform="HB", symmetric=symmetric, mn.exclude=mn.exclude, dilation=dilation, T=T, lower=lower, upper=upper, ...)
+		
+			##   Estimate the linking constants
+			hb <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, score=score, transform="HB", symmetric=symmetric, mn.exclude=mn.exclude, dilation=dilation, T=T, ...)
+			
+			##   Reformat the information from the estimation (as necessary)
+			##   to prepare it for being output
 			if (dimensions==1) { 
 				if (rasch.flag==TRUE) hb$par <- c(1,hb$par)
 				names(hb$par) <- c("A","B")
 				constants$HB <- round(hb$par,6)
 			} else {
 				if (dilation=="ODL") {
+					##   Reformat the estimated values for the rotation matrix as a matrix
 					if (rasch.flag==TRUE) A <- diag(rep(1,dimensions)) else A <- matrix(hb$par[1:(dimensions^2)],dimensions,dimensions)
+					
+					##   Extract the constants for the translation vector
 					m <- hb$par[-c(1:(dimensions^2))]
+					
 				} else if (dilation=="LL") {
+					##   Reformat the single dilation parameter as a diagonal matrix
 					if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(rep(hb$par[1],dimensions))
+					
+					##   Extract the constants for the translation vector
 					m <- hb$par[-1]
+					
+					##   Create the combined rotation matrix
 					A <- T%*%K
+					
 				} else if (dilation=="MIN") {
+					##   Reformat the dilation parameters as a diagonal matrix
 					if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(hb$par[1:dimensions])
+					
+					##   Extract the constants for the translation vector
 					m <- hb$par[-c(1:dimensions)]
+					
+					##   Create the combined rotation matrix
 					A <- T%*%K
 				} 
+				
 				rownames(A) <-rep("",dimensions)
 				colnames(A) <- c(rep("",dimensions-1),"A")
 				names(m) <- paste("m",1:dimensions,sep="")
@@ -1052,57 +1335,82 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 					constants$HB <- list(T=round(T,6), K=round(K,6), A=round(A,6), m=round(m,6))
 				}
 			}
+			
+			##   When there is only one common dimension between the groups
 			if (dim.flag==TRUE) {
 				constants$HB <- c(constants$HB$A[1,1],constants$HB$m[1])
 				names(constants$HB) <- c("A","m")
 			}
+			
 			it <- c(it, HB=hb$iterations)
 			con <- c(con, HB=hb$message)
 			obj <- c(obj, HB=hb$objective)
 		}
 		
 		
-		# Stocking-Lord Method
+		##   Stocking-Lord Method
 		if ("SL" %in% method) {
-			if (chk.sl==TRUE) {
-				sl <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, score=score, transform="SL", symmetric=symmetric, mn.exclude=mn.exclude, dilation=dilation, T=T, lower=lower, upper=upper, ...)
-				if (dimensions==1) { 
-					if (rasch.flag==TRUE) sl$par <- c(1,sl$par)
-					names(sl$par) <- c("A","B")
-					constants$SL <- round(sl$par,6)
+			
+			##   Estimate the linking constants
+			sl <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, score=score, transform="SL", symmetric=symmetric, mn.exclude=mn.exclude, dilation=dilation, T=T, ...)
+			
+			##   Reformat the information from the estimation (as necessary)
+			##   to prepare it for being output
+			if (dimensions==1) { 
+				if (rasch.flag==TRUE) sl$par <- c(1,sl$par)
+				names(sl$par) <- c("A","B")
+				constants$SL <- round(sl$par,6)
+			} else {
+				if (dilation=="ODL") {
+					##   Reformat the estimated values for the rotation matrix as a matrix
+					if (rasch.flag==TRUE) A <- diag(rep(1,dimensions)) else A <- matrix(sl$par[1:(dimensions^2)],dimensions,dimensions)
+					
+					##   Extract the constants for the translation vector
+					m <- sl$par[-c(1:(dimensions^2))]
+					
+				} else if (dilation=="LL") {
+					##   Reformat the single dilation parameter as a diagonal matrix
+					if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(rep(sl$par[1],dimensions))
+					
+					##   Extract the constants for the translation vector
+					m <- sl$par[-1]
+					
+					##   Create the combined rotation matrix
+					A <- T%*%K
+					
+				} else if (dilation=="MIN") {
+					##   Reformat the dilation parameters as a diagonal matrix
+					if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(sl$par[1:dimensions])
+					
+					##   Extract the constants for the translation vector
+					m <- sl$par[-c(1:dimensions)]
+					
+					##   Create the combined rotation matrix
+					A <- T%*%K
+				} 
+				
+				rownames(A) <-rep("",dimensions)
+				colnames(A) <- c(rep("",dimensions-1),"A")
+				names(m) <- paste("m",1:dimensions,sep="")
+				if (dilation=="ODL") {
+					constants$SL <- list(A=round(A,6), m=round(m,6))
 				} else {
-					if (dilation=="ODL") {
-						if (rasch.flag==TRUE) A <- diag(rep(1,dimensions)) else A <- matrix(sl$par[1:(dimensions^2)],dimensions,dimensions)
-						m <- sl$par[-c(1:(dimensions^2))]
-					} else if (dilation=="LL") {
-						if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(rep(sl$par[1],dimensions))
-						m <- sl$par[-1]
-						A <- T%*%K
-					} else if (dilation=="MIN") {
-						if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(sl$par[1:dimensions])
-						m <- sl$par[-c(1:dimensions)]
-						A <- T%*%K
-					} 
-					rownames(A) <-rep("",dimensions)
-					colnames(A) <- c(rep("",dimensions-1),"A")
-					names(m) <- paste("m",1:dimensions,sep="")
-					if (dilation=="ODL") {
-						constants$SL <- list(A=round(A,6), m=round(m,6))
-					} else {
-						rownames(T) <- rownames(K) <- rep("",dimensions)
-						colnames(T) <- c(rep("",dimensions-1),"T")
-						colnames(K) <- c(rep("",dimensions-1),"K")
-						constants$SL <- list(T=round(T,6), K=round(K,6), A=round(A,6), m=round(m,6))
-					}
+					rownames(T) <- rownames(K) <- rep("",dimensions)
+					colnames(T) <- c(rep("",dimensions-1),"T")
+					colnames(K) <- c(rep("",dimensions-1),"K")
+					constants$SL <- list(T=round(T,6), K=round(K,6), A=round(A,6), m=round(m,6))
 				}
-				if (dim.flag==TRUE) {
-					constants$SL <- c(constants$SL$A[1,1],constants$SL$m[1])
-					names(constants$SL) <- c("A","m")
-				}
-				it <- c(it, SL=sl$iterations)
-				con <- c(con, SL=sl$message)
-				obj <- c(obj, SL=sl$objective)
 			}
+			
+			##   When there is only one common dimension between the groups
+			if (dim.flag==TRUE) {
+				constants$SL <- c(constants$SL$A[1,1],constants$SL$m[1])
+				names(constants$SL) <- c("A","m")
+			}
+			
+			it <- c(it, SL=sl$iterations)
+			con <- c(con, SL=sl$message)
+			obj <- c(obj, SL=sl$objective)
 		}
 		
 		constants[[1]] <- NULL
@@ -1110,6 +1418,9 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		if (is.null(con)) con <- "N/A"
 		if (is.null(obj)) obj <- 0
 		
+		
+		##   Create labels identifying the pairs of groups for the linking constants
+		##   Include an asterisk identifying the base group
 		if (i==base.grp) {
 			nms <- paste(grp.names[i+1],"/",grp.names[i],"*",sep="")
 		} else if (i < base.grp) {
@@ -1122,11 +1433,15 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			nms <- paste(grp.names[i+1],"/",grp.names[i],sep="")
 		}
 		
+		##   Create the {link} object containing the linking constants
+		##   and common item descriptive statistics for the pair of adjacent groups
 		link.out[[i]] <- new("link", constants=constants, descriptives=descrip, iterations=it, objective=obj, convergence=con, base.grp=base.grp, grp.names=nms, include.mcm.nrm=mn.exclude,n=tmp1@n, mod.lab=tmp1@mod.lab, dilation=dilation)
 		
 	}
 	
+	##   Rescale the item parameters
 	if (!missing(rescale)) {
+		##   Change the method used to rescale the item parameters (if necessary)
 		if ((toupper(rescale)%in%method)==FALSE) {
 			if (dimensions==1) {
 				if ("SL" %in% method) rescale <- "SL" else rescale <- method[length(method)]
@@ -1135,29 +1450,59 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			}
 			warning(paste("No linking constants were computed for the rescale method you selected. The parameters will be rescaled using the ",rescale," method",sep=""))
 		}
+		
+		##   Initialize a list to store the specific linking constants
+		##   that will be used to rescale all of the item parameters
 		tmp.con <- vector("list",ng)
+		
+		##   Initialize an object to increment the list element for tmp.con
 		j <- 1
+		
+		##  Loop through all of the groups to compile the linking constants
 		for (i in 1:ng) {
+			##   For the base group, set the linking constants to 1 and 0 for A and B 
+			##   respectively in the unidimensional case, or to an identity matrix and 
+			##   a vector of zeros for the rotation matrix and translation vector in the 
+			##   multidimensional case
 			if (i==base.grp) {
 				if (x@dimensions[i]==1) tmp.con[[i]] <- c(1,0) else tmp.con[[i]] <- list(A=diag(rep(1,x@dimensions[i])),m=rep(0,x@dimensions[i]))
+			
+			##   Extract the specific linking constants for the given pair of tests
 			} else {
 				tmp.con[[i]] <- eval(parse(text=paste("link.out[[",j,"]]@constants$",rescale,sep="")))
 				j <- j+1
 			}
 		}
 		
+		##   Initialize objects to store the rescaled item and ability parameters
 		out.pars <- vector("list",ng)
 		out.ability <- vector("list",ng)
 		
+		
+		##   Loop through all of the groups and rescale the item parameters
+		##   and ability parameters (if applicable)
 		for (i in 1:ng) {
-			mcnr <- NULL
+		
+			##   poly.mod object for unique and common items for a given group
 			pm <- x@poly.mod[[i]]@model
+			
+			##   Identify NRM and MCM items
+			mcnr <- NULL
 			for (k in 1:length(pm)) {
 				if (pm[k]=="mcm"|pm[k]=="nrm") mcnr <- c(mcnr, x@poly.mod[[i]]@items[[k]])
 			}
+			
+			##   Separate out the item parameters for the given group
 			tmp <- sep.pars(x@pars[[i]],x@cat[[i]],x@poly.mod[[i]],x@dimensions[i],x@location[i])
+			
+			##   Extract ability estimates for the given group (if applicable)
 			if (!missing(ability)) tmpa <- ability[[i]] 
+			
+			##   Number of dimensions for the given group
 			dimensions <- x@dimensions[i]
+			
+			##   Initialize a set of indexing values to loop over to
+			##   place a given set of parameters on the base scale
 			tmp1 <- tmp
 			if (i==base.grp) {
 				tmp.j <- i
@@ -1166,7 +1511,8 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			} else if (i > base.grp) {
 				tmp.j <- i:(base.grp+1)
 			}
-			# Perform j iterations to place the parameters for the given group on the base group scale
+			
+			##   Perform j iterations to place the parameters for the given group on the base group scale
 			for (j in tmp.j) {
 				if (dimensions==1) {
 					tmp1@a <- as.matrix(tmp1@a/tmp.con[[j]][1])
@@ -1175,6 +1521,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 					tmp@b[mcnr,] <- tmp1@b[mcnr,]
 					if (!missing(ability)) tmpa <- tmp.con[[j]][1]*tmpa + tmp.con[[j]][2]
 				} else {
+					##   Identify the dimensions for the given group that should be transformed
 					if (i==base.grp) {
 						do1 <- dim.order[j,!is.na(dim.order[j,])]
 					} else if (i < base.grp) {
@@ -1194,27 +1541,47 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 					}
 				}
 			}
+			
+			##   Compile the rescaled item parameters
 			out.pars[[i]] <- tmp1
 			names(out.pars)[[i]] <- grp.names[i]
+			
+			##   Compile the rescaled ability estimates
 			if (!missing(ability)) {
 				out.ability[[i]] <- tmpa
 				names(out.ability)[[i]] <- grp.names[i]
 			}
 		}
-		# Substitute the non-scaled parameters for the common items into the set of rescaled item parameters
+		
+		##   Substitute the non-scaled parameters for the common items into the set of rescaled item parameters
 		if (rescale.com==FALSE) {
+		
+			##   Extract the common item matrix/matrices
 			com <- x@common
 			if (is.matrix(com)) com <- list(com)
+			
+			##   Loop through all of the groups lower than the base group
 			for (i in (base.grp-1):1) {
 				if (base.grp==1) break
+				
+				##   There may be different numbers of columns for the matrices
+				##   of b and c parameters for the two groups. Figure out the minimum
 				b.min <- min(c(ncol(out.pars[[i]]@b),ncol(out.pars[[i+1]]@b)))
 				c.min <- min(c(ncol(out.pars[[i]]@c),ncol(out.pars[[i+1]]@c)))
 				
+				##   Replace the b and c parameters for the group further from the base 
+				##   group with the parameters from the group closer to the base group
+				##   (i.e., the "To" scale parameters in each of the adjacent pairs used
+				##   when estimating the linking constants)
 				out.pars[[i]]@b[com[[i]][,1],1:b.min] <- out.pars[[i+1]]@b[com[[i]][,2],1:b.min]
 				out.pars[[i]]@c[com[[i]][,1],1:c.min] <- out.pars[[i+1]]@c[com[[i]][,2],1:c.min]
+				
+				##   Replace the slope parameters for the group further from the base 
+				##   group with the parameters from the group closer to the base group
 				if (dimensions==1) {
 					out.pars[[i]]@a[com[[i]][,1],] <- out.pars[[i+1]]@a[com[[i]][,2],]
 				} else {
+					##   Make the replacement only for the common dimensions
 					do1 <- dim.order[i,!is.na(dim.order[i,]) &!is.na(dim.order[i+1,])]
 					do2 <- dim.order[i+1,!is.na(dim.order[i,]) &!is.na(dim.order[i+1,])]
 					out.pars[[i]]@a[com[[i]][,1],do1] <- out.pars[[i+1]]@a[com[[i]][,2],do2]
@@ -1222,16 +1589,28 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				}
 			}
 			
+			##   Loop through all of the groups higher than the base group
 			for (i in base.grp:(ng-1)) {
 				if (base.grp==ng) break
+				
+				##   There may be different numbers of columns for the matrices
+				##   of b and c parameters for the two groups. Figure out the minimum
 				b.min <- min(c(ncol(out.pars[[i]]@b),ncol(out.pars[[i+1]]@b)))
 				c.min <- min(c(ncol(out.pars[[i]]@c),ncol(out.pars[[i+1]]@c)))
 				
+				##   Replace the b and c parameters for the group further from the base 
+				##   group with the parameters from the group closer to the base group
+				##   (i.e., the "To" scale parameters in each of the adjacent pairs used
+				##   when estimating the linking constants)
 				out.pars[[i+1]]@b[com[[i]][,2],1:b.min] <- out.pars[[i]]@b[com[[i]][,1],1:b.min]
 				out.pars[[i+1]]@c[com[[i]][,2],1:c.min] <- out.pars[[i]]@c[com[[i]][,1],1:c.min]
+				
+				##   Replace the slope parameters for the group further from the base 
+				##   group with the parameters from the group closer to the base group
 				if (dimensions==1) {
 					out.pars[[i+1]]@a[com[[i]][,2],] <- out.pars[[i]]@a[com[[i]][,1],]
 				} else {
+					##   Make the replacement only for the common dimensions
 					do1 <- dim.order[i,!is.na(dim.order[i,]) &!is.na(dim.order[i+1,])]
 					do2 <- dim.order[i+1,!is.na(dim.order[i,]) &!is.na(dim.order[i+1,])]
 					out.pars[[i+1]]@a[com[[i]][,2],do2] <- out.pars[[i]]@a[com[[i]][,1],do1]
@@ -1242,25 +1621,48 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		
 	} else {
 		if (!missing(ability)) {
+			##   Change the method used to rescale the item parameters (if necessary)
 			if (dimensions==1) {
 				if ("SL" %in% method) rsc <- "SL" else rsc<- method[length(method)]
 			} else {
 				if ("RM" %in% method) rsc <- "RM" else rsc<- method[length(method)]
 			}
 			cat(paste("No rescale method was identified. Ability parameters will be rescaled using the ",rsc," method.\n",sep=""))
+			
+			
+			##   Initialize a list to store the specific linking constants
+			##   that will be used to rescale all of the ability estimates
 			tmp.con <- vector("list",ng)
+			
+			##   Initialize an object to increment the list element for tmp.con
 			j <- 1
+			
+			##  Loop through all of the groups to compile the linking constants
 			for (i in 1:ng) {
+				##   For the base group, set the linking constants to 1 and 0 for A and B 
+				##   respectively in the unidimensional case, or to an identity matrix and 
+				##   a vector of zeros for the rotation matrix and translation vector in the 
+				##   multidimensional case
 				if (i==base.grp) {
 					if (dimensions==1) tmp.con[[i]] <- c(1,0) else tmp.con[[i]] <- list(A=diag(rep(1,dimensions)),m=rep(0,dimensions))
 				} else {
+					##   Extract the specific linking constants for the given pair of tests
 					tmp.con[[i]] <- eval(parse(text=paste("link.out[[",j,"]]@constants$",rsc,sep="")))
 					j <- j+1
 				}
 			}
 			
+			##   Initialize an object to store the rescaled ability estimates
 			out.ability <- vector("list",ng)
+			
+			##   Loop through all of the groups and rescale the ability estimates
 			for (i in 1:ng) {
+				
+				##   Number of dimensions for the given group
+				dimensions <- x@dimensions[i]
+				
+				##   Initialize a set of indexing values to loop over to
+				##   place a given set of parameters on the base scale
 				tmpa <- ability[[i]]
 				if (i==base.grp) {
 					tmp.j <- i
@@ -1269,12 +1671,14 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				} else if (i > base.grp) {
 					tmp.j <- i:(base.grp+1)
 				}
-				# Perform j iterations to place the ability estimates for the given group on the base group scale
+				
+				##   Perform j iterations to place the ability estimates for the given group on the base group scale
 				for (j in tmp.j) {
 					
 					if (dimensions==1) {
 						tmpa <- tmp.con[[j]][1]*tmpa + tmp.con[[j]][2]
 					} else {
+						##   Identify the dimensions for the given group that should be transformed
 						if (i==base.grp) {
 							do1 <- dim.order[j,!is.na(dim.order[j,])]
 						} else if (i < base.grp) {
@@ -1290,12 +1694,16 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 						}
 					}
 				}
+				
+				##   Compile the rescaled ability estimates
 				out.ability[[i]] <- tmpa
 				names(out.ability)[[i]] <- grp.names[i]
 			}
 		}
 	}
 	
+	
+	##   Combine the {link} object and rescaled item parameters/ability estimates (as necessary) to be output
 	if (ng==2) {
 		if (!missing(ability)) {
 			if (!missing(rescale)) {

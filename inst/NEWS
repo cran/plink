@@ -1,3 +1,26 @@
+Changes in version: plink_1.1-6
+
+  Bug Fixes:
+
+  o Upper and lower bounds for the estimates for the characteristic curve
+    methods were removed because they have the potential to result in inaccurate
+    estimates when there are three or more groups
+
+  o The specification of different weights for different pairs of groups
+    now works properly
+
+
+  Misc:
+
+  o A warning message was added to the Reckase-Martineau approach
+    when the rotation matrix is not positive definite
+
+  o Group name labels added to plots for multiple groups
+
+  o Some corrections/additions to the .Rd files
+
+==============================
+
 Changes in version: plink_1.1-5
 
   Bug Fixes:
@@ -5,7 +28,7 @@ Changes in version: plink_1.1-5
   o IMPORTANT - in the plink function, the incorrect parameters were
     being optimized for the multidimensional characteristic curve methods
 
-  o Bug fix for the separation of multidimensional NRM and multidimensional
+  o Fix for the separation of multidimensional NRM and multidimensional
     MCM item parameters in the sep.pars function
 
 

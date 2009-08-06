@@ -278,7 +278,7 @@ set equal to \code{D}. If only \code{D.drm} is specified, the values for \code{D
 pm <- as.poly.mod(36)
 x <- as.irt.pars(KB04$pars, KB04$common, cat=list(rep(2,36),rep(2,36)), 
   poly.mod=list(pm,pm))
-out <- plink(x, rescale="SL", base.grp=2)
+out <- plink(x, rescale="SL", base.grp=2, D=1.7)
 summary(out, descrip=TRUE)
 pars.out <- link.pars(out)
 

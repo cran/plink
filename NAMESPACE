@@ -58,6 +58,7 @@ exportMethods(
 S3method(plot,irt.prob)
 S3method(plot,sep.pars)
 S3method(plot,irt.pars)
+S3method(plot,list)
 S3method(summary,irt.pars)
 S3method(summary,sep.pars)
 S3method(summary,list)

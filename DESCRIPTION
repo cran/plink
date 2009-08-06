@@ -1,6 +1,6 @@
 Package: plink
-Version: 1.1-5
-Date: 2009-07-24
+Version: 1.1-6
+Date: 2009-08-06
 Title: IRT Separate Calibration Linking Methods
 Depends: R (>= 2.9.0), methods, statmod, lattice, MASS
 Author: Jonathan P. Weeks <weeksjp@gmail.com>
@@ -25,6 +25,6 @@ Description: This package uses item response theory methods to compute
 LazyLoad: Yes
 LazyData: Yes
 License: GPL (>= 2)
-Packaged: 2009-07-24 22:38:43 UTC; Jonathan Weeks
+Packaged: 2009-08-07 06:07:48 UTC; Jonathan Weeks
 Repository: CRAN
-Date/Publication: 2009-07-26 18:33:19
+Date/Publication: 2009-08-07 10:55:09

@@ -23,9 +23,9 @@ multidimensional items, and comparison plots for examining parameter drift.
 \method{plot}{sep.pars}(x, y, ..., type, separate, combine, items, item.names, 
     item.nums, panels) 
 
-## S3 method for signature 'list' 
-\method{plot}{list}(x, y, ..., type, separate, combine, items, item.names, 
-    item.nums, panels, drift, groups, grp.names, sep.mod) 
+## S3 method for signature 'list'
+\method{plot}{irt.pars}(x, y, ..., type, separate, combine, items, item.names, 
+    item.nums, panels, drift, groups, grp.names, sep.mod)
 }
 
 \arguments{
@@ -135,6 +135,28 @@ plot(x,combine=6,item.names="Items 1-6",auto.key=list(space="right"))
 # mathematics data. Plot the item category curves for a subset of 9 items.
 x <- nrm(act.nrm[[1]], rep(5,60))
 plot(x, items=c(2,7,12,20,35,41,48,57,60),auto.key=list(space="right"))
+
+# Create irt.pars object with two groups (all dichotomous items)
+# rescale the item parameters using the Stocking-Lord linking constants
+# Create drift plots 
+pm <- as.poly.mod(36)
+x <- as.irt.pars(KB04$pars, KB04$common, cat=list(rep(2,36),rep(2,36)), 
+  poly.mod=list(pm,pm))
+out <- plink(x, rescale="SL", base.grp=2, D=1.7)
+plot(out$pars, drift="pars", grp.names=c("Form X","Form Y"))
+
+# Compute linking constants for six groups using mixed-format items 
+# Create drift plots with distinct markers for the two response models
+pm1 <- as.poly.mod(41, c("drm", "gpcm"), reading$items[[1]])
+pm2 <- as.poly.mod(70, c("drm", "gpcm"), reading$items[[2]])
+pm3 <- as.poly.mod(70, c("drm", "gpcm"), reading$items[[3]])
+pm4 <- as.poly.mod(70, c("drm", "gpcm"), reading$items[[4]])
+pm5 <- as.poly.mod(72, c("drm", "gpcm"), reading$items[[5]])
+pm6 <- as.poly.mod(71, c("drm", "gpcm"), reading$items[[6]])
+pm <- list(pm1, pm2, pm3, pm4, pm5, pm6)
+x <- as.irt.pars(reading$pars, reading$common, reading$cat, pm, base.grp=4)
+out <- plink(x, rescale="HB")
+plot(out$pars, drift=c("a","b"), sep.mod=TRUE)
 
 ###### Multidimensional Examples ######
 # Compute response probabilities for 20 items from the 

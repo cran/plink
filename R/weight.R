@@ -188,5 +188,6 @@ as.weight <- function(n, theta, weight, quadrature=FALSE, normal.wt=FALSE, dimen
 		}
 	}
 	
+	if (dimensions>1) p <- as.matrix(p)
 	return(list(points=p,weights=w))
 }

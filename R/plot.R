@@ -382,8 +382,12 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 				if (ng==1) {
 					plot(tmp,type=type,separate=separate,combine=combine, items=items, item.names=item.names, item.nums=item.nums,panels=panels,...)
 				} else {
-					nms <- paste("G",grp,": ",grn.items,sep="")
-					pl.out[[grp]] <- plot(tmp,type=type,separate=separate,combine=combine, items=items, item.names=grn.items, item.nums=item.nums,panels=panels,mg=1,...)
+					if (names(x@pars)[1]=="group1") {
+						nms <- paste("G",grp,": ",grn.items,sep="")
+					} else {
+						nms <- paste(names(x@pars)[grp],": ",grn.items,sep="")
+					}
+					pl.out[[grp]] <- plot(tmp,type=type,separate=separate,combine=combine, items=items, item.names=nms, item.nums=item.nums,panels=panels,mg=1,...)
 				}
 			}
 		}
@@ -424,8 +428,9 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 			if ("all" %in% drift) drift <- c("a","b","c","ICC","TCC")
 			
 			##   Compute response probabilities for the TCCs
+			##   This will be implemented in a later release
 			if ("TCC" %in% drift) {
-				prob <- mixed(x, theta=theta, catprob=catprob, incorrect=incorrect, D.drm=D.drm, D.gpcm=D.gpcm, D.grm=D.grm)
+				## prob <- mixed(x, theta=theta, catprob=catprob, incorrect=incorrect, D.drm=D.drm, D.gpcm=D.gpcm, D.grm=D.grm)
 			}
 			
 			##   Make sure the common item object is a list
@@ -519,9 +524,17 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 					##   Create a title
 					if ("drm" %in% pars[[i]]@model) {
 						if (length(pars[[i]]@model)>1) {
-							a.title <- "Discrimination/Slope Parameters"
+							if (max(x@dimensions)>1) {
+								a.title <- "Slope Parameters"
+							} else {
+								a.title <- "Discrimination/Slope Parameters"
+							}
 						} else {
-							a.title <- "Discrimination Parameters"
+							if (max(x@dimensions)>1) {
+								a.title <- "Slope Parameters"
+							} else {
+								a.title <- "Discrimination Parameters"
+							}
 						}
 					} else {
 						a.title <- "Slope Parameters"
