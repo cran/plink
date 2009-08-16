@@ -1,3 +1,12 @@
+Changes in version: plink_1.2-0
+
+  o Function equate added for conducting IRT
+    true score and observed score equating
+
+  o Some corrections/additions to the .Rd files
+
+==============================
+
 Changes in version: plink_1.1-6
 
   Bug Fixes:

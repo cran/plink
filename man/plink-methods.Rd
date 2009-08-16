@@ -215,11 +215,6 @@ set equal to \code{D}. If only \code{D.drm} is specified, the values for \code{D
   }
 }
 
-\note{
-  When estimating linking constants using the characteristic curve methods, upper and lower bounds
-  are passed to \code{nlminb} equal to the starting values +/- 0.25. 
-}
-
 \value{
   Returns an object of class \code{\linkS4class{link}}. The labels for the linking constants are 
   specficied  in the following manner "group1/group2", meaning the group1 parameters were transformed 

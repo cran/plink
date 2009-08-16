@@ -1270,9 +1270,13 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 					
 					} 
 				} else {
-					if (dilation!="ODL") {
-						##   Check to see if the correct number of starting values have been specified
-						if ((length(startvals)-dimensions)!=dimensions^2) stop(paste("The number of elements must equal",dimensions^2))
+					##   Check to see if the correct number of starting values have been specified
+					if (dilation=="ODL") {
+						if ((length(startvals))!=dimensions+dimensions^2) stop(paste("The number of elements must equal",dimensions+dimensions^2))
+					} else if (dilation=="LL") {
+						if ((length(startvals))!=dimensions+1) stop(paste("The number of elements must equal",dimensions+1))
+					} else if (dilation=="MIN") {
+						if ((length(startvals))!=dimensions*2) stop(paste("The number of elements must equal",dimensions*2))
 					}
 				}
 			}
