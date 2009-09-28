@@ -1,20 +1,11 @@
 ##   This function estimates the linking constants between two or
 ##   more groups of tests and can rescale item and/or ability parameters
 
-setGeneric("plink", function(x, common, rescale, ability, method, weights.t, weights.f, startvals, score=1, base.grp=1, symmetric=FALSE, rescale.com=TRUE, grp.names=NULL, mn.exclude=0, dilation="ODL",  dim.order=NULL, ...) standardGeneric("plink"))
+setGeneric("plink", function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score=1, base.grp=1, symmetric=FALSE, rescale.com=TRUE, grp.names=NULL, dilation="ODL",  dim.order=NULL, ...) standardGeneric("plink"))
 
 
 
-setMethod("plink", signature(x="list", common="list"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, score, base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, dim.order, ...) {
-
-	x <- combine.pars(x, common, ...)
-	callGeneric()
-	
-})
-
-
-
-setMethod("plink", signature(x="list", common="matrix"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, score, base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, dim.order, ...) {
+setMethod("plink", signature(x="list", common="list"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score, base.grp, symmetric, rescale.com,  grp.names, dilation, dim.order, ...) {
 
 	x <- combine.pars(x, common, ...)
 	callGeneric()
@@ -23,7 +14,16 @@ setMethod("plink", signature(x="list", common="matrix"), function(x, common, res
 
 
 
-setMethod("plink", signature(x="list", common="data.frame"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, score, base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, dim.order, ...) {
+setMethod("plink", signature(x="list", common="matrix"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score, base.grp, symmetric, rescale.com, grp.names, dilation, dim.order, ...) {
+
+	x <- combine.pars(x, common, ...)
+	callGeneric()
+	
+})
+
+
+
+setMethod("plink", signature(x="list", common="data.frame"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score, base.grp, symmetric, rescale.com, grp.names, dilation, dim.order, ...) {
 	
 	x <- combine.pars(x, common, ...)
 	callGeneric()
@@ -32,7 +32,7 @@ setMethod("plink", signature(x="list", common="data.frame"), function(x, common,
 
 
 
-setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, score, base.grp, symmetric, rescale.com, grp.names, mn.exclude, dilation, dim.order, ...) {
+setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score, base.grp, symmetric, rescale.com, grp.names, dilation, dim.order, ...) {
 
 
 	##################################################################
@@ -40,7 +40,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	##                       (both unidimensional and multidimensional)
 	##################################################################
 	
-	.CC <- function(startvals, to, from, dimensions, weights.t, weights.f, score, transform, symmetric, mn.exclude, dilation, T, ...) {
+	.CC <- function(startvals, to, from, dimensions, weights.t, weights.f, score, transform, symmetric, dilation, T, ...) {
 		
 		##   In general, the criterion that will minimized is Q = Q1+Q2
 		##   where Q1 corresponds to the differences in probabilities after
@@ -190,12 +190,14 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		##   Create a set of default values for the scoring function
 		##   that range from 1 to Kj for K columns of probabilities for item j
 		for (h in 1:length(p.cat)) {
-			scr <- c(scr,seq(1,p.cat[h]))
-		}
 		
-		##   Create the equivalent of a scoring function for the Haebara method
-		##   This will be modified to exclude nrm and mcm items (if applicable)
-		scr.hb <- rep(1,length(scr))
+			##   Adjust {scr} for the MCM so that the 'do not know' category has a weight of zero
+			if (tmp.to$p.mod[h]=="mcm") {
+				scr <- c(scr,seq(0,p.cat[h]-1))
+			} else {
+				scr <- c(scr,seq(1,p.cat[h]))
+			}
+		}
 		
 		##   Use this if one of the default values (1 or 2) is used for the {score} argument
 		if (length(score)==1) {
@@ -211,7 +213,11 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				##   zero. As such, set the weights for these items equal to one
 				cat <- rep(p.cat,p.cat)
 				scr[cat==1] <- 1
+				
+				##   Make sure MCM 'do not know' categories still have a weight of zero
+				scr[scr<0] <- 0
 			}
+			
 			
 			
 		##   Use this if the researcher supplies a vector of score weights for
@@ -224,14 +230,6 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			}
 		}
 		
-		##   If nrm and mcm items are supposed to be excluded from the
-		##   estimation of linking constants, set the probabilities for all responses
-		##   for all of these items on both tests to zero
-		if (mn.exclude %in% c(2,3)) {
-			scr[p.mod=="nrm"|p.mod=="mcm"] <- 0
-			scr.hb[p.mod=="nrm"|p.mod=="mcm"] <- 0
-		}
-		
 		##   Compute sum of squares difference for the 
 		##   Haebara and Stocking-Lord methods
 		W1 <- as.vector(weights.t[[2]])
@@ -239,11 +237,11 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		if (transform=="HB") {
 			L1 <- ncol(prob.to)*sum(W1)
 			Q1 <- W1*(prob.to-prob.from.t)^2
-			Q1 <- sum(Q1 %*% scr.hb)
+			Q1 <- sum(apply(Q1,1,sum))
 			if (symmetric==TRUE) {
 				L2 <- ncol(prob.to)*sum(W2)
 				Q2 <- W2*(prob.from-prob.to.f)^2
-				Q2 <- sum(Q2 %*% scr.hb)
+				Q2 <- sum(apply(Q2,1,sum))
 				SS <- (Q1/L1)+(Q2/L2)
 			} else {
 				SS <- Q1/L1
@@ -569,7 +567,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	##                        for the common item parameters
 	########################################################
 	
-	.Descriptives <- function(a1, a2, b1, b2, c1, c2, pm, cat, mn.exclude, dimensions) {
+	.Descriptives <- function(a1, a2, b1, b2, c1, c2, pm, cat, dimensions) {
 	
 	if (dimensions==1) {
 		##   Transform the category parameters for mcm and nrm items in group 1
@@ -630,11 +628,11 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				colnames(des) <- c("a","b","c")
 			} else if (pm.mod[j]=="mcm") {
 				des <- data.frame(cbind(a,b,bd,c))
-				colnames(des) <- c("a","c","b (-c/a)","d")
+				colnames(des) <- c("a","b","(-b/a)","c")
 				mcnr <- c(mcnr, pm.it[[j]])
 			} else if (pm.mod[j]=="nrm") {
 				des <- data.frame(cbind(a,b,bd))
-				colnames(des) <- c("a","c","b (-c/a)")
+				colnames(des) <- c("a","b","(-b/a)")
 				mcnr <- c(mcnr, pm.it[[j]])
 			} else {
 				des <- data.frame(cbind(a,b))
@@ -644,33 +642,22 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			descrip[[j]] <- round(des,6)
 		}
 		
-		##   Check to see if all of the common items are modeled using the 
-		##   NRM or MCM. If so, do not exclude any items from the computation
-		##   of the descriptives (which will ultimately be used with the moment methods)
-		if (sum((pm.mod=="nrm"|pm.mod=="mcm")+0)==length(pm.mod)) mn.exclude <- 0
-		
-		
-		if (mn.exclude %in% c(0,2)) {
-			b1[mcnr,] <- b1r[mcnr,] 
-			b2[mcnr,] <- b2r[mcnr,] 
-		} else {
-			##   Remove NRM and/or MCM item parameters
-			if (!is.null(mcnr)) {
-				a1 <- a1[-mcnr,]
-				a2 <- a2[-mcnr,]
-				b1 <- b1[-mcnr,]
-				b2 <- b2[-mcnr,]
-			}
-		}
-		
 		##   Identify the number of each type of parameter, and compute the 
 		##   means and SDs of each parameter type for both groups
 		a <- c(length(a1[!is.na(a1)]),mean(a1,na.rm=TRUE),mean(a2,na.rm=TRUE),.sd(a1),.sd(a2))
 		b <- c(length(b1[!is.na(b1)]),mean(b1,na.rm=TRUE),mean(b2,na.rm=TRUE),.sd(b1),.sd(b2))
+		if (length(c1[!is.na(c1)])) {
+			c <- c(length(c1[!is.na(c1)]),mean(c1,na.rm=TRUE),mean(c2,na.rm=TRUE),.sd(c1),.sd(c2))
+		}
 		
 		##   Compile these descriptives for all "included" common items
-		desall <- round(cbind(a,b),6)
-		colnames(desall) <- c("a","b")
+		if (length(c)) {
+			desall <- round(cbind(a,b,c),6)
+			colnames(desall) <- c("a","b","c")
+		} else {
+			desall <- round(cbind(a,b),6)
+			colnames(desall) <- c("a","b")
+		}
 		rownames(desall) <- c("N Pars:","Mean: To","Mean: From","SD: To","SD: From")
 		descrip[[length(descrip)+1]] <- desall
 		names(descrip) <- c(pm.mod,"all")
@@ -748,7 +735,8 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				colnames(des) <- c(paste("a",1:dimensions,sep=""),"d","MDISC","MDIF")
 			}
 			
-			if (dim.flag==TRUE) des <- des[,-2]  ##  WHAT IS THIS?
+			##   If there is only one common dimension, eliminate the dummy slope from the descriptives
+			if (dim.flag==TRUE) des <- des[,-2]  
 			colnames(des)[1] <- "a"
 			rownames(des) <- c("N Pars:","Mean: To","Mean: From","SD: To","SD: From")
 			descrip[[j]] <- round(des,6)
@@ -761,6 +749,9 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			a <- cbind(a,c(length(tmp1[!is.na(tmp1)]),mean(tmp1,na.rm=TRUE),mean(tmp2,na.rm=TRUE),.sd(tmp1),.sd(tmp2)))
 		}
 		b <- c(length(b1[!is.na(b1)]),mean(b1,na.rm=TRUE),mean(b2,na.rm=TRUE),.sd(b1),.sd(b2))
+		if (length(c1[!is.na(c1)])) {
+			c <- c(length(c1[!is.na(c1)]),mean(c1,na.rm=TRUE),mean(c2,na.rm=TRUE),.sd(c1),.sd(c2))
+		}
 		mdisc1 <- sqrt(apply(a1^2,1,sum,na.rm=TRUE))
 		mdisc2 <- sqrt(apply(a2^2,1,sum,na.rm=TRUE))
 		mdif1 <- -b1/mdisc1
@@ -768,8 +759,13 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		mdc <- c(length(mdisc1[!is.na(mdisc1)]),mean(mdisc1,na.rm=TRUE),mean(mdisc2,na.rm=TRUE),.sd(mdisc1),.sd(mdisc2))
 		mdf <- c(length(mdif1[!is.na(mdif1)]),mean(mdif1,na.rm=TRUE),mean(mdif2,na.rm=TRUE),.sd(mdif1),.sd(mdif2))
 		
-		desall <- round(cbind(a,b,mdc,mdf),6)
-		colnames(desall) <- c(paste("a",1:dimensions,sep=""),"d","MDISC","MDIF")
+		if (length(c)) {
+			desall <- round(cbind(a,b,c,mdc,mdf),6)
+			colnames(desall) <- c(paste("a",1:dimensions,sep=""),"d","c","MDISC","MDIF")
+		} else {
+			desall <- round(cbind(a,b,mdc,mdf),6)
+			colnames(desall) <- c(paste("a",1:dimensions,sep=""),"d","MDISC","MDIF")
+		}
 		rownames(desall) <- c("N Pars:","Mean: To","Mean: From","SD: To","SD: From")
 		descrip[[length(descrip)+1]] <- desall
 		names(descrip) <- c(pm.mod,"all")
@@ -832,6 +828,14 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		}
 	}
 	
+	##   Check to see if {exclude} is formatted properly (if applicable)
+	if (!missing(exclude)) {
+		if (is.list(exclude)) {
+			if (length(exclude)!=ng) stop("The {exclude} argument must be a list with length equal to the number of groups")
+		}
+	}
+	
+	
 	##   Initialize an object to store the common item
 	##   parameters for each pair of adjacent groups
 	com <- vector("list",ng-1)
@@ -847,39 +851,84 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	##   Loop through all of the groups (minus 1)
 	for (i in 1:(ng-1)) {
 	
-		##   Initialize a list to store the common item parameters
-		##   for each group of the adjacent paired groups
-		com[[i]] <- vector("list",2)
-		
 		##   If there are only two groups total
 		if (ng==2) {
 			##   Get the common item matrix
 			it.com <- x@common
 			
-			##   Extract the common item parameterss for the lower group
-			com[[i]][[1]] <- x@pars[[i]][it.com[,1],] 
-			
-			##   Extract the common item parameterss for the higher group
-			com[[i]][[2]] <- x@pars[[i+1]][it.com[,2],]
-			
-			##   Extract a vector of the number of response categories for the common items
-			catci[[i]] <- x@cat[[i]][it.com[,1]] 
-			
 		##   If there are more than two groups
 		} else if (ng>2) {
 			##   Get the common item matrix for the given pair of groups
 			it.com <- x@common[[i]]
-			
-			##   Extract the common item parameterss for the lower group
-			com[[i]][[1]] <- x@pars[[i]][it.com[,1],]
-			
-			##   Extract the common item parameterss for the higher group
-			com[[i]][[2]] <- x@pars[[i+1]][it.com[,2],]
-			
-			##   Extract a vector of the number of response categories 
-			##   for the common items for the given pair of groups
-			catci[[i]] <- x@cat[[i]][it.com[,1]]
 		}
+		
+		##   Modify {it.com} to account for any excluded items from {exclude}
+		if (!missing(exclude)) {
+			
+			##   Exclude all items associated with the specified models
+			if (is.character(exclude)) {
+				for (j in exclude) {
+					items <- eval(parse(text=paste("x@poly.mod[[i]]@items$",j,sep="")))
+					it.com <- it.com[(it.com[,1] %in% items)==FALSE,]
+				}
+			} else {
+				##   Items associated with the given models should be excluded
+				##   for the given pair of tests based on {exclude} for the lower group
+				if (is.character(exclude[[i]])) {
+					tmp <- suppressWarnings(as.numeric(exclude[[i]]))
+					items.char <- exclude[[i]][is.na(tmp)]
+					for (j in items.char) {
+						items <- eval(parse(text=paste("x@poly.mod[[i]]@items$",j,sep="")))
+						it.com <- it.com[(it.com[,1] %in% items)==FALSE,]
+					}
+					
+					##   Check to see if there are additional items that should be excluded
+					items.num <- tmp[!is.na(tmp)]
+					it.com <- it.com[(it.com[,1] %in% items.num)==FALSE,]
+				} else {
+					it.com <- it.com[(it.com[,1] %in% exclude[[i]])==FALSE,]
+				}
+				
+				##   Items associated with the given models should be excluded
+				##   for the given pair of tests based on {exclude} for the lower group
+				if (is.character(exclude[[i+1]])) {
+					tmp <- suppressWarnings(as.numeric(exclude[[i+1]]))
+					items.char <- exclude[[i+1]][is.na(tmp)]
+					for (j in items.char) {
+						items <- eval(parse(text=paste("x@poly.mod[[i+1]]@items$",j,sep="")))
+						it.com <- it.com[(it.com[,2] %in% items)==FALSE,]
+					}
+					
+					##   Check to see if there are additional items that should be excluded
+					items.num <- tmp[!is.na(tmp)]
+					it.com <- it.com[(it.com[,2] %in% items.num)==FALSE,]
+				} else {
+					it.com <- it.com[(it.com[,2] %in% exclude[[i+1]])==FALSE,]
+				}
+			}
+			
+			if (ng==2) {
+				x@common <- it.com
+			} else {
+				x@common[[i]] <- it.com
+			}
+		}
+		
+		
+		##   Initialize a list to store the common item parameters
+		##   for each group of the adjacent paired groups
+		com[[i]] <- vector("list",2)
+		
+		##   Extract the common item parameterss for the lower group
+		com[[i]][[1]] <- x@pars[[i]][it.com[,1],]
+		
+		##   Extract the common item parameterss for the higher group
+		com[[i]][[2]] <- x@pars[[i+1]][it.com[,2],]
+		
+		##   Extract a vector of the number of response categories 
+		##   for the common items for the given pair of groups
+		catci[[i]] <- x@cat[[i]][it.com[,1]]
+		
 		
 		##   The ordering of parameters in com[[i]] should be such that
 		##   the first element is the "To" set and the second is the "From" set
@@ -948,8 +997,8 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		
 		# Create poly.mod object for the common items
 		pm[[i]] <- as.poly.mod(length(it.com),mod1,poly) }
-	
-	
+		
+		
 	##   Initialize an object to store the linking constants
 	##   and common item descriptives for each pair
 	##   of adjacent groups
@@ -1058,12 +1107,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		}
 		
 		##   Compute the descriptive statistics for reporting
-		descrip <- .Descriptives(a1,a2,b1,b2,c1,c2,pm[[i]],catci[[i]],mn.exclude=0,dimensions)
-		
-		##   Compute the descriptive statistics for use in the moment methods
-		##   These may differ from those above  if parameters are excluded for NRM and MCM items
-		descrip.mm <- .Descriptives(a1,a2,b1,b2,c1,c2,pm[[i]],catci[[i]],mn.exclude,dimensions)
-		
+		descrip <- .Descriptives(a1,a2,b1,b2,c1,c2,pm[[i]],catci[[i]],dimensions)
 		
 		##   Check to see if the {rescale} method is included in the {method} argument
 		##   If not, add it to {method}
@@ -1073,27 +1117,6 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			}
 		}
 		
-		##   Initialize an object to identify whether constants should NOT
-		##   be estimated using the SL method (even if it is included in {method})
-		##   Set the default to TRUE
-		chk.sl <- TRUE
-		
-		##   If there are only NRM or MCM items, the SL method should not be used
-		if (sum((mod=="nrm"|mod=="mcm")+0)==length(mod)) {
-			chk.sl <- FALSE
-			method <- method[method!="SL"]
-			
-			##   Determine which moment methods are to be used
-			meth <- NULL
-			if ("MS" %in% method) meth <- "Mean/Sigma"
-			if ("MM" %in% method) {
-				if (length(meth)) meth <- "Mean/Sigma and Mean/Mean" else meth <- "Mean/Mean"
-			}
-			
-			##   Print a message stating that all of the NRM and/or MCM items
-			##   will be used to compute linking constants using the specified moment methods
-			if (length(meth)) cat(paste("All items were used to compute the",meth,"linking constants\n"))
-		}
 		
 		########################################
 		##            Perform the Calibration
@@ -1122,19 +1145,19 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			mm <- ms <- NULL
 			
 			##   Mean/Mean - A
-			A1 <- descrip.mm$all[3,1]/descrip.mm$all[2,1]
+			A1 <- descrip$all[3,1]/descrip$all[2,1]
 			
 			##   Mean/Sigma  - A
-			A2 <- descrip.mm$all[4,2]/descrip.mm$all[5,2]
+			A2 <- descrip$all[4,2]/descrip$all[5,2]
 			
 			##   If the Rasch model or PCM is used, set the A2 constant equal to A1
 			if (rasch.flag==TRUE) A2 <- A1
 			
 			##   Mean/Mean - B
-			B1 <- descrip.mm$all[2,2]-A1*descrip.mm$all[3,2]
+			B1 <- descrip$all[2,2]-A1*descrip$all[3,2]
 			
 			##   Mean/Sigma - B
-			B2 <- descrip.mm$all[2,2]-A2*descrip.mm$all[3,2]
+			B2 <- descrip$all[2,2]-A2*descrip$all[3,2]
 			
 			##   Format the constants for the moment methods
 			##   to be included in the output
@@ -1290,7 +1313,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		if ("HB" %in% method) {
 		
 			##   Estimate the linking constants
-			hb <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, score=score, transform="HB", symmetric=symmetric, mn.exclude=mn.exclude, dilation=dilation, T=T, ...)
+			hb <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, score=score, transform="HB", symmetric=symmetric, dilation=dilation, T=T, ...)
 			
 			##   Reformat the information from the estimation (as necessary)
 			##   to prepare it for being output
@@ -1356,7 +1379,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		if ("SL" %in% method) {
 			
 			##   Estimate the linking constants
-			sl <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, score=score, transform="SL", symmetric=symmetric, mn.exclude=mn.exclude, dilation=dilation, T=T, ...)
+			sl <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, score=score, transform="SL", symmetric=symmetric, dilation=dilation, T=T, ...)
 			
 			##   Reformat the information from the estimation (as necessary)
 			##   to prepare it for being output
@@ -1439,11 +1462,14 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		
 		##   Create the {link} object containing the linking constants
 		##   and common item descriptive statistics for the pair of adjacent groups
-		link.out[[i]] <- new("link", constants=constants, descriptives=descrip, iterations=it, objective=obj, convergence=con, base.grp=base.grp, grp.names=nms, include.mcm.nrm=mn.exclude,n=tmp1@n, mod.lab=tmp1@mod.lab, dilation=dilation)
+		link.out[[i]] <- new("link", constants=constants, descriptives=descrip, iterations=it, objective=obj, convergence=con, base.grp=base.grp, grp.names=nms, n=tmp1@n, mod.lab=tmp1@mod.lab, dilation=dilation)
 		
 	}
 	
-	##   Rescale the item parameters
+	########################################
+	##            Rescale the Parameters
+	########################################
+	
 	if (!missing(rescale)) {
 		##   Change the method used to rescale the item parameters (if necessary)
 		if ((toupper(rescale)%in%method)==FALSE) {

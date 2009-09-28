@@ -445,7 +445,7 @@ setClassUnion("list.dat",c("list","data.frame"))
 setClassUnion("list.null",c("list","NULL"))
 setClassUnion("pars.null",c("irt.pars","NULL"))
 
-setClass("link", representation(constants="list", descriptives="list.dat", iterations="numeric", objective="numeric", convergence="character", base.grp="numeric", n="numeric", grp.names="character", mod.lab="character", dilation="character", include.mcm.nrm="numeric") )
+setClass("link", representation(constants="list", descriptives="list.dat", iterations="numeric", objective="numeric", convergence="character", base.grp="numeric", n="numeric", grp.names="character", mod.lab="character", dilation="character") )
 
 ##   is.link function
 ##   This function checks to see if {x} is an object of class {link}

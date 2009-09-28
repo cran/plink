@@ -51,7 +51,7 @@ and the specified weights corresponding to two specific theta values on each dim
 respectively are 0.8 and 1.2, the final weight for this pair of theta values will be 0.96.
 
 \describe{
-  \item{Uniform Weights}{Six general approaches can be used to create uniform weights.}
+  \item{Uniform Weights}{Five general approaches can be used to create uniform weights.}
     \itemize{
       \item{}{If no arguments are supplied, a set of weights (all equal to one) will be 
       returned for a single dimension, for 40 equal interval theta values ranging from 
@@ -71,13 +71,6 @@ respectively are 0.8 and 1.2, the final weight for this pair of theta values wil
       
       \item{}{If values are specified for \code{theta} and uniform values are specified for 
       \code{weight}.}
-
-      \item{}{If \code{quadrature} is equal to \code{TRUE}, additional arguments associated with
-      \code{\link[statmod:gauss.quad.prob]{gauss.quad.prob}} should be specified. In particular,
-      \code{dist} should be equal to "uniform", \code{l} equal to the lower bound and \code{u} equal
-      to the upper bound. Different lower and/or upper bounds can be supplied for each dimension. 
-      If no value for \code{n} is specified, 40 theta values will be created for a single dimension 
-      or seven theta values for more than two dimensions.}
   }
 
   \item{Non-Uniform Weights}{Four general approaches can be used to create non-uniform weights.

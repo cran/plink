@@ -63,7 +63,7 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 			if (mod[i]=="gpcm") tmp <- .Gpcm(x, theta, D.gpcm)
 			if (mod[i]=="grm") tmp <- .Grm(x, theta, catprob, D.grm)
 			if (mod[i]=="nrm") tmp <- .Nrm(x, theta)
-			if (mod[i]=="mcm") next
+			if (mod[i]=="mcm") tmp <- .Mcm(x, theta)
 			p <- cbind(p, tmp$p)
 			p1 <- cbind(p1, tmp$p1)
 			p.cat <- c(p.cat,tmp$cat)
@@ -254,7 +254,6 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 				
 				den <- cbind(den, d)
 				den.der <- cbind(den.der, d1)
-				
 			}
 			
 			den <- apply(den,1,sum)
@@ -274,6 +273,54 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 		}
 		mod <- rep("nrm",n)
 		return(list(p=p,p1=p1,cat=cat,mod=mod))
+	}
+	
+	##   This is a stripped down version of the {mcm} function
+	.Mcm <- function(x, theta) {
+	
+		dimensions <- x@dimensions
+		items <- x@items$mcm
+		n <- length(items)
+		a <- as.matrix(x@a[items,]) 
+		b <- as.matrix(x@b[items,])
+		c <- as.matrix(x@c[items,])
+		if (length(items)==1) {
+			a <- t(a)
+			b <- t(b)
+			c <- t(c)
+		}
+		cat <- x@cat[items]
+		
+		p <- p1 <- NULL 
+		for (i in 1:n) {
+			den <- den.der <- NULL
+			a1 <- a[i,][!is.na(a[i,])]
+			b1 <- b[i,][!is.na(b[i,])]
+			c1 <- c[i,][!is.na(c[i,])]
+			for (k in 1:cat[i]) {
+				d <- exp((theta*a1[k])+b1[k])
+				d1 <- a1[k]*d
+				
+				den <- cbind(den, d)
+				den.der <- cbind(den.der, d1)
+				
+			}
+			den <- apply(den,1,sum)
+			den.der <- apply(den.der,1,sum)
+			
+			for (k in 2:cat[i]) {
+			
+				cp <- (exp((theta*a1[k])+b1[k])+c1[k-1]*(exp((theta*a1[1])+b1[1])))/den
+				
+				##   Compute derivative of category probabilities
+				cp1 <- (den*a1[k]*exp((theta*a1[k])+b1[k])+c1[k-1]*a1[1]*(exp((theta*a1[1])+b1[1]))-exp((theta*a1[k])+b1[k])+c1[k-1]*(exp((theta*a1[1])+b1[1]))*den.der)/den^2
+				
+				p <- cbind(p,cp)
+				p1 <- cbind(p1,cp1)
+			}
+		}
+		mod <- rep("mcm",n)
+		return(list(p=p,p1=p1,cat=cat-1,mod=mod))
 	}
 	
 	
@@ -361,7 +408,6 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 				cat <- rep(p.cat,p.cat)
 				scr[cat==1] <- 1
 			}
-			
 			
 		##   Use this if the researcher supplies a vector of score 
 		##   weights for all of the columns in p
@@ -633,13 +679,13 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 			n2 <- nrow(p2)
 			
 			##   Maximum possible score
-			 ms.b <- sum(pars[[base.grp]]@cat-1)
-			 ms <- sum(pars[[grp]]@cat-1)
-			
-			
-			##   Maximum possible score
 			 cat.b <- pars[[base.grp]]@cat
 			 cat <- pars[[grp]]@cat
+			
+			##   Correct the maximum possible score if there are MCM items
+			if ("mcm" %in% pars[[base.grp]]@model) cat.b[pars[[base.grp]]@items$mcm] <- cat.b[pars[[base.grp]]@items$mcm]-1
+			if ("mcm" %in% pars[[grp]]@model) cat.b[pars[[grp]]@items$mcm] <- cat.b[pars[[grp]]@items$mcm]-1
+			
 			
 			##   Initialize lists to store the distributions for each
 			##   observed score for each group

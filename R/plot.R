@@ -1,4 +1,4 @@
-plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names, item.nums, panels, drift, groups, grp.names, sep.mod) {
+plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names, item.nums, panels, drift, groups, grp.names, sep.mod, drift.sd) {
 	
 	##   Delete plot history
 	if (exists(".SavedPlots",where=1)) rm(".SavedPlots",pos=1)
@@ -408,6 +408,8 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 		} else {
 			if (missing(sep.mod)) sep.mod <- FALSE
 			if (missing(groups)) groups <- 1:(x@groups-1)
+			
+			##   Make sure there are fewer group pairs than the total number of groups
 			groups <- groups[groups<x@groups]
 			if (length(groups)==0) warning("Invalid group number(s). Plots will be created for all groups.")
 			
@@ -425,13 +427,15 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 			}
 			
 			##   Reformat the "all" value
-			if ("all" %in% drift) drift <- c("a","b","c","ICC","TCC")
+			if ("all" %in% drift) drift <- c("a","b","c","TCC","ICC")
 			
-			##   Compute response probabilities for the TCCs
-			##   This will be implemented in a later release
-			if ("TCC" %in% drift) {
-				## prob <- mixed(x, theta=theta, catprob=catprob, incorrect=incorrect, D.drm=D.drm, D.gpcm=D.gpcm, D.grm=D.grm)
+			##   Compute response probabilities for the TCCs and ICCs
+			if ("TCC" %in% drift|"ICC" %in% drift) {
+				prob <- mixed(x, theta=theta, catprob=catprob, incorrect=incorrect, D.drm=D.drm, D.gpcm=D.gpcm, D.grm=D.grm)
 			}
+			
+			##   Check to see if a value is specified for {drift.sd}
+			if (missing(drift.sd)) drift.sd <- 3
 			
 			##   Make sure the common item object is a list
 			if (is.matrix(x@common)) x@common <- list(x@common)
@@ -444,29 +448,47 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 				##   For Windows, save the plot history so that different plot
 				##   windows can be seen using PgUp and PgDn
 				if (Sys.info()["sysname"] == "Windows") {
-					cat("Use PgUp and PgDn to view different plot pages\n")
-					windows(record=TRUE)
+					if (length(groups)>1|length(drift)>1) {
+						cat("Use PgUp and PgDn to view different plot pages\n")
+						windows(record=TRUE)
+					}
 				}
+			}
+			
+			##   The bult-in SD function R uses n-1 in the denominator
+			##   This function uses n in the denominator
+			.sd <- function(x) {
+				z <- x[!is.na(x)]
+				out <- sqrt(sum((z-mean(z))^2)/length(z))
+				return(out)
 			}
 			
 			##   Create an object to store the trellis output for each group
 			pl.out <- list()
 			
-			##   Panel function uses to specify the markers and lines used in the plots
-			pfunc <- function(x,y,...,sd) {
+			##   Panel function uses to specify the markers and lines 
+			##   used in the parameter comparison plots
+			pfunc <- function(x,y,...,sd,item.names, drift.sd) {
 				if (sep.mod==TRUE) {
 					panel.xyplot(x,y,cex=1.2,pch=c(1,2,0,6,8),...)
 				} else {
 					panel.xyplot(x,y,cex=1.2,pch=1,...)
 				}
-				panel.abline(0,1)
+				
+				##   Plot SD line
+				slope <- .sd(y)/.sd(x)
+				int <- mean(y)-slope*mean(x)
+				panel.abline(int,slope)
 				
 				##   Create a confidence interval that is 3 SDs
 				##   around the center line in perpendicular distance
-				tmp <- sqrt(2*sd^2)/2
-				tmp <- sqrt(sd^2-tmp^2)
-				panel.abline(-3*tmp,1,lty=2)
-				panel.abline(3*tmp,1,lty=2)
+				pd <- (drift.sd*sd)/sin(atan(1/slope))
+				panel.abline(int-pd,slope,lty=2)
+				panel.abline(int+pd,slope,lty=2)
+				
+				##   Print item numbers
+				ydif <- (range(y)[2]-range(y)[1])*0.025
+				if (length(item.names)) ltext(x,y-ydif,item.names,col="black",cex=.7)
 			}
 			
 			##   Set the marker options to be used in the legend (if applicable)
@@ -482,14 +504,29 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 				trellis.par.set("superpose.symbol", sps)
 			}
 			
+			
 			##   Loop through all adjacent groups
-			for (i in groups) {
+			for (i in 1:length(groups)) {
 				
-				##   Extract the item parameters for the lower group
-				items1 <- x@common[[i]][,1]
+				grp <- groups[i]
 				
-				##   Extract the item parameters for the higher group
-				items2 <- x@common[[i]][,2]
+				##   Identify the item numbers for the lower group
+				items1 <- x@common[[grp]][,1]
+				
+				##   Identify the item numbers for the higher group
+				items2 <- x@common[[grp]][,2]
+				
+				if (missing(item.nums)) {
+					item.names <- NULL
+				} else {
+					if (item.nums==TRUE) {
+						if (missing(item.names)) {
+							item.names <- paste(items1, ",", items2,sep="")
+						}
+					} else {
+						item.names <- NULL
+					}
+				}
 				
 				##   Initialize a list to store the trellis objects for each
 				##   element included in {drift}
@@ -505,10 +542,10 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 				if ("a" %in% drift) {
 				
 					##   Extract slopes for the lower group
-					pa1 <- pars[[i]]@a[items1,]
+					pa1 <- pars[[grp]]@a[items1,]
 					
 					##   Extract slopes for the higher group
-					pa2 <- pars[[i+1]]@a[items2,]
+					pa2 <- pars[[grp+1]]@a[items2,]
 					
 					##   Transpose these values if there is only one item
 					if (is.vector(pa1)) {
@@ -522,8 +559,8 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 					}
 					
 					##   Create a title
-					if ("drm" %in% pars[[i]]@model) {
-						if (length(pars[[i]]@model)>1) {
+					if ("drm" %in% pars[[grp]]@model) {
+						if (length(pars[[grp]]@model)>1) {
 							if (max(x@dimensions)>1) {
 								a.title <- "Slope Parameters"
 							} else {
@@ -552,17 +589,17 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 					mod <- NULL
 					
 					##   Loop through the item response models
-					for (j in 1:length(pars[[i]]@model)) {
+					for (j in 1:length(pars[[grp]]@model)) {
 						##   Identify the items for the given model that
 						##   are part of the subset of items selected
-						tmp <- pars[[i]]@items[[j]][pars[[i]]@items[[j]] %in% items1]
+						tmp <- pars[[grp]]@items[[j]][pars[[grp]]@items[[j]] %in% items1]
 						
 						##   Extract the incremented item numbers
 						tmp <- items1a[items1a[,2]%in%tmp,1]
 						
 						##   If there are any items in the subset associated with 
 						##   this model, add the model to {mod}
-						if (length(tmp)) mod <- c(mod,pars[[i]]@model[j])
+						if (length(tmp)) mod <- c(mod,pars[[grp]]@model[j])
 						
 						##   Update the indicator variable
 						m.type[tmp,][!is.na(m.type[tmp,])] <- j
@@ -572,18 +609,19 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 					pa <- data.frame(pa1=pa1[!is.na(pa1)],pa2=pa2[!is.na(pa2)],type=factor(m.type[!is.na(m.type)],labels=toupper(mod)))
 					
 					##   Compute a range of 3 SDs for creating a confidence interval
-					sd.a <- sd(pa[,1]-pa[,2])
+					sd.a <- .sd(pa[,1]-pa[,2])
 					p.min <- min(pa[,1:2])-0.25
 					p.max <- max(pa[,1:2])+0.25
 					
 					##   Create the plot with different markers for each response model
 					if (sep.mod==TRUE) {
-						pl.out[[i]][[pl]] <- xyplot(pa2~pa1,data=pa,groups=type, auto.key=list(space="right"),
-						,xlab=nms[i], ylab=nms[i+1], main=a.title, panel=pfunc, xlim=c(p.min,p.max) ,ylim=c(p.min,p.max),sd=sd.a)
+						pl.out[[i]][[pl]] <- xyplot(pa2~pa1,data=pa,groups=type, auto.key=list(space="bottom", columns=length(mod)),
+						,xlab=nms[grp], ylab=nms[grp+1], main=a.title, panel=pfunc, xlim=c(p.min,p.max) ,ylim=c(p.min,p.max),sd=sd.a, item.names=item.names, 
+						drift.sd=drift.sd)
 					
 					##   Create the plot with a single marker for all response models
 					} else {
-						pl.out[[i]][[pl]] <- xyplot(pa2~pa1,data=pa,xlab=nms[i], ylab=nms[i+1], main=a.title, panel=pfunc, xlim=c(p.min,p.max) ,ylim=c(p.min,p.max), sd=sd.a)
+						pl.out[[i]][[pl]] <- xyplot(pa2~pa1,data=pa,xlab=nms[grp], ylab=nms[grp+1], main=a.title, panel=pfunc, xlim=c(p.min,p.max) ,ylim=c(p.min,p.max), sd=sd.a, item.names=item.names, drift.sd=drift.sd)
 					}
 					
 					##   Increment the plot index
@@ -595,10 +633,10 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 				if ("b" %in% drift) {
 				
 					##   Extract difficulty/threshold/step/category parameters for the lower group
-					pb1 <- pars[[i]]@b[items1,]
+					pb1 <- pars[[grp]]@b[items1,]
 					
 					##   Extract difficulty/threshold/step/category parameters for the higher group
-					pb2 <- pars[[i+1]]@b[items2,]
+					pb2 <- pars[[grp+1]]@b[items2,]
 					
 					##   Transpose these values if there is only one item
 					if (is.vector(pb1)) {
@@ -613,10 +651,10 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 					
 					##   Create a title
 					b.title <- NULL
-					if ("drm" %in% pars[[i]]@model) b.title <- c(b.title,"Difficulty")
-					if ("grm" %in% pars[[i]]@model) b.title <- c(b.title,"Threshold")
-					if ("gpcm" %in% pars[[i]]@model) b.title <- c(b.title,"Step")
-					if ("nrm" %in% pars[[i]]@model|"mcm" %in% pars[[i]]@model) b.title <- c(b.title,"Category")
+					if ("drm" %in% pars[[grp]]@model) b.title <- c(b.title,"Difficulty")
+					if ("grm" %in% pars[[grp]]@model) b.title <- c(b.title,"Threshold")
+					if ("gpcm" %in% pars[[grp]]@model) b.title <- c(b.title,"Step")
+					if ("nrm" %in% pars[[grp]]@model|"mcm" %in% pars[[grp]]@model) b.title <- c(b.title,"Category")
 					b.title <- paste(paste(b.title,collapse="/"),"Parameters")
 					
 					##   Initialize an indicator variable to identify the item
@@ -631,17 +669,17 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 					mod <- NULL
 					
 					##   Loop through the item response models
-					for (j in 1:length(pars[[i]]@model)) {
+					for (j in 1:length(pars[[grp]]@model)) {
 						##   Identify the items for the given model that
 						##   are part of the subset of items selected
-						tmp <- pars[[i]]@items[[j]][pars[[i]]@items[[j]] %in% items1]
+						tmp <- pars[[grp]]@items[[j]][pars[[grp]]@items[[j]] %in% items1]
 						
 						##   Extract the incremented item numbers
 						tmp <- items1a[items1a[,2]%in%tmp,1]
 						
 						##   If there are any items in the subset associated with 
 						##   this model, add the model to {mod}
-						if (length(tmp)) mod <- c(mod,pars[[i]]@model[j])
+						if (length(tmp)) mod <- c(mod,pars[[grp]]@model[j])
 						
 						##   Update the indicator variable
 						m.type[tmp,][!is.na(m.type[tmp,])] <- j
@@ -651,18 +689,18 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 					pb <- data.frame(pb1=pb1[!is.na(pb1)],pb2=pb2[!is.na(pb2)],type=factor(m.type[!is.na(m.type)],labels=toupper(mod)))
 					
 					##   Compute a range of 3 SDs for creating a confidence interval
-					sd.b <- sd(pb[,1]-pb[,2])
+					sd.b <- .sd(pb[,1]-pb[,2])
 					p.min <- min(pb[,1:2])-0.25
 					p.max <- max(pb[,1:2])+0.25
 					
 					##   Create the plot with different markers for each response model
 					if (sep.mod==TRUE) {
-						pl.out[[i]][[pl]] <- xyplot(pb2~pb1,data=pb,groups=type,auto.key=list(space="right"), 
-						xlab=nms[i], ylab=nms[i+1], main=b.title, panel=pfunc, xlim=c(p.min,p.max) ,ylim=c(p.min,p.max), sd=sd.b)
+						pl.out[[i]][[pl]] <- xyplot(pb2~pb1,data=pb,groups=type,auto.key=list(space="bottom", columns=length(mod)), 
+						xlab=nms[grp], ylab=nms[grp+1], main=b.title, panel=pfunc, xlim=c(p.min,p.max) ,ylim=c(p.min,p.max), sd=sd.b, item.names=item.names, drift.sd=drift.sd)
 					
 					##   Create the plot with a single marker for all response models
 					} else {
-						pl.out[[i]][[pl]] <- xyplot(pb2~pb1,data=pb,xlab=nms[i], ylab=nms[i+1], main=b.title, panel=pfunc, xlim=c(p.min,p.max) ,ylim=c(p.min,p.max), sd=sd.b)
+						pl.out[[i]][[pl]] <- xyplot(pb2~pb1,data=pb,xlab=nms[grp], ylab=nms[grp+1], main=b.title, panel=pfunc, xlim=c(p.min,p.max) ,ylim=c(p.min,p.max), sd=sd.b, item.names=item.names, drift.sd=drift.sd)
 					}
 					
 					##   Increment the plot index
@@ -674,10 +712,10 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 				if ("c" %in% drift) {
 				
 					##   Extract asymptotes for the lower group
-					pc1 <- pars[[i]]@c[items1,]
+					pc1 <- pars[[grp]]@c[items1,]
 					
 					##   Extract asymptotes for the higher group
-					pc2 <- pars[[i+1]]@c[items2,]
+					pc2 <- pars[[grp+1]]@c[items2,]
 					
 					##   Check to see if there are any asymptote values 
 					##   for any of the common items
@@ -709,17 +747,17 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 						mod <- NULL
 						
 						##   Loop through the item response models
-						for (j in 1:length(pars[[i]]@model)) {
+						for (j in 1:length(pars[[grp]]@model)) {
 							##   Identify the items for the given model that
 							##   are part of the subset of items selected
-							tmp <- pars[[i]]@items[[j]][pars[[i]]@items[[j]] %in% items1]
+							tmp <- pars[[grp]]@items[[j]][pars[[grp]]@items[[j]] %in% items1]
 							
 							##   Extract the incremented item numbers
 							tmp <- items1a[items1a[,2]%in%tmp,1]
 							
 							##   If there are any items in the subset associated with 
 							##   this model, add the model to {mod}
-							if (length(tmp)) mod <- c(mod,pars[[i]]@model[j])
+							if (length(tmp)) mod <- c(mod,pars[[grp]]@model[j])
 							
 							##   Update the indicator variable
 							m.type[tmp,][!is.na(m.type[tmp,])] <- j
@@ -729,31 +767,317 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 						pc <- data.frame(pc1=pc1[!is.na(pc1)],pc2=pc2[!is.na(pc2)],type=factor(m.type[!is.na(m.type)], labels=toupper(mod[mod %in% c("drm","mcm")])))
 						
 						##   Compute a range of 3 SDs for creating a confidence interval
-						sd.c <- sd(pc[,1]-pc[,2],na.rm=T)
+						sd.c <- .sd(pc[,1]-pc[,2])
 						p.max <- max(pc[,1:2])+0.1
 						
 						##   Create the plot with different markers for each response model
 						if (sep.mod==TRUE) {
-							pl.out[[i]][[pl]] <- xyplot(pc2~pc1,data=pc,groups=type,auto.key=list(space="right"),
-							xlab=nms[i], ylab=nms[i+1], main=c.title, panel=pfunc, xlim=c(0,p.max) ,ylim=c(0,p.max),sd=sd.c)
+							pl.out[[i]][[pl]] <- xyplot(pc2~pc1,data=pc,groups=type,auto.key=list(space="bottom", columns=length(mod[mod %in% c("drm","mcm")])),
+							xlab=nms[grp], ylab=nms[grp+1], main=c.title, panel=pfunc, xlim=c(0,p.max) ,ylim=c(0,p.max),sd=sd.c, item.names=item.names, drift.sd=drift.sd)
 							
 						##   Create the plot with a single marker for all response models
 						} else {
-							pl.out[[i]][[pl]] <- xyplot(pc2~pc1,data=pc,xlab=nms[i], ylab=nms[i+1], main=c.title, panel=pfunc, xlim=c(0,p.max) ,ylim=c(0,p.max),sd=sd.c)
+							pl.out[[i]][[pl]] <- xyplot(pc2~pc1,data=pc,xlab=nms[grp], ylab=nms[grp+1], main=c.title, panel=pfunc, xlim=c(0,p.max) ,ylim=c(0,p.max),sd=sd.c, item.names=item.names, drift.sd=drift.sd)
 						}
 						
 						##   Increment the plot index
 						pl <- pl+1
 					}
 				} 
+				
+				if ("ICC" %in% drift|"TCC" %in% drift) {
+					
+					##   Reorder the common items
+					sort <- order(items1)
+					items1 <- items1[sort]
+					items2 <- items2[sort]
+					
+					##   Create a duplicate object of response probabilities
+					##   The probability matrix for each group will be modified
+					##   to hold only the columns for the common items
+					prob1 <- prob
+					
+					##   Identify the number of columns in the matrix of
+					##   probabilities associated with each item in the lower group
+					tmp <- rep(1:length(prob1[[grp]]@p.cat),prob1[[grp]]@p.cat)
+					
+					##   Identify the columns of probabilities for the common
+					##   items in the lower group
+					tmp1 <- 1:length(tmp)
+					tmp2 <- NULL
+					for (j in items1) {
+						tmp2 <- c(tmp2, tmp1[tmp==j])
+					}
+					
+					##   Re-specify the matrix of probabilities to include 
+					##   the column(s) of theta values and the appropriate 
+					##   columns of probabilities for the common items
+					##   in the lower group
+					prob1[[grp]]@prob <- prob1[[grp]]@prob[,c(1:prob1[[grp]]@dimensions,tmp2+prob1[[grp]]@dimensions)]
+					
+					##   Re-specify the {p.cat} vector to identify the number of 
+					##   columns in the probability matrix associated with each 
+					##   common item in the lower group
+					prob1[[grp]]@p.cat <- prob1[[grp]]@p.cat[items1]
+				
+					##   Identify the number of columns in the matrix of
+					##   probabilities associated with each item in the higher group
+					tmp <- rep(1:length(prob1[[grp+1]]@p.cat),prob1[[grp+1]]@p.cat)
+					
+					##   Identify the columns of probabilities for the common
+					##   items in the higher group
+					tmp1 <- 1:length(tmp)
+					tmp2 <- NULL
+					for (j in items2) {
+						tmp2 <- c(tmp2, tmp1[tmp==j])
+					}
+					
+					##   Re-specify the matrix of probabilities to include 
+					##   the column(s) of theta values and the appropriate 
+					##   columns of probabilities for the common items
+					##   in the higher group
+					prob1[[grp+1]]@prob <- prob1[[grp+1]]@prob[,c(1:prob1[[grp+1]]@dimensions,tmp2+prob1[[grp+1]]@dimensions)]
+					
+					##   Re-specify the {p.cat} vector to identify the number of 
+					##   columns in the probability matrix associated with each 
+					##   common item in the higher group
+					prob1[[grp+1]]@p.cat <- prob1[[grp+1]]@p.cat[items2]
+					
+					if ("TCC" %in% drift) {
+						##   Compute a vector of response weights
+						##   for the lower and higher groups
+						scr1 <- scr2 <- NULL
+						for (j in 1:length(prob1[[grp]]@p.cat)) {
+							scr1 <- c(scr1,1:prob1[[grp]]@p.cat[j])
+						}
+						for (j in 1:length(prob1[[grp+1]]@p.cat)) {
+							scr2 <- c(scr2,1:prob1[[grp+1]]@p.cat[j])
+						}
+						
+						p1 <- as.matrix(prob1[[grp]]@prob[,-c(1:prob1[[grp]]@dimensions)])
+						p1 <- p1%*%scr1
+						p2 <- as.matrix(prob1[[grp+1]]@prob[,-c(1:prob1[[grp+1]]@dimensions)])
+						p2 <- p2%*%scr2
+						
+						if (prob1[[grp]]@dimensions==1) {
+						
+							th <- c(prob1[[grp]]@prob[,1],prob1[[grp+1]]@prob[,1])
+							p.all <- data.frame(cbind(th,c(p1,p2),c(rep(1,length(p1)),rep(2,length(p2)))))
+							names(p.all) <- c("theta","prob","gr")
+							
+							pl.out[[i]][[pl]] <- xyplot(prob~theta,data=p.all,type="l",
+							as.table=TRUE,
+							ylab="True Score",
+							xlab=expression(paste(theta)),
+							groups=p.all$gr,
+							col=1:2, lty=1:2,
+							key=list(space="bottom", text=list(c(nms[grp],nms[grp+1])),lines=list(col=1:2, lty=1:2), columns=2),...)
+							
+						} else {
+							##   TCCs for multidimenisonal data will be implemented in a future release
+						}
+						
+						##   Increment the plot index
+						pl <- pl+1
+						
+					}
+					
+					if ("ICC" %in% drift) {
+						
+						dimensions <- prob1[[grp]]@dimensions
+						
+						if(!missing(separate)) {
+							##   Re-specify {cat} so that each column in the matrix of 
+							##   probabilities will be plotted in a separate panel
+							if (separate==TRUE) cat <- rep(1,ncol(prob1[[grp]]@prob)-dimensions) else cat <- prob1[[grp]]@p.cat
+						} else {
+							separate <- FALSE
+							cat <- prob1[[grp]]@p.cat
+						}
+						
+						##   Extract the first column(s) in {prob} containing the 
+						##   theta values used to compute the probabilities
+						theta <- as.matrix(prob1[[grp]]@prob[,1:dimensions])
+						
+						##   Number of (combinations) of theta values
+						nt <- nrow(theta)
+						
+						##   Number of "items"
+						ni <- length(cat)
+						
+						##   If there is more than one item, create a matrix where 
+						##   the probabilities for each item and category are stacked
+						##   on top of each other. This is necessary
+						##   to use the group argument in the various lattice plots.
+						if (ncol(prob1[[grp]]@prob)>(dimensions+1)) {
+							sx <- stack(prob1[[grp]]@prob[,-c(1:dimensions)]) 
+						} else {
+							sx <- data.frame(values=prob1[[grp]]@prob[,-c(1:dimensions)],ind=factor(rep(colnames(prob1[[grp]]@prob)[dimensions+1],nt)))
+						}
+						
+						if (ncol(prob1[[grp+1]]@prob)>(dimensions+1)) {
+							sx1 <- stack(prob1[[grp+1]]@prob[,-c(1:dimensions)]) 
+						} else {
+							sx1 <- data.frame(values=prob1[[grp+1]]@prob[,-c(1:dimensions)],ind=factor(rep(colnames(prob1[[grp+1]]@prob)[dimensions+1],nt)))
+						}
+						sx <-c(sx$values,sx1$values)
+						
+						##   Create indicator values for the item numbers and category numbers
+						##   to identify groups in the sx matrix created above
+						id <- NULL
+						cid <- NULL
+						
+						for (j in 1:ni) {
+							id <- c(id, rep(j,nt*cat[j]))
+							for (k in 1:cat[j]) {
+								cid <- c(cid, rep(k,nt))
+							}
+						}
+						
+						
+						if (separate==TRUE) {
+						
+							##   Initialize an object to store the item names
+							nms <- NULL
+							
+							##   Loop through all of the items
+							for (j in 1:length(items)) {
+							
+								##   For dichotomous items, only include the item number
+								if (prob1[[grp]]@p.cat[j]==1) {
+									nms <- c(nms,paste("Item",items[j]))
+									
+								##   For polytomous items, include both the item
+								##   number and the category number
+								} else {
+									for (k in 1:x@p.cat[j]) {
+										nms <- c(nms, paste("Item ",items[j],".",j,sep=""))
+									}
+								}
+							}
+							id <- factor(id,seq(1:ni),nms)
+						} else {
+							id <- c(id,id)
+						}
+						
+						##   Create a set of theta values to be attached to the sx
+						##   matrix created above
+						if (sum(cat)>1) {
+							tmp <- theta
+							for (j in 2:sum(cat)) {
+								tmp <- rbind(tmp,theta)
+							}
+							theta <- tmp
+						}
+						
+						test <- c(rep(1,nrow(theta)),rep(2,nrow(theta)))
+						if (dimensions==1) theta <- c(theta,theta) else theta <- rbind(theta,theta)
+						
+						##   Combine the theta values, response probabilities,
+						##   item indicators, and category indicators into a 
+						##   single matrix
+						out <- data.frame(cbind(theta,id,sx,c(cid,cid),test))
+						names(out) <- c(paste("theta",1:dimensions,sep=""),"id","values","cid","test")
+						
+						##   Re-specify id as a factor
+						out$id <- factor(out$id,seq(1:length(items1)),paste("Item ",items1,",",items2,sep=""))
+						
+						##   Create the formula that will be passed to the given lattice function
+						if (dimensions>1) {
+							tmp <- paste(names(out)[1:2],collapse="+")
+							if (dimensions>2) {
+								for (j in 1:(dimensions-2)) {
+									out[,j+2] <- as.factor(out[,j+2])
+									
+								}
+								tmp2 <- paste(c(names(out)[3:dimensions],"id"),collapse="+") 
+							} else {
+								tmp2 <- "id"
+							}
+							form<- as.formula(paste("values~",tmp,"|",tmp2,sep="")) 
+						}
+						
+						##   Custom strip
+						if (dimensions>2) {
+							vn <- c(paste("theta[",3:dimensions,"]",sep=""),"")
+							strip.irt.prob <- function(which.given, which.panel, var.name, factor.levels, ...) {
+								vn <- vn[which.given]
+								fl <- factor.levels
+								if (which.given<=dimensions-2) {
+									expr <- paste(vn, "==", fl, collapse = ",")
+									expr <- paste("expression(", expr, ")", sep = "")
+									fl <- eval(parse(text = expr))
+								}
+								strip.default(which.given, which.panel, vn, fl, ...)
+							}
+						} else {
+							strip.irt.prob <- TRUE
+						}
+						
+						##   Determine the number of panels to print
+						if (dimensions<3) np <- ni else np <- ni*length(unique(out[,1]))^(dimensions-2)
+						if (missing(panels)) {
+							if (np<20) panels <- np else panels <- 20
+						}
+						
+						##   Initialize a set of colors for the strips for multiple dimensions
+						cols <- c("lightpink1", "darkseagreen1", "burlywood1", "cadetblue3", "yellow", "darkorchid2", "coral", "seagreen4")
+						if (dimensions<3) cols <- "lightblue" else cols <- c(cols[(dimensions-2):1],"lightblue")
+					
+						if (dimensions==1) {
+							if (np>panels) {
+							
+								##   Check to see if a graphics device is already open
+								if (names(dev.cur())=="null device") {
+									if (Sys.info()["sysname"] == "Windows") {
+										cat("Use PgUp and PgDn to view different plot pages\n")
+										windows(record=TRUE)
+									}
+								}
+								
+								##   Create the multi-page plot
+								pl.out[[i]][[pl]] <- xyplot(values~theta1|id,out,type="l",
+								as.table=TRUE,
+								ylab="Probability",
+								xlab=expression(paste(theta)),
+								groups=interaction(cid,test),
+								par.strip.text=list(cex=0.7),
+								par.settings = list(strip.background = list(col = cols), layout.heights=list(strip=1.1), superpose.line=list(col=c("red","blue")) ) ,
+								strip=strip.irt.prob,
+								layout=c(0,panels),
+								key=list(space="bottom", text=list(c(nms[grp],nms[grp+1])),lines=list(col=1:2, lty=1:2), columns=2),
+								ylim=c(-0.05,1.05),...)
+								
+							##   Create a single-page plot
+							} else {
+								pl.out[[i]][[pl]] <- xyplot(values~theta1|id,out,type="l",
+								as.table=TRUE,
+								ylab="Probability",
+								xlab=expression(paste(theta)),
+								groups=interaction(cid,test),
+								par.strip.text=list(cex=0.7),
+								par.settings = list(strip.background = list(col = cols), layout.heights=list(strip=1.1), superpose.line=list(col=c("red","blue")) ) ,
+								strip=strip.irt.prob,
+								key=list(space="bottom", text=list(c(nms[grp],nms[grp+1])),lines=list(col=1:2, lty=1:2), columns=2),
+								ylim=c(-0.05,1.05),...)
+							}
+						} else if (dimensions>1) {
+							##   ICCs for multidimenisonal data will be implemented in a future release
+						}
+						
+						##   Increment the plot index
+						pl <- pl+1
+						
+					}
+					
+				}
 			}
 				
 			
 			##   Print all of the comparison plots
 			for (i in 1:length(pl.out)) {
+				##   Include functionality for d.split here later
 				for (j in 1:length(pl.out[[i]])) {
-					##   Include functionality for d.split here later
-					
 					print(pl.out[[i]][[j]])
 				}
 			}
@@ -1062,13 +1386,46 @@ plot.sep.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 	
 }
 
-plot.list <- function(x, y, ..., type, separate, combine, items, item.names, item.nums, panels, drift, groups, grp.names, sep.mod) {
+plot.list <- function(x, y, ..., type, separate, combine, items, item.names, item.nums, panels, drift, groups, grp.names, sep.mod, drift.sd) {
 
 	##   Extract the rescaled item parameters from the object output by {plink}
 	if (length(x$pars)) {
 		tmp <- x$pars
 		
-		plot(tmp,type=type,separate=separate,combine=combine, items=items, item.names=item.names, item.nums=item.nums,panels=panels,drift=drift,groups=groups, grp.names=grp.names,sep.mod=sep.mod,...)
+		if (missing(drift.sd)) drift.sd <- 3
+		plot(tmp,type=type,separate=separate,combine=combine, items=items, item.names=item.names, item.nums=item.nums,panels=panels,drift=drift,groups=groups, grp.names=grp.names,sep.mod=sep.mod, drift.sd=drift.sd, ...)
+		
+	##   When x is a list of irt.prob objects
+	} else if (class(x[[1]])=="irt.prob") {
+		
+		##   Number of groups
+		ng <- length(x)
+		
+		pl.out <- vector("list",ng)
+		
+		for (i in 1:ng) {
+			if (ng==1) {
+				plot(x[[i]],type=type,separate=separate,combine=combine, items=items, item.names=item.names, item.nums=item.nums,panels=panels,...)
+			} else {
+				grn.items <- unique(unlist(strsplit(names(x[[i]]@prob)[-c(1:x[[i]]@dimensions)],"\\.")))
+				tmp <- suppressWarnings(as.numeric(grn.items))
+				grn.items <- grn.items[is.na(tmp)]
+				if (missing(grp.names)) {
+					nms <- paste("G",i,": ",grn.items,sep="")
+				} else {
+					nms <- paste(grp.names[i],": ",grn.items,sep="")
+				}
+				pl.out[[i]] <- plot(x[[i]],type=type,separate=separate,combine=combine, items=items, item.names=nms, item.nums=item.nums,panels=panels,mg=1,...)
+			}
+		}
+	
+		##   Print compiled trellis objects
+		if (length(pl.out)) {
+			for (i in 1:ng) {
+				print(pl.out[[i]])
+			}
+		}
+		
 	} else {
 		stop("There were no parameters in {x}, re-run plink and specify and argument for {rescale} then try again.")
 	}

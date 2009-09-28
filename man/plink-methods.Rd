@@ -20,29 +20,29 @@ optimization and chain-linked rescaling of item and ability parameters.
 
 \usage{
 plink(x, common, rescale, ability, method, weights.t, weights.f, 
-  startvals, score = 1, base.grp = 1, symmetric = FALSE, 
-  rescale.com = TRUE, grp.names = NULL, mn.exclude = 0, 
-  dilation = "ODL", dim.order = NULL, ...)
+  startvals, exclude, score = 1, base.grp = 1, symmetric = FALSE, 
+  rescale.com = TRUE, grp.names = NULL, dilation = "ODL", 
+  dim.order = NULL, ...)
 
 ## S4 method for signature 'list', 'matrix'
 plink(x, common, rescale, ability, method, weights.t, weights.f, 
-  startvals, score, base.grp, symmetric, rescale.com, grp.names, 
-  mn.exclude, dilation, dim.order, ...)
+  startvals, exclude, score, base.grp, symmetric, rescale.com, 
+  grp.names, dilation, dim.order, ...)
 
 ## S4 method for signature 'list', 'data.frame'
 plink(x, common, rescale, ability, method, weights.t, weights.f, 
-  startvals, score, base.grp, symmetric, rescale.com, grp.names, 
-  mn.exclude, dilation, dim.order, ...)
+  startvals, exclude, score, base.grp, symmetric, rescale.com, 
+  grp.names, dilation, dim.order, ...)
 
 ## S4 method for signature 'list', 'list'
 plink(x, common, rescale, ability, method, weights.t, weights.f, 
-  startvals, score, base.grp, symmetric, rescale.com, grp.names, 
-  mn.exclude, dilation, dim.order, ...)
+  startvals, exclude, score, base.grp, symmetric, rescale.com, 
+  grp.names, dilation, dim.order, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
 plink(x, common, rescale, ability, method, weights.t, weights.f, 
-  startvals, score, base.grp, symmetric, rescale.com, grp.names, 
-  mn.exclude, dilation, dim.order, ...)
+  startvals, exclude, score, base.grp, symmetric, rescale.com, 
+  grp.names, dilation, dim.order, ...)
 }
 
 \arguments{
@@ -74,17 +74,20 @@ plink(x, common, rescale, ability, method, weights.t, weights.f,
     on the \emph{From} scale for use with the characteristic curve methods. This
     argument will be ignored if \code{symmetric}=FALSE. See below for more details. }
 
+  \item{startvals}{vector of slope and intercept starting values for the characteristic
+    curve methods or a character vector of "MM", "MS", or "RM" to identify that
+    values from the Mean/Mean, Mean/Sigma, or Reckase-Martineau method should be used
+    for the starting values. See below for more details.}
+
+  \item{exclude}{character vector or list identifying common items that should be
+    excluded when estimating the linking constants. See below for more details.}
+
   \item{score}{if \code{score} = 1, score responses for the Stocking-Lord
     method with zero for the lowest category and k-1 for the highest, k, category
     for each item.  If \code{score} = 2, score responses with one for the
     lowest category and k for the highest, k, category for each item.  A vector of
     scores for each response category can be supplied, but this is only recommended
     for advanced users.}
-
-  \item{startvals}{vector of slope and intercept starting values for the characteristic
-    curve methods or a character vector of "MM", "MS", or "RM" to identify that
-    values from the Mean/Mean, Mean/Sigma, or Reckase-Martineau method should be used
-    for the starting values. See below for more details.}
 
   \item{base.grp}{integer identifying the group for the base scale}
 
@@ -96,11 +99,6 @@ plink(x, common, rescale, ability, method, weights.t, weights.f,
     parameters into the set of unique transformed item parameters}
 
   \item{grp.names}{character vector of group names }
-
-  \item{mn.exclude}{numeric value. If 0, include NRM and MCM common items in all linking
-    methods. If 1, exclude NRM and MCM common items from the moment methods. If 2, exclude
-    NRM and MCM common items from the characteristic curve methods. If 3, exclude NRM and 
-    MCM common items from all linking methods.}
 
   \item{dilation}{character value identifying whether the Oshima, Davey, & Lee (2000)
     approach \code{"ODL"}, the Li and Lissitz (2000) approach \code{"LL"}, or the Min (2003)
@@ -157,6 +155,21 @@ theta values and weights for this object correspond to theta values on the \emph
 This argument is only used when \code{symmetric}=TRUE. If \code{weights.f} is missing and 
 \code{symmetric}=TRUE, the same theta values and weights used for \code{weights.t} will be
 used for \code{weights.f}.
+
+In general, all of the common items identified in \code{x} or \code{common} will be used
+in estimating linking constants; however, there are instances where there is a need to exclude
+certain common items (e.g., NRM or MCM items or items exhibiting parameter drift). Instead of
+creating a new matrix or list of matrices for \code{common}, the \code{exclude} argument can
+be used. \code{exclude} can be specified as a character vector or a list. In the former case,
+a vector of model names (i.e., "drm", "grm", "gpcm", "nrm", "mcm") would be supplied, indicating
+that any common item on any test associated with the given model(s) would be excluded from the
+set of items used to estimate the linking constants. If the argument is specified as a list, 
+\code{exclude} should have as many elements as groups in \code{x}. Each list element can include
+model names and/or item numbers corresponding to the common items that should be excluded for
+the given group. If no items need to be excluded for a given group, the list element should be
+NULL or NA. For example, say we have two groups and we would like to exclude the NRM items and
+item 23 from the first group, we would specify \code{exclude} as \code{exclude <- list(c("nrm",23),NA)}.
+Notice that the item number corresponding item 23 in group 2 does not need to be specified.
 
 The argument \code{dim.order} is a k x r matrix for k groups and r unique dimensions across
 groups. This object identifies the common dimensions across groups. The elements in the 
@@ -268,12 +281,13 @@ set equal to \code{D}. If only \code{D.drm} is specified, the values for \code{D
 
 \examples{
 ###### Unidimensional Examples ######
-# Create irt.pars object with two groups (all dichotomous items)
-# rescale the item parameters using the Stocking-Lord linking constants
+# Create irt.pars object with two groups (all dichotomous items),
+# rescale the item parameters using the Mean/Sigma linking constants,
+# and exclude item 27 from the common item set
 pm <- as.poly.mod(36)
 x <- as.irt.pars(KB04$pars, KB04$common, cat=list(rep(2,36),rep(2,36)), 
-  poly.mod=list(pm,pm))
-out <- plink(x, rescale="SL", base.grp=2, D=1.7)
+  poly.mod=list(pm,pm), exclude=list(27,NA))
+out <- plink(x, rescale="MS", base.grp=2, D=1.7)
 summary(out, descrip=TRUE)
 pars.out <- link.pars(out)
 
@@ -327,10 +341,10 @@ summary(out, descrip=TRUE)
 pm1 <- as.poly.mod(55,c("drm","gpcm","nrm"),dgn$items$group1)
 pm2 <- as.poly.mod(55,c("drm","gpcm","nrm"),dgn$items$group2)
 x <- as.irt.pars(dgn$pars,dgn$common,dgn$cat,list(pm1,pm2))
-# Run with NRM items included for all methods
+# Run with the NRM common items included
 out <- plink(x) 
-# Run with NRM items excluded from the moment methods
-out1 <- plink(x,mn.exclude=1) 
+# Run with the NRM common items excluded
+out1 <- plink(x,exclude="nrm") 
 summary(out)
 summary(out1)
 

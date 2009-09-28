@@ -47,10 +47,6 @@ not encouraged.  Use the function \code{\link[=plink-methods]{plink}} instead.
 
     \item{\code{dilation}:}{character value identifying the dilation approach used when
       estimating multidimensional linking constants}
-
-    \item{\code{include.mcm.nrm}:}{logical vector indicating whether multiple-choice
-      model or nominal response model items were included in the computation of
-      the linking constants}
   }
 }
 

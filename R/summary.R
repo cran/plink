@@ -32,6 +32,52 @@ summary.list <- function(object, ..., descrip=FALSE) {
 			for (i in 1:length(object[[1]])) {
 				summary(object[[1]][[i]],descrip=descrip)
 			}
+			
+			##   Check to see if ability estimates are included in the output
+			##   If yes, compute descriptive statistics for each group
+			if (length(object$ability)) {
+			
+				##   Initialize object to store the descriptives
+				tmp.ability <- NULL
+				
+				for (i in 1:length(object$ability)) {
+					tmp <- object$ability[[i]]
+					
+					if (is.matrix(tmp)) {
+						##   Compute the descriptives
+						means <- apply(tmp,2,mean,na.rm=T)
+						sds <- apply(tmp,2,sd,na.rm=T)
+						min <- apply(tmp,2,min,na.rm=T)
+						max <- apply(tmp,2,max,na.rm=T)
+						 
+						##   Compile the descriptives and create column names
+						tmp1 <- rbind(means,sds,min,max)
+						th <- paste("theta",1:ncol(tmp),sep="")
+						colnames(tmp1) <- paste(names(object$ability)[i],":",th,sep="")
+						
+					} else if (is.vector(tmp)) {
+						##   Compute the descriptives
+						means <- mean(tmp,na.rm=T)
+						sds <- sd(tmp,na.rm=T)
+						min <- min(tmp,na.rm=T)
+						max <- max(tmp,na.rm=T)
+						
+						##   Compile the descriptives and create column names
+						tmp1 <- as.matrix(c(means,sds,min,max))
+						colnames(tmp1) <- names(object$ability)[i]
+					}
+					
+					tmp.ability <- cbind(tmp.ability, tmp1)
+				}
+				
+				##   Print ability descriptives
+				rownames(tmp.ability) <- c("Mean","SD","Min","Max")
+				tmp.ability <- round(tmp.ability,4)
+				cat("Ability Descriptive Statistics\n\n")
+				print(format(as.data.frame(tmp.ability),nsmall=4),quote=FALSE)
+				cat("\n")
+			}
+			
 		} else {
 			stop("The objects in the list are not of class {link}")
 		}
@@ -45,7 +91,52 @@ summary.list <- function(object, ..., descrip=FALSE) {
 		##   parameters and/or ability estimates were returned
 		if (is.link(object[[1]]) & !is.link(object[[2]])) {
 			summary(object[[1]],descrip=descrip)
-		
+			
+			##   Check to see if ability estimates are included in the output
+			##   If yes, compute descriptive statistics for each group
+			if (length(object$ability)) {
+			
+				##   Initialize object to store the descriptives
+				tmp.ability <- NULL
+				
+				for (i in 1:length(object$ability)) {
+					tmp <- object$ability[[i]]
+					
+					if (is.matrix(tmp)) {
+						##   Compute the descriptives
+						means <- apply(tmp,2,mean,na.rm=T)
+						sds <- apply(tmp,2,sd,na.rm=T)
+						min <- apply(tmp,2,min,na.rm=T)
+						max <- apply(tmp,2,max,na.rm=T)
+						 
+						##   Compile the descriptives and create column names
+						tmp1 <- rbind(means,sds,min,max)
+						th <- paste("theta",1:ncol(tmp),sep="")
+						colnames(tmp1) <- paste(names(object$ability)[i],":",th,sep="")
+						
+					} else if (is.vector(tmp)) {
+						##   Compute the descriptives
+						means <- mean(tmp,na.rm=T)
+						sds <- sd(tmp,na.rm=T)
+						min <- min(tmp,na.rm=T)
+						max <- max(tmp,na.rm=T)
+						
+						##   Compile the descriptives and create column names
+						tmp1 <- as.matrix(c(means,sds,min,max))
+						colnames(tmp1) <- names(object$ability)[i]
+					}
+					
+					tmp.ability <- cbind(tmp.ability, tmp1)
+				}
+				
+				##   Print ability descriptives
+				rownames(tmp.ability) <- c("Mean","SD","Min","Max")
+				tmp.ability <- round(tmp.ability,4)
+				cat("Ability Descriptive Statistics\n\n")
+				print(format(as.data.frame(tmp.ability),nsmall=4),quote=FALSE)
+				cat("\n")
+			}
+			
 		##   This is the case where the output from {plink}
 		##   is for three or more groups, but no rescaled
 		##   parameters were returned
@@ -169,7 +260,7 @@ summary.sep.pars <- function(object, ..., descrip=FALSE){
 			}
 			des <- round(des,4)
 			cat("All Item Parameter Descriptives:\n")
-			print(format(des,justify="right"),quote=FALSE)
+			print(format(as.data.frame(des),nsmall=4),quote=FALSE)
 			cat("\n")
 		}
 	}
@@ -222,7 +313,7 @@ summary.sep.pars <- function(object, ..., descrip=FALSE){
 			}
 			des <- round(des,4)
 			cat(paste(object@mod.lab[object@model=="drm"],"- Item Parameter Descriptives:\n"))
-			print(format(des,justify="right"),quote=FALSE)
+			print(format(as.data.frame(des),nsmall=4),quote=FALSE)
 			cat("\n")
 		} else if (object@n[2]==1) { 
 			cat("There is only one item. No descriptives available.\n\n")
@@ -301,7 +392,7 @@ summary.sep.pars <- function(object, ..., descrip=FALSE){
 					if (object@model[i]=="mcm") {
 						if (object@dimensions==1) {
 							des <- cbind(a,b,c)
-							colnames(des) <- c("a","c","d")
+							colnames(des) <- c("a","b","c")
 						} else {
 							des <- cbind(a,b,c,mdc,mdf)
 							colnames(des) <- c(paste("a",1:object@dimensions,sep=""),"d","c","MDISC","MDIF")
@@ -309,7 +400,7 @@ summary.sep.pars <- function(object, ..., descrip=FALSE){
 					} else {
 						if (object@dimensions==1) {
 							des <- cbind(a,b)
-							colnames(des) <- c("a","d")
+							colnames(des) <- c("a","b")
 						} else {
 							des <- cbind(a,b,mdc,mdf)
 							colnames(des) <- c(paste("a",1:object@dimensions,sep=""),"d","MDISC","MDIF")
@@ -320,7 +411,7 @@ summary.sep.pars <- function(object, ..., descrip=FALSE){
 					if (length(object@mod.lab[object@mod.lab!="drm"])>=1) {
 						cat(paste(object@mod.lab[i],"- Item Parameter Descriptives:\n"))
 					} 
-					print(format(des,justify="right"),quote=FALSE)
+					print(format(as.data.frame(des),nsmall=4),quote=FALSE)
 					cat("\n")
 				} else if (object@n[j]==1) { 
 					cat("There is only one item. No descriptives available.\n\n")
@@ -366,19 +457,19 @@ summary.link <- function(object, ..., descrip=FALSE) {
 			
 			##   Print the linking constants for the oblique procrustes method
 			if (length(object@constants[[j]] )==2) { 
-				print(formatC(object@constants[[j]]$A,digits=6,format="f",drop0trailing=FALSE),quote=FALSE)
+				print(format(object@constants[[j]]$A,digits=6,drop0trailing=FALSE),nsmall=6,quote=FALSE)
 				cat("\n")
-				print(formatC(object@constants[[j]]$m,digits=6,format="f",drop0trailing=FALSE),quote=FALSE)
+				print(format(object@constants[[j]]$m,digits=6,drop0trailing=FALSE),nsmall=6,quote=FALSE)
 				cat("\n")
 			
 			##   Print the linking constants for the orthogonal procrustes methods
 			} else {
 				tmp <- object@constants[[j]]
-				tmp1 <- formatC(cbind(tmp$A,NA,tmp$T,NA,tmp$K),digits=6,format="f",drop0trailing=FALSE)
+				tmp1 <- format(cbind(tmp$A,NA,tmp$T,NA,tmp$K),digits=6,drop0trailing=FALSE)
 				tmp1[,c(ncol(tmp$A)+1,2*ncol(tmp$A)+2)] <- NA
 				print(tmp1,na.print="",quote=F)
 				cat("\n")
-				print(formatC(tmp$m,digits=6,format="f",drop0trailing=FALSE),quote=FALSE)
+				print(format(tmp$m,digits=6,drop0trailing=FALSE),nsmall=6,quote=FALSE)
 				cat("\n")
 			}
 		}
@@ -392,7 +483,7 @@ summary.link <- function(object, ..., descrip=FALSE) {
 			tmp <- rbind(tmp,object@constants[[j]])
 		}
 		rownames(tmp) <- tmp.nms
-		print(formatC(tmp,digits=6,format="f",drop0trailing=FALSE),quote=FALSE)
+		print(format(data.frame(tmp),digits=6,nsmall=6, drop0trailing=FALSE),quote=FALSE)
 	}
 	cat("\n")
 	
@@ -418,10 +509,9 @@ summary.link <- function(object, ..., descrip=FALSE) {
 		for (j in 1:length(n[n>0])) {
 			cat("Model:",ml[j],"\n")
 			cat("Number of Items:",n[j],"\n\n")
-			print(format(object@descriptives[[j]],justify="right"),quote=FALSE)
+			print(format(as.data.frame(object@descriptives[[j]]),nsmall=6),quote=FALSE)
 			cat("\n")
 		}
 		cat("\n")
 	}
-	
 }

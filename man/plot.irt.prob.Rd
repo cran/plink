@@ -13,7 +13,7 @@ multidimensional items, and comparison plots for examining parameter drift.
 \usage{
 ## S3 method for signature 'irt.pars'
 \method{plot}{irt.pars}(x, y, ..., type, separate, combine, items, item.names, 
-    item.nums, panels, drift, groups, grp.names, sep.mod)
+    item.nums, panels, drift, groups, grp.names, sep.mod, drift.sd)
 
 ## S3 method for signature 'irt.prob'
 \method{plot}{irt.prob}(x, y, ..., type, separate, combine, items, item.names, 
@@ -25,7 +25,7 @@ multidimensional items, and comparison plots for examining parameter drift.
 
 ## S3 method for signature 'list'
 \method{plot}{irt.pars}(x, y, ..., type, separate, combine, items, item.names, 
-    item.nums, panels, drift, groups, grp.names, sep.mod)
+    item.nums, panels, drift, groups, grp.names, sep.mod, drift.sd)
 }
 
 \arguments{
@@ -73,6 +73,10 @@ multidimensional items, and comparison plots for examining parameter drift.
 
   \item{sep.mod}{logical value. If \code{TRUE} use different markers in the drift plots
       to identify parameters related to different item response models}
+
+  \item{drift.sd}{numeric value identifying the number of standard deviations to use when
+      creating the perpedicular confidence region for the drift comparison plots. If 
+      missing, \code{drift.sd} will default to 3.}
 }
 
 \details{
@@ -143,7 +147,8 @@ pm <- as.poly.mod(36)
 x <- as.irt.pars(KB04$pars, KB04$common, cat=list(rep(2,36),rep(2,36)), 
   poly.mod=list(pm,pm))
 out <- plink(x, rescale="SL", base.grp=2, D=1.7)
-plot(out$pars, drift="pars", grp.names=c("Form X","Form Y"))
+plot(out$pars, drift="all", grp.names=c("Form X","Form Y"), 
+item.nums=TRUE)
 
 # Compute linking constants for six groups using mixed-format items 
 # Create drift plots with distinct markers for the two response models

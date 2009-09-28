@@ -122,7 +122,7 @@ marginal distributions or a list combining these two objects}
 # IRT true score and observed score examples from 
 # Kolen & Brennan (2004, ch. 6)
 pm <- as.poly.mod(36)
-x <- as.irt.pars(KB04$pars, KB04$common[-9,], 
+x <- as.irt.pars(KB04$pars, KB04$common, exclude=list(27,NA),
   cat=list(rep(2,36),rep(2,36)), poly.mod=list(pm,pm))
 out <- plink(x, rescale="MS", base.grp=2, D=1.7)
 

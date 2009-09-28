@@ -1,3 +1,47 @@
+Changes in version: plink_1.2-1
+
+  Changed Arguments:
+
+  o The mn.exclude argument in the plink function has been
+    replaced with a more general argument exclude that allows
+    common items associated with any response model, or specific
+    items, to be excluded when estimating the linking constants 
+
+
+  Added Functionality:
+
+  o The plink function now allows NRM and MCM items to be used
+    for the Stocking-Lord method (note: caution should be taken
+    when using these models because TCCs are not adequately defined
+    unless the parameters correspond to ordered categories)
+
+  o The MCM can now be used for true-score and observed score equating
+
+
+  Plotting:
+
+  o Item numbers can now be plotted on the drift plots
+    for the parameter comparisons
+
+  o ICCs and TCCs can now be plotted as part of the drift argument
+
+  o An argument drift.sd has been added to change the size of the
+    confidence region for the parameter comparison plots
+
+  o The comparison plots now use the SD line rather than the 
+    45 degree line
+
+
+  Misc:
+
+  o Summary function now prints descriptive statistics for 
+    rescaled ability estimates when summarizing the output
+    from plink (if applicable)
+
+  o Some corrections/additions to the .Rd files
+
+==============================
+
 Changes in version: plink_1.2-0
 
   o Function equate added for conducting IRT
