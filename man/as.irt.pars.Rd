@@ -119,7 +119,7 @@ as.irt.pars(x, common, cat, poly.mod, dimensions, location,
 \item{x = "sep.pars", common = "missing"}{\code{x} is an object of class \code{\linkS4class{sep.pars}}.
   The arguments \code{cat}, \code{poly.mod}, and \code{location} do not need to be included.}
 
-\item{x = "list", common = "matix"}{This method is intended for the creation of an 
+\item{x = "list", common = "matrix"}{This method is intended for the creation of an 
   object with only two groups.  Each list element should conform to one of the formats 
   listed above (i.e. a numeric vector, matrix/data.frame, list, or sep.pars object)
   or be an \code{\linkS4class{irt.pars}} object.  The format of each list element does

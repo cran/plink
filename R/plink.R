@@ -40,7 +40,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	##                       (both unidimensional and multidimensional)
 	##################################################################
 	
-	.CC <- function(startvals, to, from, dimensions, weights.t, weights.f, score, transform, symmetric, dilation, T, ...) {
+	.CC <- function(startvals, to, from, dimensions, weights.t, weights.f, sc, transform, symmetric, dilation, T, ...) {
 		
 		##   In general, the criterion that will minimized is Q = Q1+Q2
 		##   where Q1 corresponds to the differences in probabilities after
@@ -200,10 +200,10 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		}
 		
 		##   Use this if one of the default values (1 or 2) is used for the {score} argument
-		if (length(score)==1) {
+		if (length(sc)==1) {
 		
 			##   Use this if the lowest category should have a scoring weight of zero
-			if (score==2) {
+			if (sc==2) {
 				scr <- scr-1
 				
 				##   If the argument {incorrect} equals FALSE, either explicitly or
@@ -223,8 +223,8 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		##   Use this if the researcher supplies a vector of score weights for
 		##   all of the columns in p
 		} else {
-			if (length(score)==length(scr)) {
-				scr <- score
+			if (length(sc)==length(scr)) {
+				scr <- sc
 			} else {
 				warning("The length of {score} does not match the number of response probabilities. Score was set to 1")
 			}
@@ -651,7 +651,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		}
 		
 		##   Compile these descriptives for all "included" common items
-		if (length(c)) {
+		if (c[1]>0) {
 			desall <- round(cbind(a,b,c),6)
 			colnames(desall) <- c("a","b","c")
 		} else {
@@ -759,7 +759,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		mdc <- c(length(mdisc1[!is.na(mdisc1)]),mean(mdisc1,na.rm=TRUE),mean(mdisc2,na.rm=TRUE),.sd(mdisc1),.sd(mdisc2))
 		mdf <- c(length(mdif1[!is.na(mdif1)]),mean(mdif1,na.rm=TRUE),mean(mdif2,na.rm=TRUE),.sd(mdif1),.sd(mdif2))
 		
-		if (length(c)) {
+		if (c[1]>0) {
 			desall <- round(cbind(a,b,c,mdc,mdf),6)
 			colnames(desall) <- c(paste("a",1:dimensions,sep=""),"d","c","MDISC","MDIF")
 		} else {
@@ -782,6 +782,25 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	
 	##   Number of groups
 	ng <- x@groups
+	
+	##   Make {score} a list with length equal to the number of groups minus one
+	if(!is.list(score)) {
+		tmp <- vector("list",ng-1)
+		for (i in 1:ng) {
+			tmp[[i]] <- score
+		}
+		score <- tmp
+	} else {
+		if (length(score)!=(ng-1)) {
+			tmp <- vector("list",ng-1)
+			for (i in 1:ng) {
+				tmp[[i]] <- 1
+			}
+			score <- tmp
+			
+			warning("The number of list elements in {score} does not correspond to the number of groups minus one. Score was set to 1 for all cases")
+		}
+	}
 	
 	##   Maximum number of dimensions across groups
 	md <- max(x@dimensions)
@@ -1313,7 +1332,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		if ("HB" %in% method) {
 		
 			##   Estimate the linking constants
-			hb <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, score=score, transform="HB", symmetric=symmetric, dilation=dilation, T=T, ...)
+			hb <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, sc=score[[i]], transform="HB", symmetric=symmetric, dilation=dilation, T=T, ...)
 			
 			##   Reformat the information from the estimation (as necessary)
 			##   to prepare it for being output
@@ -1379,7 +1398,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		if ("SL" %in% method) {
 			
 			##   Estimate the linking constants
-			sl <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, score=score, transform="SL", symmetric=symmetric, dilation=dilation, T=T, ...)
+			sl <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, sc=score[[i]], transform="SL", symmetric=symmetric, dilation=dilation, T=T, ...)
 			
 			##   Reformat the information from the estimation (as necessary)
 			##   to prepare it for being output
@@ -1732,6 +1751,13 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		}
 	}
 	
+	##   Include a location parameter if the original set of item parameters had one
+	if (!missing(rescale)) {
+		for (i in 1:length(out.pars)) {
+			out.pars[[i]] <- sep.pars(as.irt.pars(out.pars[[i]]),loc.out=x@location[i])
+		}
+	}
+	
 	
 	##   Combine the {link} object and rescaled item parameters/ability estimates (as necessary) to be output
 	if (ng==2) {
@@ -1759,7 +1785,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			if (!missing(rescale)) {
 				return(list(link=link.out,pars=combine.pars(out.pars,x@common,grp.names)))
 			} else {
-				return(link.out)
+				return(link.out) 
 			}
 		}
 	}

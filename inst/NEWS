@@ -1,3 +1,31 @@
+Changes in version: plink_1.2-2
+
+Bug Fixes:
+
+  o The creation of an irt.pars object for multiple groups when
+    there are location parameters in one or more sets of items
+    was returning an error
+
+  o The specification of explicit scoring weights in plink
+    and equate when there are multiple groups could return an
+    error
+
+  o No ability descriptives were printed when using the
+    summary function when there are multiple groups
+
+
+Added Functionality:
+
+  o Function get.prob added to extract expected
+    probabilities from irt.prob objects
+
+
+Misc:
+
+  o Some corrections/additions to the .Rd files
+
+==============================
+
 Changes in version: plink_1.2-1
 
   Changed Arguments:

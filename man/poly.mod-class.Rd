@@ -24,9 +24,9 @@ not encouraged. Use the function \code{\link{as.poly.mod}} instead.
 }
 
 \details{ 
-    The IRT models associted with the codes:
+    The IRT models associated with the codes:
   \describe{
-    \item{\code{drm}:}{dichotomous reponse models (includes 1PL, 2PL, and 3PL)}
+    \item{\code{drm}:}{dichotomous response models (includes 1PL, 2PL, and 3PL)}
     \item{\code{gpcm}:}{generalized partial credit model (includes the
 	partial credit model)}
     \item{\code{grm}:}{graded response model}

@@ -27,7 +27,7 @@ equate(x, method, true.scores, ts.low, base.grp, score, startval,
 
 \arguments{
   \item{x}{an object of class \code{\linkS4class{irt.pars}} with two or more groups
-    or the output from \code{plink} containing rescaled item paramters. }
+    or the output from \code{plink} containing rescaled item parameters. }
 
   \item{method}{character vector identifying the equating method(s) to use. 
     Values can include \code{"TSE"} and \code{"OSE"}.}
@@ -40,12 +40,12 @@ equate(x, method, true.scores, ts.low, base.grp, score, startval,
 
   \item{base.grp}{integer identifying the group for the base scale}
 
-  \item{score}{if \code{score} = 1, score responses for the Stocking-Lord
+  \item{score}{if \code{score} = 1, score responses for the true-score equating
     method with zero for the lowest category and k-1 for the highest, k, category
     for each item.  If \code{score} = 2, score responses with one for the
-    lowest category and k for the highest, k, category for each item.  A vector of
-    scores for each response category can be supplied, but this is only recommended
-    for advanced users.}
+    lowest category and k for the highest, k, category for each item.  A vector or
+    list of scoring weights for each response category can be supplied, but this is 
+    only recommended for advanced users.}
 
   \item{startval}{integer starting value for the first value of \code{true.score}}
 
@@ -77,7 +77,7 @@ and normal density weights for all groups.
 To better understand the elements of \code{weights1}, let us assume for a moment that \code{x}
 has parameters for only two groups.  In this instance, \code{weights1} would be a single list 
 with length two.  The first element should be a vector of theta values corresponding to points 
-on the base scale.  The second list element should be a vector of weights corresponding the the 
+on the base scale.  The second list element should be a vector of weights corresponding the 
 theta values.  If \code{x} contains more than two groups, a single \code{weights1} object can 
 be supplied, and the same set of thetas and weights will be used for all adjacent groups.  
 However, a separate list of theta values and weights for each adjacent group in \code{x} can be 

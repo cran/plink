@@ -784,7 +784,6 @@ setMethod("sep.pars", signature(x="list"), function(x, cat, poly.mod, dimensions
 
 
 combine.pars <- function(x, common, grp.names) {
-
 	##   Check to see if the objects in {x} are of class {irt.pars} or class {sep.pars}
 	for (i in 1:length(x)) {
 		if (!is.sep.pars(x[[i]]) & !is.irt.pars(x[[i]])) stop(paste("list element",i,"is not an object of class {irt.pars} or class {sep.pars}"))
@@ -878,7 +877,7 @@ combine.pars <- function(x, common, grp.names) {
 			pars[[length(pars)+1]] <- t.pars
 			cat[[length(cat)+1]] <- x[[i]]@cat
 			pm[[length(pm)+1]] <- t.pm
-			location <- c(location,x[[i]]@loc.out)
+			location <- c(location,x[[i]]@location)
 			dimensions <- c(dimensions,x[[i]]@dimensions)
 		}
 	} 

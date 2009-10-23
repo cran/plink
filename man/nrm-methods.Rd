@@ -106,7 +106,7 @@ nrm(x, cat, theta, dimensions, ...)
 should be a vector. If a matrix or list of values is supplied, they will be converted to a single vector
 of theta values.  For the multidimensional case, if a vector of values is supplied it will be assumed
 that this same set of values should be used for each dimension.  Probabilities will be computed for each
-combination of theta values.  Similarly, if a list is supplied, probabilites will be computed for each
+combination of theta values.  Similarly, if a list is supplied, probabilities will be computed for each
 combination of theta values.  In instances where probabilities are desired for specific combinations of 
 theta values, a j x m matrix should be specified for j ability points and m dimensions where the columns 
 are ordered from dimension 1 to m.

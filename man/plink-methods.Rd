@@ -85,9 +85,9 @@ plink(x, common, rescale, ability, method, weights.t, weights.f,
   \item{score}{if \code{score} = 1, score responses for the Stocking-Lord
     method with zero for the lowest category and k-1 for the highest, k, category
     for each item.  If \code{score} = 2, score responses with one for the
-    lowest category and k for the highest, k, category for each item.  A vector of
-    scores for each response category can be supplied, but this is only recommended
-    for advanced users.}
+    lowest category and k for the highest, k, category for each item.  A vector or 
+    list of scoring weights for each response category can be supplied, but this is 
+    only recommended for advanced users.}
 
   \item{base.grp}{integer identifying the group for the base scale}
 
@@ -129,7 +129,7 @@ is "ODL", the first m*m values in \code{startvals}, for m dimensions, should cor
 the values in the transformation matrix (starting with the value in the upper-left corner, 
 then the next value in the column, ..., then the first value in the next column, etc.). 
 The remaining m values should be for the translation vector. If \code{dilation} is "LL", the
-first value will be the slope parameter and the remaining m values wil be for the translation 
+first value will be the slope parameter and the remaining m values will be for the translation 
 vector. If \code{dilation} is "MIN", the first m values are the slopes for each dimension and 
 the remaining m values are for the translation vector. 
 
@@ -145,7 +145,7 @@ To better understand the elements of \code{weights.t}, let us assume for a momen
 has parameters for only two groups and that we are using non-symmetric linking.  In this instance, 
 \code{weights.t} would be a single list with length two.  The first element should be a vector
 of theta values corresponding to points on the \emph{To} scale.  The second list element should 
-be a vector of weights corresponding the the theta values.  If \code{x} contains multiple 
+be a vector of weights corresponding the theta values.  If \code{x} contains multiple 
 groups, a single \code{weights.t} object can be supplied, and the same set of thetas and weights
 will be used for all adjacent groups.  However, a separate list of theta values and theta weights 
 for each adjacent group in \code{x} can be supplied.
@@ -230,7 +230,7 @@ set equal to \code{D}. If only \code{D.drm} is specified, the values for \code{D
 
 \value{
   Returns an object of class \code{\linkS4class{link}}. The labels for the linking constants are 
-  specficied  in the following manner "group1/group2", meaning the group1 parameters were transformed 
+  specified in the following manner "group1/group2", meaning the group1 parameters were transformed 
   to the group2 test. The base group is indicated by an asterisk.
 }
 

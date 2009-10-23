@@ -12,7 +12,7 @@ a grade 4 and grade 5 test in year 1, and a grade 5 and grade 6 test in year 2. 
 label for the information related to the grade 3 test is grade3.0 where the value 
 after the decimal indicates the year.  Similar labels are used for the other grade/year
 combinations.  This dataset is used for illustrative purposes to show in a multi-group
-scenario how items from diferent response models can be mixed together and common 
+scenario how items from different response models can be mixed together and common 
 items can be in different positions across groups.
 }
 

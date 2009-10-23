@@ -43,15 +43,15 @@ summary.list <- function(object, ..., descrip=FALSE) {
 				for (i in 1:length(object$ability)) {
 					tmp <- object$ability[[i]]
 					
-					if (is.matrix(tmp)) {
+					if (is.matrix(tmp)|is.data.frame(tmp)) {
 						##   Compute the descriptives
 						means <- apply(tmp,2,mean,na.rm=T)
 						sds <- apply(tmp,2,sd,na.rm=T)
-						min <- apply(tmp,2,min,na.rm=T)
-						max <- apply(tmp,2,max,na.rm=T)
+						tmp.min <- apply(tmp,2,min,na.rm=T)
+						tmp.max <- apply(tmp,2,max,na.rm=T)
 						 
 						##   Compile the descriptives and create column names
-						tmp1 <- rbind(means,sds,min,max)
+						tmp1 <- rbind(means,sds,tmp.min,tmp.max)
 						th <- paste("theta",1:ncol(tmp),sep="")
 						colnames(tmp1) <- paste(names(object$ability)[i],":",th,sep="")
 						
@@ -59,11 +59,11 @@ summary.list <- function(object, ..., descrip=FALSE) {
 						##   Compute the descriptives
 						means <- mean(tmp,na.rm=T)
 						sds <- sd(tmp,na.rm=T)
-						min <- min(tmp,na.rm=T)
-						max <- max(tmp,na.rm=T)
+						tmp.min <- min(tmp,na.rm=T)
+						tmp.max <- max(tmp,na.rm=T)
 						
 						##   Compile the descriptives and create column names
-						tmp1 <- as.matrix(c(means,sds,min,max))
+						tmp1 <- as.matrix(c(means,sds,tmp.min,tmp.max))
 						colnames(tmp1) <- names(object$ability)[i]
 					}
 					
@@ -102,15 +102,15 @@ summary.list <- function(object, ..., descrip=FALSE) {
 				for (i in 1:length(object$ability)) {
 					tmp <- object$ability[[i]]
 					
-					if (is.matrix(tmp)) {
+					if (is.matrix(tmp)|is.data.frame(tmp)) {
 						##   Compute the descriptives
 						means <- apply(tmp,2,mean,na.rm=T)
 						sds <- apply(tmp,2,sd,na.rm=T)
-						min <- apply(tmp,2,min,na.rm=T)
-						max <- apply(tmp,2,max,na.rm=T)
+						tmp.min <- apply(tmp,2,min,na.rm=T)
+						tmp.max <- apply(tmp,2,max,na.rm=T)
 						 
 						##   Compile the descriptives and create column names
-						tmp1 <- rbind(means,sds,min,max)
+						tmp1 <- rbind(means,sds,tmp.min,tmp.max)
 						th <- paste("theta",1:ncol(tmp),sep="")
 						colnames(tmp1) <- paste(names(object$ability)[i],":",th,sep="")
 						
@@ -118,11 +118,11 @@ summary.list <- function(object, ..., descrip=FALSE) {
 						##   Compute the descriptives
 						means <- mean(tmp,na.rm=T)
 						sds <- sd(tmp,na.rm=T)
-						min <- min(tmp,na.rm=T)
-						max <- max(tmp,na.rm=T)
+						tmp.min <- min(tmp,na.rm=T)
+						tmp.max <- max(tmp,na.rm=T)
 						
 						##   Compile the descriptives and create column names
-						tmp1 <- as.matrix(c(means,sds,min,max))
+						tmp1 <- as.matrix(c(means,sds,tmp.min,tmp.max))
 						colnames(tmp1) <- names(object$ability)[i]
 					}
 					

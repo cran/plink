@@ -63,7 +63,9 @@ multidimensional items, and comparison plots for examining parameter drift.
 
   \item{drift}{character vector identifying the plots to create to examine item
       parameter drift. Acceptable values are "a", "b", "c" for the various parameters
-      respectively or "pars" to compare all of these parameters.}
+      respectively, "pars" to compare all of these parameters, "TCC" to compare test
+      characteristic curves, "ICC" to compare item characteristic curves, or "all" to
+      produce all of these plots.}
 
   \item{groups}{numeric vector identifying the groups in \code{x} that should be included
       for comparing parameter drift. The values should correspond to the group number of 
@@ -75,7 +77,7 @@ multidimensional items, and comparison plots for examining parameter drift.
       to identify parameters related to different item response models}
 
   \item{drift.sd}{numeric value identifying the number of standard deviations to use when
-      creating the perpedicular confidence region for the drift comparison plots. If 
+      creating the perpendicular confidence region for the drift comparison plots. If 
       missing, \code{drift.sd} will default to 3.}
 }
 

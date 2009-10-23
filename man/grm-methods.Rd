@@ -77,7 +77,7 @@ grm(x, cat, theta, dimensions, catprob, D, location, ...)
       of threshold/threshold deviation parameters can vary for each item.  In these instances, 
       all cells with missing values should be filled with \code{NA}s.  For example, for a 
       unidimensional model with no location parameter, if one item has five categories (four 
-      threshold parameters) and another item has three categories (two threshol parameters), 
+      threshold parameters) and another item has three categories (two threshold parameters), 
       there should be five columns.  The first column includes the slope parameters and columns 
       2-5 include the threshold parameters.  The values in the last two columns for the item with 
       three categories should be \code{NA}.}
@@ -116,7 +116,7 @@ grm(x, cat, theta, dimensions, catprob, D, location, ...)
 should be a vector. If a matrix or list of values is supplied, they will be converted to a single vector
 of theta values.  For the multidimensional case, if a vector of values is supplied it will be assumed
 that this same set of values should be used for each dimension.  Probabilities will be computed for each
-combination of theta values.  Similarly, if a list is supplied, probabilites will be computed for each
+combination of theta values.  Similarly, if a list is supplied, probabilities will be computed for each
 combination of theta values.  In instances where probabilities are desired for specific combinations of 
 theta values, a j x m matrix should be specified for j ability points and m dimensions where the columns 
 are ordered from dimension 1 to m.

@@ -52,10 +52,10 @@ not encouraged. Use the function \code{\link{sep.pars}} instead.
 }
 
 \details{
-\code{a} will be an n x m matrix for n items and m dimensions if there are no nomial responce model 
+\code{a} will be an n x m matrix for n items and m dimensions if there are no nominal response model 
 or multiple-choice model items.  Otherwise, if nrm or mcm items are included, \code{a} will be an 
 n x (k x m) matrix with k equal to the maximum number of response categories across items. If nrm or 
-mcm items are included, the discrimination/slope parameters for the dictomous response models, the 
+mcm items are included, the discrimination/slope parameters for the dichotomous response models, the 
 graded response model, partial credit model and generalized partial credit model (and the multidimensional
 extensions of these models) are listed in the first m columns with all other columns filled with \code{NA}s.
 
@@ -65,8 +65,8 @@ parameters across all items. For items with \code{b} less than k x m, the row is
 
 \code{c} will be an n x 1 matrix for n items if there are no multiple-choice model items. Otherwise, 
 if mcm items are included, \code{c} will be an n x k matrix with k equal to the maximum number of 
-response categories across items minus one. If mcm items are included, the lower asmptote parameters 
-for the dictomous response models, are listed in the first column with all other columns filled with 
+response categories across items minus one. If mcm items are included, the lower asymptote parameters 
+for the dichotomous response models, are listed in the first column with all other columns filled with 
 \code{NA}s. The \code{c} values for the 1PL, 2PL, M1PL, and M2PL equal zero.
 }
 

@@ -14,7 +14,7 @@ as.poly.mod(n, model = "drm", items = NULL)
 
   \item{model}{character vector identifying the IRT models used to estimate
     the item parameters.  The only acceptable models are 
-    \code{drm, gpcm, grm, mcm, and nrm}.  See below for an explantion of
+    \code{drm, gpcm, grm, mcm, and nrm}.  See below for an explanation of
     the codes. }
 
   \item{items}{list identifying the item numbers from a set of parameters
@@ -27,9 +27,9 @@ unidimensional versus multidimensional item response models.  If all the items a
 it is only necessary to specify a value for \code{n}.  If all the items correspond to a 
 single model (other than \code{drm}), only \code{n} and \code{model} need to be specified.
 
-The IRT models associted with the codes:
+The IRT models associated with the codes:
   \describe{
-    \item{\code{drm}:}{dichotomous reponse models (includes the 1PL, 2PL, 3PL, M1PL, 
+    \item{\code{drm}:}{dichotomous response models (includes the 1PL, 2PL, 3PL, M1PL, 
       M2PL, and M3PL)}
     \item{\code{gpcm}:}{partial credit model, generalized partial credit model,
       multidimensional partial credit model, and multidimensional generalized partial credit model}

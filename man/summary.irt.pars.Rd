@@ -42,7 +42,7 @@ Objects of class \code{list} can include any combination of \code{irt.pars} or
 
 The method for objects of class \code{link} prints the linking constants for n-1 groups.
 If \code{descrip} = \code{TRUE}, the method summarizes the parameters for all groups 
-separately.  The labels are specficied in the following manner "group1/group2", meaning
+separately.  The labels are specified in the following manner "group1/group2", meaning
 the group1 parameters were transformed to the group2 test using the associated constants.
 The base group is indicated by an asterisk.
 }

@@ -117,6 +117,7 @@ return(out)
 
 ##   Extract rescaled item parameters from {plink} output
 link.pars <- function(x) {
+
 	if (length(x$pars)>0) {
 		return(x$pars@pars)
 	} else {
@@ -128,9 +129,35 @@ link.pars <- function(x) {
 
 ##   Extract rescaled ability parameters from {plink} output
 link.ability <- function(x) {
+
 	if (length(x$ability)>0) {
 		return(x$ability)
 	} else {
 		cat("There are no rescaled ability estimates present. Re-run plink and specify an object for the argument {ability}\n")
 	}
+}
+
+
+
+##   Extract expected probabilities from {irt.prob} output
+get.prob <- function(x) {
+
+	if (class(x)=="irt.prob") {
+		##   Extract the expected probabilities
+		out <- x@prob
+		
+	} else if (class(x)=="list") {
+		if (class(x[[1]])=="irt.prob") {
+			out <- vector("list",length(x))
+			for (i in 1:length(x)) {
+				out[[i]] <- x[[i]]@prob
+			}
+			names(out) <- names(x)
+		} else {
+			stop("{x} does not contain an object of class irt.prob.")
+		} 
+	} else {
+		stop("{x} does not contain an object of class irt.prob.")
+	}
+	return(out)
 }

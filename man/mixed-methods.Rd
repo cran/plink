@@ -72,12 +72,12 @@ arguments for the above models can be passed to this method as well.
 should be a vector. If a matrix or list of values is supplied, they will be converted to a single vector
 of theta values.  For the multidimensional case, if a vector of values is supplied it will be assumed
 that this same set of values should be used for each dimension.  Probabilities will be computed for each
-combination of theta values.  Similarly, if a list is supplied, probabilites will be computed for each
+combination of theta values.  Similarly, if a list is supplied, probabilities will be computed for each
 combination of theta values.  In instances where probabilities are desired for specific combinations of 
 theta values, a j x m matrix should be specified for j ability points and m dimensions where the columns 
 are ordered from dimension 1 to m.
 
-The \code{mixed} function essentially compiles response probabilites computed using the functions
+The \code{mixed} function essentially compiles response probabilities computed using the functions
 \code{drm}, \code{grm}, \code{gpcm}, \code{nrm}, and \code{mcm} for the associated models
 respectively. All of the arguments specified in any one of these functions can be passed to 
 \code{mixed} as an additional argument. For example, the argument \code{incorrect} can be passed 
@@ -103,7 +103,7 @@ argument is specified for \code{D} and, say \code{D.drm}, the values for \code{D
 
 \examples{
 ###### Unidimensional Examples ######
-# Compute probabilites for three dichotomous (3PL) items and two 
+# Compute probabilities for three dichotomous (3PL) items and two 
 # polytomous (gpcm) items without a location parameter
 dichot <- matrix(c(1.2, .8, .9, 2.3, -1.1, -.2, .24, .19, .13),3,3)
 poly <- matrix(c(.64, -1.8, -.73, .45, NA, .88, .06, 1.4, 1.9, 2.6),

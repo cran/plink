@@ -6,7 +6,7 @@
 This (unidimensional) dataset includes item parameters for two groups estimated under 
 the three parameter logistic model, the generalized partial credit model, and 
 the nominal response model. There are 15 common items (7 drm, 3 gpcm, 5 nrm).
-This dataset is for illustrative purposes to show how items from diferent
+This dataset is for illustrative purposes to show how items from different
 response models can be mixed together and common items can be in different
 positions across groups.
 }

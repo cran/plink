@@ -84,7 +84,7 @@ multidimensional models.
           equal to \code{TRUE}.  If column(s) are included for the slope parameters, 
           the location parameters should be in the m+1 column; otherwise, they should be 
           in the first column.  The columns for the step/step deviation parameters will always
-          follow the slope and/or location columns (or they may potententially 
+          follow the slope and/or location columns (or they may potentially 
           start in the first column for the partial credit model with no location parameter).
 
           The number of step/step deviation parameters can vary for each item.  In these
@@ -142,7 +142,7 @@ multidimensional models.
 should be a vector. If a matrix or list of values is supplied, they will be converted to a single vector
 of theta values.  For the multidimensional case, if a vector of values is supplied it will be assumed
 that this same set of values should be used for each dimension.  Probabilities will be computed for each
-combination of theta values.  Similarly, if a list is supplied, probabilites will be computed for each
+combination of theta values.  Similarly, if a list is supplied, probabilities will be computed for each
 combination of theta values.  In instances where probabilities are desired for specific combinations of 
 theta values, a j x m matrix should be specified for j ability points and m dimensions where the columns 
 are ordered from dimension 1 to m.

@@ -22,12 +22,12 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 
 
 	##      Function that will be minimized for the True Score Equating
-	.TSE <- function(startval, truescore, pars, score, ...) {
+	.TSE <- function(startval, truescore, pars, sc, ...) {
 	
 		##   Compute response probabilities for the base group first
 		prob <- .Mixed(pars, startval, ...)
 		
-		scr <- .scr(prob, score)
+		scr <- .scr(prob, sc)
 		
 		##   Compute the TCC for the given startval
 		tcc <- prob$p %*% scr
@@ -326,7 +326,7 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 	
 	##   This function is used to find the theta value that
 	##   produces a TCC that is very close to the specified true score
-	new.startval <- function(pars, ts, ...) {
+	new.startval <- function(pars, ts, sc, ...) {
 	
 		##   Generate an initial set of theta values
 		th <- seq(-6,6,.05)
@@ -335,7 +335,7 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 		
 			##   Create the TCCs
 			prob <- .Mixed(pars, th,...)
-			scr <- .scr(prob, score)
+			scr <- .scr(prob, sc)
 			prob <- prob$p %*% scr
 			
 			##   Set the new start value to the theta that corresponds
@@ -369,10 +369,10 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 	
 	
 	##   This function is used to create the score weights for creating the TCCs
-	.scr <- function(prob, score) {
+	.scr <- function(prob, sc) {
 	
 	##   prob - output from running .Mixed
-	##   score - {score} argument in the equate function
+	##   sc - {score} argument in the equate function
 	
 		##   Use the information in the {irt.prob} object tmp.to to 
 		##   determine the number of columns in the matrix of probabilities
@@ -394,10 +394,10 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 		}
 		
 		##   Use this if one of the default values (1 or 2) is used for the {score} argument
-		if (length(score)==1) {
+		if (length(sc)==1) {
 		
 			##   Use this if the lowest category should have a scoring weight of zero
-			if (score==2) {
+			if (sc==2) {
 				scr <- scr-1
 				
 				##   If the argument {incorrect} equals FALSE, either explicitly or
@@ -412,8 +412,8 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 		##   Use this if the researcher supplies a vector of score 
 		##   weights for all of the columns in p
 		} else {
-			if (length(score)==length(scr)) {
-				scr <- score
+			if (length(sc)==length(scr)) {
+				scr <- sc
 			} else {
 				warning("The length of {score} does not match the number of response probabilities. Score was set to 1")
 			}
@@ -429,6 +429,14 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 	##   Number of groups
 	ng <- x@groups
 	
+	##   Make {score} a list with length equal to the number of groups
+	if(!is.list(score)) {
+		tmp <- vector("list",ng)
+		for (i in 1:ng) {
+			tmp[[i]] <- score
+		}
+		score <- tmp
+	}
 	
 	##   TRUE SCORE EQUATING
 	if ("TSE" %in% method) {
@@ -481,13 +489,13 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 			
 			##   Use the Newton-Raphson method to find the
 			repeat{
-				theta <- .TSE(startval, ts, pars[[base.grp]], score, ...)
+				theta <- .TSE(startval, ts, pars[[base.grp]], score[[base.grp]], ...)
 				
 				##   Check to see if the convergence has gone awry
 				if (theta==Inf|is.nan(theta)) {
 				
 					##   Attempt to get a starting value closer to the final theta value
-					startval <- new.startval(pars[[base.grp]], ts, ...)
+					startval <- new.startval(pars[[base.grp]], ts, score[[base.grp]], ...)
 					flag <- flag+1
 					
 					##   When no theta value can be found for the specified true score
@@ -548,7 +556,7 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 				##   Compute response probabilities for 
 				prob <- .Mixed(pars[[i]], tse.out[,1], ...)
 				
-				scr <- .scr(prob, score)
+				scr <- .scr(prob, score[[i]])
 				
 				##   Compute the TCC for the given startval
 				tcc <- prob$p %*% scr

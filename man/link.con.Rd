@@ -2,15 +2,19 @@
 \alias{link.con}
 \alias{link.pars}
 \alias{link.ability}
-\title{Extract Linking Information}
+\alias{get.prob}
+\title{Extract Output Information}
 \description{
 These functions extract information from an object of class \code{\linkS4class{irt.pars}},
-typically created using \code{\link[=plink-methods]{plink}}. }
+typically created using \code{\link[=plink-methods]{plink}}, or an object of 
+class \code{\linkS4class{irt.prob}} containing expected probabilities.
+}
 
 \usage{
 link.con(x, method = "ALL")
 link.pars(x)
 link.ability(x)
+get.prob(x)
 }
 
 \arguments{
@@ -25,6 +29,7 @@ link.ability(x)
 \code{link.con} extracts the linking constants,
 \code{link.pars} extracts the rescaled item parameters (if present), and 
 \code{link.ability} extracts the rescaled ability estimates (if present)
+\code{get.prob} extracts expected probabilities for an \code{irt.prob} object
 
 For \code{link.con}, the following values can be included for \code{method}.
 For multidimensional constants, although matrices \code{A}, \code{K}, and \code{T} are

@@ -3,7 +3,7 @@
 \docType{data}
 \title{Multidimensional Mixed-Format Tests}
 \description{
-This dataset includes mutidimensional 3PL and multidimensional generalized partial
+This dataset includes multidimensional 3PL and multidimensional generalized partial
 credit model item parameters for two groups modeled with four dimensions.  The item
 parameters were estimated based on item responses provided with BMIRT (Yao, 2008).
 }

@@ -365,7 +365,7 @@ setMethod("initialize", "irt.pars", function(.Object, pars, cat, poly.mod, commo
 				tmp <- !is.na(tmp.pars[[i]][pm[[i]]@items$gpcm,])
 				if (np==1) tmp <- t(tmp)
 				poly.p <- apply(tmp,1,sum)
-				
+	
 				if (location[i]==TRUE) {
 					if (length(poly.p[poly.p==(dimensions[i]+poly.c)])!=length(pm[[i]]@items$gpcm)) {
 						stop(paste("One or more GPCM items in group",i,"as specified by the {poly.mod} object do not have the correct number of parameters"))

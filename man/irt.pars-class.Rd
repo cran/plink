@@ -38,7 +38,7 @@ not encouraged.  Use the function \code{\link{as.irt.pars}} instead.
 }
 
 \details{
-Objects of class \code{irt.pars} contain all the information necesary to produce
+Objects of class \code{irt.pars} contain all the information necessary to produce
 expected response probabilities, linking constants (when data for two or more groups are 
 included), and to plot item response curves/surfaces, vector plots, and parameter 
 comparison plots.
