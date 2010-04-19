@@ -1,3 +1,39 @@
+Changes in version: plink_1.2-3
+
+Bug Fixes:
+
+  o Multidimensional item and ability parameters were not properly
+    rescaled with more than two groups when not all dimensions are 
+    common
+
+  o The get.prob function was not automatically loaded with the package
+
+
+Added Functionality:
+
+  o Function read.erm added to allow item parameters to be
+    imported from the eRm package
+
+  o Argument {save.hist} added to the plot functions. In previous versions
+    any plot history was eliminated prior to producing new plots. The
+    new default is to not delete any plot history
+
+
+Changed Functionality:
+
+  o The startvals argument for plink can now be specified as
+    a list so that different starting values can be used for 
+    different pairs of tests
+
+  o The default argument for {dilation} in plink changed to "MIN"
+
+
+Misc:
+
+  o Some corrections/additions to the .Rd files
+
+==============================
+
 Changes in version: plink_1.2-2
 
 Bug Fixes:

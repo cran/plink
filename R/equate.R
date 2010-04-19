@@ -823,7 +823,7 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 			for (j in 1:length(F1)) {
 					tmp <- 1:length(F2)
 					tmp <- min(tmp[F2>pr[j]])
-				if (j==1) {
+				if (tmp==1) {
 					tmp.ose <- c(tmp.ose, (pr[j]/F2[tmp])+(tmp-1.5))
 				} else {
 					tmp.ose <- c(tmp.ose, ((pr[j]-F2[tmp-1])/(F2[tmp]-F2[tmp-1]))+(tmp-1.5))

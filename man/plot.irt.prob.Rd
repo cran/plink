@@ -13,19 +13,21 @@ multidimensional items, and comparison plots for examining parameter drift.
 \usage{
 ## S3 method for signature 'irt.pars'
 \method{plot}{irt.pars}(x, y, ..., type, separate, combine, items, item.names, 
-    item.nums, panels, drift, groups, grp.names, sep.mod, drift.sd)
+    item.nums, panels, drift, groups, grp.names, sep.mod, 
+    drift.sd, save.hist)
 
 ## S3 method for signature 'irt.prob'
 \method{plot}{irt.prob}(x, y, ..., type, separate, combine, items, item.names, 
-    item.nums, panels)
+    item.nums, panels, save.hist)
 
 ## S3 method for signature 'sep.pars'
 \method{plot}{sep.pars}(x, y, ..., type, separate, combine, items, item.names, 
-    item.nums, panels) 
+    item.nums, panels, save.hist) 
 
 ## S3 method for signature 'list'
 \method{plot}{irt.pars}(x, y, ..., type, separate, combine, items, item.names, 
-    item.nums, panels, drift, groups, grp.names, sep.mod, drift.sd)
+    item.nums, panels, drift, groups, grp.names, sep.mod, 
+    drift.sd, save.hist)
 }
 
 \arguments{
@@ -79,6 +81,9 @@ multidimensional items, and comparison plots for examining parameter drift.
   \item{drift.sd}{numeric value identifying the number of standard deviations to use when
       creating the perpendicular confidence region for the drift comparison plots. If 
       missing, \code{drift.sd} will default to 3.}
+
+  \item{save.hist}{logical value. If \code{FALSE}, the plot history should be deleted
+      (only applies to Windows); otherwise, any previously saved plots will be retained.}
 }
 
 \details{

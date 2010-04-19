@@ -1,12 +1,7 @@
-.onLoad <- function(lib,pkg) {
-    require(methods)
-    require(lattice)
-    require(statmod)
-    require(MASS)
-    load(plink)
-}
-
-import("methods","statmod","lattice","MASS")
+import("methods")
+import("lattice")
+importFrom("MASS", "ginv")
+importFrom('statmod', "gauss.quad.prob")
 
 export(
     "combine.pars",
@@ -20,13 +15,15 @@ export(
     "link.con",
     "link.pars",
     "link.ability",
+    "get.prob",
     "read.bilog",
     "read.parscale",
     "read.multilog",
     "read.testfact",
     "read.icl",
     "read.bmirt",
-    "read.ltm"
+    "read.ltm",
+    "read.erm"
 )
 
 exportClasses(

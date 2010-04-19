@@ -1,7 +1,7 @@
 ##   This function estimates the linking constants between two or
 ##   more groups of tests and can rescale item and/or ability parameters
 
-setGeneric("plink", function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score=1, base.grp=1, symmetric=FALSE, rescale.com=TRUE, grp.names=NULL, dilation="ODL",  dim.order=NULL, ...) standardGeneric("plink"))
+setGeneric("plink", function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score=1, base.grp=1, symmetric=FALSE, rescale.com=TRUE, grp.names=NULL, dilation="MIN",  dim.order=NULL, ...) standardGeneric("plink"))
 
 
 
@@ -40,7 +40,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	##                       (both unidimensional and multidimensional)
 	##################################################################
 	
-	.CC <- function(startvals, to, from, dimensions, weights.t, weights.f, sc, transform, symmetric, dilation, T, ...) {
+	.CC <- function(sv, to, from, dimensions, weights.t, weights.f, sc, transform, symmetric, dilation, T, ...) {
 		
 		##   In general, the criterion that will minimized is Q = Q1+Q2
 		##   where Q1 corresponds to the differences in probabilities after
@@ -77,18 +77,18 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		pm <- as.poly.mod(length(to@cat),to@model,to@items)
 		
 		if (dimensions==1) {
-			##   Assign the vector of startvals to meaningful objects
+			##   Assign the vector of startvals (sv) to meaningful objects
 			
 			##   This parameterization is for the Rasch model
 			##   where only the difficulties are transformed
-			if (length(startvals)==1) {
+			if (length(sv)==1) {
 				alpha <- 1
-				beta <- startvals[1]
+				beta <- sv[1]
 				
 			##   This parameterization is for all other models
 			} else {
-				alpha <- startvals[1]
-				beta <- startvals[2]
+				alpha <- sv[1]
+				beta <- sv[2]
 			}
 			
 			##   Identify the nrm and mcm items
@@ -119,29 +119,29 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			}
 		} else {
 		
-			if (length(startvals)==dimensions) {
+			if (length(sv)==dimensions) {
 				##   This parameterization is for the multidimensional Rasch case
 				A <- diag(rep(1,dimensions))
-				m <- startvals
+				m <- sv
 				
 			} else {
 				##   This parameterization is used for all other models
 				##   although it differs depending on the specified dilation
 				if (dilation=="ODL") {
-					A <- matrix(startvals[1:(dimensions^2)],dimensions,dimensions)
-					m <- startvals[(dimensions^2+1):length(startvals)]
+					A <- matrix(sv[1:(dimensions^2)],dimensions,dimensions)
+					m <- sv[(dimensions^2+1):length(sv)]
 					
 				##   For the LL and MIN approaches, the starting values need
 				##   to be rotated using the orthogonal rotation matrix T
 				##   prior to transforming any of the parameters. This makes it
 				##   so that parameters only capture changes in variability
 				} else if (dilation=="LL") {
-					A <- diag(rep(startvals[1],dimensions))%*%T
-					m <- startvals[2:length(startvals)]
+					A <- diag(rep(sv[1],dimensions))%*%T
+					m <- sv[2:length(sv)]
 					
 				} else if (dilation=="MIN") {
-					A <- diag(startvals[1:dimensions])%*%T
-					m <- startvals[(dimensions+1):length(startvals)]
+					A <- diag(sv[1:dimensions])%*%T
+					m <- sv[(dimensions+1):length(sv)]
 				} 
 				
 			}
@@ -286,19 +286,15 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		
 		TF <- T
 		mn <- sum((to-from%*%ginv(T))^2)
-		for (i in 1:3) {
-			##   Due to indeterminacies in the sign of eigenvectors (or the orientation), 
-			##   adjust the rotation matrix to get the matrix that truly minimizes the 
-			##   difference between the two sets of slopes
-			if (i==1) T1 <- t(T)
-			if (i==2) T1 <- T*-1
-			if (i==3) T1 <- t(T*-1)
-			tmp <- sum((to-from%*%ginv(T1))^2)
-			if (mn>tmp) {
-				mn <- tmp
-				TF <- T1
-			}
+		##   Due to indeterminacies in the sign of eigenvectors, 
+		##   adjust the rotation matrix to get the matrix that truly minimizes the 
+		##   difference between the two sets of slopes
+		tmp <- sum((to-from%*%ginv(T*-1))^2)
+		if (mn>tmp) {
+			mn <- tmp
+			TF <- T*-1
 		}
+		
 		return(T)
 	}
 	
@@ -786,19 +782,39 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	##   Make {score} a list with length equal to the number of groups minus one
 	if(!is.list(score)) {
 		tmp <- vector("list",ng-1)
-		for (i in 1:ng) {
+		for (i in 1:(ng-1)) {
 			tmp[[i]] <- score
 		}
 		score <- tmp
 	} else {
 		if (length(score)!=(ng-1)) {
 			tmp <- vector("list",ng-1)
-			for (i in 1:ng) {
+			for (i in 1:(ng-1)) {
 				tmp[[i]] <- 1
 			}
 			score <- tmp
 			
 			warning("The number of list elements in {score} does not correspond to the number of groups minus one. Score was set to 1 for all cases")
+		}
+	}
+	
+	##   Make {startvals} a list with length equal to the number of groups minus one
+	if (missing(startvals)) {
+		##   Make a list with NULL values
+		##   Default starting values will be used
+		startvals <- vector("list",ng-1)
+	} else {
+		if(!is.list(startvals)) {
+			tmp <- vector("list",ng-1)
+			for (i in 1:(ng-1)) {
+				tmp[[i]] <- startvals
+			}
+			startvals <- tmp
+		} else {
+			if (length(startvals)!=(ng-1)) {
+				startvals <- vector("list",ng-1)
+				warning("The number of list elements in {startvals} does not correspond to the number of groups minus one. The default values were used.")
+			}
 		}
 	}
 	
@@ -1194,19 +1210,21 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			T <- NA
 			
 			##   Determine starting values for the characteristic curve methods
-			if (missing(startvals)) {
+			if (is.null(startvals[[i]])) {
 				##   Use the Mean/Sigma values
-				startvals <- ms
+				sv <- ms
 			} else {
 				if (is.character(startvals)) {
-					if (toupper(startvals)=="MM") startvals <- mm
-					if (toupper(startvals)=="MS") startvals <- ms
+					if (toupper(startvals[[i]])=="MM") sv <- mm
+					if (toupper(startvals[[i]])=="MS") sv <- ms
+				} else {
+					sv <- startvals[[i]]
 				}
 			}
 			
 			if (rasch.flag==TRUE) {
 				##   Only include starting values for the B constant
-				startvals <- startvals[2]
+				sv <- startvals[[i]][2]
 			}
 			
 		##   Multidimensional case
@@ -1286,39 +1304,51 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			
 			##   Determine starting values for the characteristic curve methods
 			if (rasch.flag==TRUE) {
-				if (missing(startvals)) {
+				if (is.null(startvals[[i]])) {
 					##   Use the values from the direct method
-					startvals <- m 
+					sv <- m 
 				} else {
-					startvals <- startvals[((length(startvals)-dimensions)+1):length(startvals)]
+					sv <- startvals[[i]][((length(startvals[[i]])-dimensions)+1):length(startvals[[i]])]
 				}
 			} else {
-				if (missing(startvals)) {
+				if (is.null(startvals[[i]])) {
 				
 					##   Oshima, Davey, & Lee method
 					if (dilation=="ODL") {
 						##   Use all of the constants from the direct method
-						startvals <- c(as.vector(A),m) 
+						sv <- c(as.vector(A),m) 
 						
 					##   Li & Lissitz method
 					} else if (dilation=="LL") {
 						##   Use the values from the translation vector from the direct method
-						startvals <- c(1,m)
+						sv <- c(1,m)
 						
 					##   Min method
 					} else if (dilation=="MIN") {
 						##   Use the values from the translation vector from the direct method
-						startvals <- c(rep(1,dimensions),m)
+						sv <- c(rep(1,dimensions),m)
 					
 					} 
 				} else {
+				
+					sv <- startvals[[i]]
+					
 					##   Check to see if the correct number of starting values have been specified
 					if (dilation=="ODL") {
-						if ((length(startvals))!=dimensions+dimensions^2) stop(paste("The number of elements must equal",dimensions+dimensions^2))
+						if ((length(sv))!=dimensions+dimensions^2) {
+							sv <- c(as.vector(A),m) 
+							warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions+dimensions^2,". The default values were used>"))
+						}
 					} else if (dilation=="LL") {
-						if ((length(startvals))!=dimensions+1) stop(paste("The number of elements must equal",dimensions+1))
+						if ((length(sv))!=dimensions+1) {
+							sv <- c(1,m)
+							warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions+1,". The default values were used>"))
+						}
 					} else if (dilation=="MIN") {
-						if ((length(startvals))!=dimensions*2) stop(paste("The number of elements must equal",dimensions*2))
+						if ((length(sv))!=dimensions*2) {
+							sv <- c(rep(1,dimensions),m)
+							warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions*2,". The default values were used>"))
+						}
 					}
 				}
 			}
@@ -1332,7 +1362,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		if ("HB" %in% method) {
 		
 			##   Estimate the linking constants
-			hb <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, sc=score[[i]], transform="HB", symmetric=symmetric, dilation=dilation, T=T, ...)
+			hb <- nlminb(sv, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, sc=score[[i]], transform="HB", symmetric=symmetric, dilation=dilation, T=T, ...)
 			
 			##   Reformat the information from the estimation (as necessary)
 			##   to prepare it for being output
@@ -1398,7 +1428,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		if ("SL" %in% method) {
 			
 			##   Estimate the linking constants
-			sl <- nlminb(startvals, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, sc=score[[i]], transform="SL", symmetric=symmetric, dilation=dilation, T=T, ...)
+			sl <- nlminb(sv, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, sc=score[[i]], transform="SL", symmetric=symmetric, dilation=dilation, T=T, ...)
 			
 			##   Reformat the information from the estimation (as necessary)
 			##   to prepare it for being output
@@ -1572,21 +1602,36 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				} else {
 					##   Identify the dimensions for the given group that should be transformed
 					if (i==base.grp) {
-						do1 <- dim.order[j,!is.na(dim.order[j,])]
+						do1 <- dim.order[i,!is.na(dim.order[i,])]
+						do4 <- 1:length(do1)
 					} else if (i < base.grp) {
-						do1 <- dim.order[j,!is.na(dim.order[j,]) &!is.na(dim.order[j+1,])]
+						do1 <- dim.order[i,!is.na(dim.order[i,]) &!is.na(dim.order[j+1,])]
+						do2 <- dim.order[j+1,!is.na(dim.order[i,]) &!is.na(dim.order[j+1,])]
+						do3 <- dim.order[j+1,!is.na(dim.order[j,]) & !is.na(dim.order[j+1,])]
+						do4 <- c(1:length(do3))[(do3%in%do2)==TRUE]
 					} else if (i > base.grp) {
-						do1 <- dim.order[j,!is.na(dim.order[j,]) &!is.na(dim.order[j-1,])]
+						do1 <- dim.order[i,!is.na(dim.order[i,]) &!is.na(dim.order[j-1,])]
+						do2 <- dim.order[j-1,!is.na(dim.order[i,]) &!is.na(dim.order[j-1,])]
+						do3 <- dim.order[j-1,!is.na(dim.order[j,]) & !is.na(dim.order[j-1,])]
+						do4 <- c(1:length(do3))[(do3%in%do2)==TRUE]
 					}
 					
-					if (length(do1)==1) {
-						tmp1@a[,do1] <- tmp1@a[,do1]*ginv(tmp.con[[j]][1])
-						tmp1@b <- tmp1@b-matrix(tmp1@a[,do1]*tmp.con[[j]][2],nrow(tmp1@b),ncol(tmp1@b))
-						if (!missing(ability)) tmpa <- tmp.con[[j]][1]*tmpa + tmp.con[[j]][2]
+					if (length(do1)==0) {
+						next
+					} else if (length(do1)==1) {
+						if (is.vector(tmp.con[[j]])) {
+							tmp1@a[,do1] <- tmp1@a[,do1]*ginv(tmp.con[[j]][1])
+							tmp1@b <- tmp1@b-matrix(tmp1@a[,do1]*tmp.con[[j]][2],nrow(tmp1@b),ncol(tmp1@b))
+							if (!missing(ability)) tmpa[,do1] <- tmp.con[[j]][1]*tmpa[,do1] + tmp.con[[j]][2]
+						} else {
+							tmp1@a[,do1] <- tmp1@a[,do1]%*%ginv(tmp.con[[j]]$A[do4,do4])
+							tmp1@b <- tmp1@b-matrix(tmp1@a[,do1]%*%tmp.con[[j]]$m[do4],nrow(tmp1@b),ncol(tmp1@b))
+							if (!missing(ability)) tmpa[,do1] <- t(tmp.con[[j]]$A[do4,do4]%*%t(tmpa[,do1]) + tmp.con[[j]]$m[do4])
+						}
 					} else {
-						tmp1@a[,do1] <- tmp1@a[,do1]%*%ginv(tmp.con[[j]]$A)
-						tmp1@b <- tmp1@b-matrix(tmp1@a[,do1]%*%tmp.con[[j]]$m,nrow(tmp1@b),ncol(tmp1@b))
-						if (!missing(ability)) tmpa <- t(tmp.con[[j]]$A%*%t(tmpa[,do1]) + tmp.con[[j]]$m)
+						tmp1@a[,do1] <- tmp1@a[,do1]%*%ginv(tmp.con[[j]]$A[do4,do4])
+						tmp1@b <- tmp1@b-matrix(tmp1@a[,do1]%*%tmp.con[[j]]$m[do4],nrow(tmp1@b),ncol(tmp1@b))
+						if (!missing(ability)) tmpa[,do1] <- t(tmp.con[[j]]$A[do4,do4]%*%t(tmpa[,do1]) + tmp.con[[j]]$m[do4])
 					}
 				}
 			}
@@ -1737,9 +1782,9 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 						}
 						
 						if (length(do1)==1) {
-							tmpa <- tmp.con[[j]][1]*tmpa + tmp.con[[j]][2]
+							tmpa[,do1] <- tmp.con[[j]][1]*tmpa[,do1] + tmp.con[[j]][2]
 						} else {
-							tmpa <- t(tmp.con[[j]]$A%*%t(tmpa[,do1]) + tmp.con[[j]]$m)
+							tmpa[,do1] <- t(tmp.con[[j]]$A%*%t(tmpa[,do1]) + tmp.con[[j]]$m)
 						}
 					}
 				}

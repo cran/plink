@@ -5,6 +5,7 @@
 \alias{read.testfact}
 \alias{read.icl}
 \alias{read.bmirt}
+\alias{read.erm}
 \alias{read.ltm}
 \title{Import Parameters from IRT Software}
 \description{
@@ -29,6 +30,8 @@ read.icl(file, poly.mod, ability = FALSE, loc.out = FALSE,
 
 read.bmirt(file, ability = FALSE, sign.adjust = TRUE, loc.out = FALSE, 
   pars.only = TRUE, as.irt.pars = TRUE)
+
+read.erm(x, loc.out = FALSE, as.irt.pars = TRUE)
 
 read.ltm(x, loc.out = FALSE, as.irt.pars = TRUE)
 }
@@ -71,8 +74,10 @@ read.ltm(x, loc.out = FALSE, as.irt.pars = TRUE)
   should be multiplied by -1 to make them consistent with common formulations of 
   multidimensional response models}
 
-  \item{x}{output object from one of the following functions in the \code{ltm} package:
-      \code{rasch}, \code{ltm}, \code{tpm}, \code{grm}, or \code{gpcm} }
+  \item{x}{output object from one of the following functions in the \code{eRm} package:
+      \code{LLTM}, \code{LPCM}, \code{LRSM},\code{PCM}, \code{RM}, or \code{RSM} or one
+      of the following functions in the \code{ltm} package: \code{rasch}, \code{ltm}, 
+      \code{tpm}, \code{grm}, or \code{gpcm} }
 }
 
 \details{
@@ -113,6 +118,10 @@ Returns a data.frame or an object of class \code{\linkS4class{irt.pars}} if
   Hanson, B. A. (2002). 
   IRT command language [Computer Program].
   URL \url{http://www.b-a-h.com/software/irt/icl/}
+
+  Mair, P & Hatzinger, R. (2007).
+  Extended Rasch modeling: The eRm package for the application of IRT models in R.
+  URL \url{http://www.jstatsoft.org/v20/i09}
 
   Muraki, E. & Bock, R. D. (2003). 
   PARSCALE 4: IRT item analysis and test scoring for rating scale data [Computer Program].

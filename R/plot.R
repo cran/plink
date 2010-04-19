@@ -1,7 +1,11 @@
-plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names, item.nums, panels, drift, groups, grp.names, sep.mod, drift.sd) {
+plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names, item.nums, panels, drift, groups, grp.names, sep.mod, drift.sd, save.hist) {
 	
 	##   Delete plot history
-	if (exists(".SavedPlots",where=1)) rm(".SavedPlots",pos=1)
+	if (!missing(save.hist)) {
+		if (save.hist==FALSE) {
+			if (exists(".SavedPlots",where=1)) rm(".SavedPlots",pos=1)
+		}
+	}
 	
 	##   Check to see if another graphics device is already open
 	if (names(dev.cur())=="null device") dev.flag <- FALSE else dev.flag <- TRUE
@@ -328,8 +332,8 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 								suppressWarnings(arrows(x1,y1,x2,y2,length=.1))
 							} else if (type=="vectorplot2") {
 								suppressWarnings(arrows(x1,y1,x2,y2,length=.1))
-								arrows(max(xmm[1],ymm[1])*ref[1],max(xmm[1],ymm[1])*ref[2],min(xmm[2],ymm[2])*ref[1],
-									min(xmm[2],ymm[2])*ref[2],lwd=3,length=.2,)
+								arrows(max(par("usr")[c(1,3)])*ref[1],max(par("usr")[c(1,3)])*ref[2],min(par("usr")[c(2,4)])*ref[1],
+									min(par("usr")[c(2,4)])*ref[2],lwd=3,length=.2,col="darkred")
 							} else if (type=="vectorplot3") {
 								tmp <- rep(0,length(mdisc))
 								suppressWarnings(arrows(tmp,tmp,x1,y1,length=.1))
@@ -1087,7 +1091,7 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 
 
 
-plot.irt.prob <- function(x, y, ..., type, separate, combine, items, item.names, item.nums, panels) {
+plot.irt.prob <- function(x, y, ..., type, separate, combine, items, item.names, item.nums, panels, save.hist) {
 	
 	if (missing(type)) type <- "wireframe"
 	dots <- list(...)
@@ -1111,8 +1115,12 @@ plot.irt.prob <- function(x, y, ..., type, separate, combine, items, item.names,
 	
 		##   Check to see if there is a graphics device already open
 		if (dev.cur()=="null device") {
-			##   If not, clear any saved plot history
-			if (exists(".SavedPlots",where=1)) rm(".SavedPlots",pos=1)
+			if (!missing(save.hist)) {
+				if (save.hist==FALSE) {
+					##   If not, clear any saved plot history
+					if (exists(".SavedPlots",where=1)) rm(".SavedPlots",pos=1)
+				}
+			}
 		}
 		
 		##   Number of dimensions
@@ -1379,14 +1387,14 @@ plot.irt.prob <- function(x, y, ..., type, separate, combine, items, item.names,
 }
 
 
-plot.sep.pars <- function(x, y, ..., type, separate, combine, items, item.names, item.nums, panels) {
+plot.sep.pars <- function(x, y, ..., type, separate, combine, items, item.names, item.nums, panels, save.hist) {
 	
 	x <- as.irt.pars(x)
 	plot(x,type=type,separate=separate,combine=combine, items=items, item.names=item.names, item.nums=item.nums,panels=panels, ...)
 	
 }
 
-plot.list <- function(x, y, ..., type, separate, combine, items, item.names, item.nums, panels, drift, groups, grp.names, sep.mod, drift.sd) {
+plot.list <- function(x, y, ..., type, separate, combine, items, item.names, item.nums, panels, drift, groups, grp.names, sep.mod, drift.sd, save.hist) {
 
 	##   Extract the rescaled item parameters from the object output by {plink}
 	if (length(x$pars)) {
@@ -1430,3 +1438,4 @@ plot.list <- function(x, y, ..., type, separate, combine, items, item.names, ite
 		stop("There were no parameters in {x}, re-run plink and specify and argument for {rescale} then try again.")
 	}
 }
+

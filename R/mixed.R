@@ -146,11 +146,11 @@ setMethod("mixed", signature(x="sep.pars", cat="ANY"), function(x, cat, poly.mod
 	
 	##   Loop through all of the item response models and compute response probabilities
 	for (i in 1:length(mod)) {
-		if (mod[i]=="drm") tmp <- suppressWarnings(drm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="gpcm") tmp <- suppressWarnings(gpcm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="grm") tmp <- suppressWarnings(grm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="mcm") tmp <- suppressWarnings(mcm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="nrm") tmp <- suppressWarnings(nrm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
+		if (mod[i]=="drm") tmp <- suppressWarnings(plink::drm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
+		if (mod[i]=="gpcm") tmp <- suppressWarnings(plink::gpcm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
+		if (mod[i]=="grm") tmp <- suppressWarnings(plink::grm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
+		if (mod[i]=="mcm") tmp <- suppressWarnings(plink::mcm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
+		if (mod[i]=="nrm") tmp <- suppressWarnings(plink::nrm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
 		p <- cbind(p,as.matrix(tmp))
 	}
 	

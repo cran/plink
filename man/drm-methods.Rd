@@ -204,6 +204,7 @@ plot(x)
 # respectively. Assume a constant discrimination of 1 for each item
 b <- c(-2.2,-.7,1.54)
 x <- drm(b) 
+# Plot the expected probabilites
 plot(x)
 
 # Five items with a constant discrimination equal to 1.2
@@ -212,6 +213,9 @@ a <- rep(1.2,5)
 b <- c(-2,-1,0,1,2)
 pars <- list(a,b)
 x <- drm(pars,D=1.7)
+# Extract the expected probabilities
+get.prob(x)
+# Plot the expected probabilities
 plot(x,combine=5,item.names="Items 1-5")
 
 
@@ -221,7 +225,8 @@ plot(x,combine=5,item.names="Items 1-5")
 a <- c(1,.8,.6,1.2,.9)
 b <- c(-1.7,2.2,.4,-1,-.4)
 pars <- cbind(a,b)
-drm(pars,theta=1.5,print.mod=TRUE)@prob
+drm(pars,theta=1.5,print.mod=TRUE)
+
 
 # Include a vector of zeros for the lower asymptote
 # Compute probabilities for incorrect responses

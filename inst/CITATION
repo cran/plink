@@ -3,11 +3,11 @@ citHeader("To cite package 'plink' in publications use:")
 citEntry(entry = "Manual",
          title        = "plink: {IRT} separate calibration linking methods",
          author       = "Jonathan P. Weeks",
-         year         = "2009",
+         year         = "2010",
          note         = "R package",
          url          = "http://cran.r-project.org/web/packages/plink/index.html",
          
-         textVersion  = paste("Jonathan P. Weeks (2009).",
+         textVersion  = paste("Jonathan P. Weeks (2010).",
                         "plink: IRT separate calibration linking methods.",
                         "(R package).",
                         "URL http://cran.r-project.org/web/packages/plink/index.html")

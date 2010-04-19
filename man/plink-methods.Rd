@@ -21,7 +21,7 @@ optimization and chain-linked rescaling of item and ability parameters.
 \usage{
 plink(x, common, rescale, ability, method, weights.t, weights.f, 
   startvals, exclude, score = 1, base.grp = 1, symmetric = FALSE, 
-  rescale.com = TRUE, grp.names = NULL, dilation = "ODL", 
+  rescale.com = TRUE, grp.names = NULL, dilation = "MIN", 
   dim.order = NULL, ...)
 
 ## S4 method for signature 'list', 'matrix'
@@ -74,9 +74,9 @@ plink(x, common, rescale, ability, method, weights.t, weights.f,
     on the \emph{From} scale for use with the characteristic curve methods. This
     argument will be ignored if \code{symmetric}=FALSE. See below for more details. }
 
-  \item{startvals}{vector of slope and intercept starting values for the characteristic
-    curve methods or a character vector of "MM", "MS", or "RM" to identify that
-    values from the Mean/Mean, Mean/Sigma, or Reckase-Martineau method should be used
+  \item{startvals}{vector or list of slope and intercept starting values for the 
+    characteristic curve methods or character value(s) of "MM", "MS", or "RM" to identify 
+    that values from the Mean/Mean, Mean/Sigma, or Reckase-Martineau method should be used
     for the starting values. See below for more details.}
 
   \item{exclude}{character vector or list identifying common items that should be
@@ -121,17 +121,23 @@ contains only two list elements, a single set of common items links them togethe
 item 4 in group one (row 4 in slot \code{pars}) is the same as item 6 in group two, the 
 first row of \code{common} would be \code{(4,6)}.
 
-\code{startvals} can be a vector of starting values for the slope(s) and intercept(s). For
-unidimensional methods, this argument should have a length of two with the first value for
-the slope and the second value for the intercept. For the multidimensional methods, the 
-length of the vector will vary depending on the dilation approach used. If \code{dilation}
-is "ODL", the first m*m values in \code{startvals}, for m dimensions, should correspond to 
-the values in the transformation matrix (starting with the value in the upper-left corner, 
-then the next value in the column, ..., then the first value in the next column, etc.). 
-The remaining m values should be for the translation vector. If \code{dilation} is "LL", the
-first value will be the slope parameter and the remaining m values will be for the translation 
-vector. If \code{dilation} is "MIN", the first m values are the slopes for each dimension and 
-the remaining m values are for the translation vector. 
+\code{startvals} can be a vector or list of starting values for the slope(s) and intercept(s). 
+For unidimensional methods, when there are only two groups, this argument should be a vector of 
+length of two with the first value for the slope and the second value for the intercept or a
+character value equal to "MM" or"MS". When there are more than two groups a vector of starting 
+values or a character value can be supplied (the same numeric values, if a vector is supplied,
+will be used for all pairs, or the corresponding MM/MS values for each pair of tests will be 
+used) or a list of vectors/character values can be supplied with the number of list elements
+equal to the number of groups minus one. For the multidimensional methods, the same general 
+structure applies (a vector or character value for a single group or a vector, character value 
+or list for multiple groups); however, the length of the vector will vary depending on the 
+dilation approach used. If \code{dilation} is "ODL", the first m*m values in \code{startvals}, 
+for m dimensions, should correspond to the values in the transformation matrix (starting with 
+the value in the upper-left corner, then the next value in the column, ..., then the first value 
+in the next column, etc.). The remaining m values should be for the translation vector. If 
+\code{dilation} is "LL", the first value will be the slope parameter and the remaining m values 
+will be for the translation vector. If \code{dilation} is "MIN", the first m values are the 
+slopes for each dimension and the remaining m values are for the translation vector. 
 
 \code{weights.t} can be a list or a list of lists.  The purpose of this object is to specify
 the theta values on the \emph{To} scale to integrate over in the characteristic curve methods 
@@ -259,10 +265,9 @@ set equal to \code{D}. If only \code{D.drm} is specified, the values for \code{D
   Item Characteristic Curve Solutions to Three Intractable Testing Problems.
   \emph{Journal of Educational Measurement}, \emph{14}(2), 139-160.
 
-  Min, K. -S. (2003). 
-  \emph{The impact of scale dilation on the quality of the linking of 
-  multidimensional item response theory calibrations}. 
-  Unpublished Dissertation, Michigan State University, East Lansing, MI. 
+  Min, K. -S. (2007). 
+  Evaluation of linking methods for multidimensional IRT calibrations. 
+  \emph{Asia Pacific Education Review}, \emph{8}(1), 41-55. 
 
   Oshima, T. C., Davey, T., & Lee, K. (2000). 
   Multidimensional linking: Four practical approaches. 
@@ -370,12 +375,17 @@ pm <- as.poly.mod(80, "drm", list(1:80))
 x <- as.irt.pars(reckase9$pars, reckase9$common, 
   list(rep(2,80),rep(2,80)), list(pm,pm), dimensions=2)
 # Compute constants using Reckase & Martineau (2004) and 
-# Oshima, Davey, & Lee (2000). Rescale the item parameters 
+# Min (2003). Rescale the item parameters 
 # using the RM method
 out <- plink(x, rescale="RM")
 summary(out, descrip=TRUE)
 # Extract the rescaled item parameters
 pars.out <- link.pars(out)
+
+# Compute constants using Oshima, Davey, Lee (2000)
+# Display trace output and descriptives
+out <- plink(x, dilation="ODL", control=list(trace=1))
+summary(out, descrip=TRUE)
 
 # Compute constants using Li & Lissitz (2000)
 # Rescale item parameters and ability estimates using the "HB" method
@@ -385,12 +395,6 @@ out <- plink(x, method=c("HB","SL"), dilation="LL", rescale="HB",
 summary(out)
 # Extract rescaled ability estimates
 ability.out <- out$ability
-
-# Compute constants using Reckase & Martineau (2004) and Min (2003) 
-# with non-symmetric calibration
-out <- plink(x, dilation="MIN")
-summary(out, descrip=TRUE)
-
 
 
 # Compute linking constants for two groups using mixed-format items 
