@@ -1,14 +1,18 @@
-citHeader("To cite package 'plink' in publications use:")
+citHeader("To cite plink in publications use:")
 
-citEntry(entry = "Manual",
-         title        = "plink: {IRT} separate calibration linking methods",
-         author       = "Jonathan P. Weeks",
-         year         = "2010",
-         note         = "R package",
-         url          = "http://cran.r-project.org/web/packages/plink/index.html",
-         
-         textVersion  = paste("Jonathan P. Weeks (2010).",
-                        "plink: IRT separate calibration linking methods.",
-                        "(R package).",
-                        "URL http://cran.r-project.org/web/packages/plink/index.html")
+citEntry(entry = "Article",
+  title        = "{plink}: An {R} Package for Linking Mixed-Format Tests Using IRT-Based Methods",
+  author       = personList(as.person("Jonathan P. Weeks")),
+  journal      = "Journal of Statistical Software",
+  year         = "2010",
+  volume       = "35",
+  number       = "12",
+  pages        = "1--33",
+  url          = "http://www.jstatsoft.org/v35/i12/",
+
+  textVersion  =
+  paste("Jonathan P. Weeks (2010).",
+        "plink: An R Package for Linking Mixed-Format Tests Using IRT-Based Methods.",
+        "Journal of Statistical Software, 35(12), 1-33.",
+        "URL http://www.jstatsoft.org/v35/i12/.")
 )

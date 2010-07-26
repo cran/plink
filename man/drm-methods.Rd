@@ -176,6 +176,11 @@ are ordered from dimension 1 to m.
   In W. J. van der Linden & R. K. Hambleton (Eds.)
   \emph{Handbook of Modern Item Response Theory} (pp. 271-286). 
   New York: Springer-Verlag.
+
+  Weeks, J. P. (2010) 
+  \bold{plink}: An R package for linking mixed-format tests using IRT-based methods. 
+  \emph{Journal of Statistical Software}, \bold{35(12)}, 1--33. 
+  URL \url{http://www.jstatsoft.org/v35/i12/}
 }
 
 \note{ 

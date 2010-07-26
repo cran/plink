@@ -47,6 +47,13 @@ group in the adjacent element in \code{x}.
 Returns an object of class \code{\linkS4class{irt.pars}}
 }
 
+\references{
+  Weeks, J. P. (2010) 
+  \bold{plink}: An R package for linking mixed-format tests using IRT-based methods. 
+  \emph{Journal of Statistical Software}, \bold{35(12)}, 1--33. 
+  URL \url{http://www.jstatsoft.org/v35/i12/}
+}
+
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{\code{\linkS4class{irt.pars}}, \code{\link{as.irt.pars}}, \code{\linkS4class{sep.pars}},

@@ -139,6 +139,11 @@ are ordered from dimension 1 to m.
   Takane, Y., & De Leeuw, J. (1987)
   On the relationship between item response theory and factor analysis of discretized variables. 
   \emph{Psychometrika}, \emph{52}(3), 393-408.
+
+  Weeks, J. P. (2010) 
+  \bold{plink}: An R package for linking mixed-format tests using IRT-based methods. 
+  \emph{Journal of Statistical Software}, \bold{35(12)}, 1--33. 
+  URL \url{http://www.jstatsoft.org/v35/i12/}
 }
 
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }

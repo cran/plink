@@ -114,6 +114,11 @@ marginal distributions or a list combining these two objects}
   Kolen, M. J. & Brennan, R. L. (2004)
   \emph{Test Equating, Scaling, and Linking} (2nd ed.).
   New York: Springer
+
+  Weeks, J. P. (2010) 
+  \bold{plink}: An R package for linking mixed-format tests using IRT-based methods. 
+  \emph{Journal of Statistical Software}, \bold{35(12)}, 1--33. 
+  URL \url{http://www.jstatsoft.org/v35/i12/}
 }
 
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }

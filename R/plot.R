@@ -1438,4 +1438,3 @@ plot.list <- function(x, y, ..., type, separate, combine, items, item.names, ite
 		stop("There were no parameters in {x}, re-run plink and specify and argument for {rescale} then try again.")
 	}
 }
-

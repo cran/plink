@@ -83,7 +83,7 @@ The package consists of three types of functions:
   \item{}{Utility Functions:}
   \itemize{
     \item{}{Import item parameters and/or ability estimates from BILOG-MG 3, PARSCALE 4, MULTILOG 7, TESTFACT 4,
-    ICL, BMIRT, and the \code{ltm} package.}
+    ICL, BMIRT, and the \code{eRm} and \code{ltm} packages.}
 
     \item{}{Separate item parameters from matrices or lists into the slope, difficulty, category, 
     etc. values for use in computing response probabilities, descriptive statistics, etc.}
@@ -114,6 +114,14 @@ To compute response probabilities for a given model, the following functions can
 \code{\link[=mcm-methods]{mcm}}, or \code{\link[=nrm-methods]{nrm}}. The \code{\link[=plot.irt.prob]{plot}} 
 function can be used to create item/category characteristic curves, item/category response surfaces, 
 and vector plots.
+}
+
+
+\references{
+  Weeks, J. P. (2010) 
+  \bold{plink}: An R package for linking mixed-format tests using IRT-based methods. 
+  \emph{Journal of Statistical Software}, \bold{35(12)}, 1--33. 
+  URL \url{http://www.jstatsoft.org/v35/i12/}
 }
 
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com}}

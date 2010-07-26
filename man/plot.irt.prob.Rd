@@ -113,6 +113,13 @@ a panel of vectorplots is created for each pair of dimensions.
 plots on different pages on a Windows machine. For other operating systems, it is suggested
 that the multipage plot be sent to an external graphics file.}
 
+\references{
+  Weeks, J. P. (2010) 
+  \bold{plink}: An R package for linking mixed-format tests using IRT-based methods. 
+  \emph{Journal of Statistical Software}, \bold{35(12)}, 1--33. 
+  URL \url{http://www.jstatsoft.org/v35/i12/}
+}
+
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com}, Adam Wyse (Contributing Author)}
 
 \seealso{

@@ -148,6 +148,11 @@ are ordered from dimension 1 to m.
   In W. J. van der Linden & Hambleton, R. K. (Eds.) 
   \emph{Handbook of Modern Item Response Theory} (pp. 85-100). 
   New York: Springer-Verlag.
+
+  Weeks, J. P. (2010) 
+  \bold{plink}: An R package for linking mixed-format tests using IRT-based methods. 
+  \emph{Journal of Statistical Software}, \bold{35(12)}, 1--33. 
+  URL \url{http://www.jstatsoft.org/v35/i12/}
 }
 
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }

@@ -47,6 +47,13 @@ the group1 parameters were transformed to the group2 test using the associated c
 The base group is indicated by an asterisk.
 }
 
+\references{
+  Weeks, J. P. (2010) 
+  \bold{plink}: An R package for linking mixed-format tests using IRT-based methods. 
+  \emph{Journal of Statistical Software}, \bold{35(12)}, 1--33. 
+  URL \url{http://www.jstatsoft.org/v35/i12/}
+}
+
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \seealso{

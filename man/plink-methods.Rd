@@ -280,6 +280,11 @@ set equal to \code{D}. If only \code{D.drm} is specified, the values for \code{D
   Stocking, M. L. & Lord, F. M. (1983). 
   Developing a common metric in item response theory. 
   \emph{Applied Psychological Measurement}, \emph{7}(2), 201-210.
+
+  Weeks, J. P. (2010) 
+  \bold{plink}: An R package for linking mixed-format tests using IRT-based methods. 
+  \emph{Journal of Statistical Software}, \bold{35(12)}, 1--33. 
+  URL \url{http://www.jstatsoft.org/v35/i12/}
 }
 
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }

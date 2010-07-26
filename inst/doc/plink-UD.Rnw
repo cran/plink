@@ -1,0 +1,912 @@
+\documentclass[nojss]{jss}
+\usepackage{amsmath,amssymb,bm,array,thumbpdf}
+\graphicspath{{Figures/}}
+
+%\VignetteIndexEntry{plink: An R Package for Linking Mixed-Format Tests Using IRT-Based Methods}
+%\VignetteDepends{plink}
+%\VignetteKeywords{item response theory, separate calibration, chain linking, mixed-format tests, R}
+%\VignettePackage{plink}
+
+%\usepackage{Sweave}
+\SweaveOpts{keep.source=TRUE}
+<<echo=FALSE, results=hide>>=
+library("plink")
+options(prompt = "R> ", continue = "+  ", width = 70,
+  digits = 4, show.signif.stars = FALSE, useFancyQuotes = FALSE)
+@
+
+
+\author{Jonathan P. Weeks\\University of Colorado at Boulder}
+\Plainauthor{Jonathan P. Weeks}
+
+\title{\pkg{plink}: An \proglang{R} Package for Linking Mixed-Format Tests Using IRT-Based Methods}
+\Plaintitle{plink: An R Package for Linking Mixed-Format Tests Using IRT-Based Methods}
+\Shorttitle{\pkg{plink}: Linking Mixed-Format Tests Using IRT-Based Methods in \proglang{R}}
+
+\Abstract{
+  This introduction to the \proglang{R} package \pkg{plink} is a (slightly)
+  modified version of \cite{Weeks:2010}, published in the
+  \emph{Journal of Statistical Software}.
+
+  The \proglang{R} package \pkg{plink} has been developed to facilitate the
+  linking of mixed-format tests for multiple groups under a common item design
+  using unidimensional and multidimensional IRT-based methods. This paper
+  presents the capabilities of the package in the context of the unidimensional
+  methods. The package supports nine unidimensional item response models (the
+  Rasch model, 1PL, 2PL, 3PL, graded response model, partial credit and
+  generalized partial credit model, nominal response model, and multiple-choice
+  model) and four separate calibration linking methods (mean/sigma, mean/mean,
+  Haebara, and Stocking-Lord). It also includes functions for importing item
+  and/or ability parameters from common IRT software, conducting IRT true-score
+  and observed-score equating, and plotting item response curves and parameter
+  comparison plots. 
+}
+\Keywords{item response theory, separate calibration, chain linking, mixed-format tests, \proglang{R}}
+\Plainkeywords{item response theory, separate calibration, chain linking, mixed-format tests, R}
+
+\Address{
+  Jonathan Weeks\\
+  School of Education\\
+  University of Colorado at Boulder\\
+  UCB 249\\
+  Boulder, CO 80309, United States of America\\
+  E-mail: \email{jonathan.weeks@colorado.edu}
+}
+
+
+\begin{document}
+
+\section{Introduction}
+In many measurement scenarios there is a need to compare results from multiple tests, but depending on the statistical properties of these measures and/or the sample of examinees, scores across tests may not be directly comparable; in most instances they are not. To create a common scale, scores from all tests of interest must be transformed to the metric of a reference test. This process is known generally as \emph{linking}, although other terms like \emph{equating} and \emph{vertical scaling} are often used to refer to specific instantiations \cite[see][for information on the associated terminology]{linn93}. Linking methods were originally developed to equate observed scores for parallel test forms \citep{hull22, kelley23, gulliksen50, levine55}. These approaches work well when the forms are similar in terms of difficulty and reliability, but as the statistical specifications of the tests diverge, the comparability of scores across tests becomes increasingly unstable \citep{petersen83,yen86}. 
+
+\cite{thurstone25, thurstone38} developed observed score methods for creating vertical scales when the difficulties of the linked tests differ substantively. These methods depend on item p-values or empirical score distributions which are themselves dependent on the sample of examinees and the particular items included on the tests. As such, these approaches can be unreliable. \cite{lord68} argued that in order to maintain a consistent scale, the linking approach must be based on a stable scaling model (i.e., a model with invariant item parameters). With the advent of item response theory \citep[IRT;][]{lord52, lord68, lord80} this became possible. Today, IRT-based linking is the most commonly used approach for developing vertical scales, and it is being used increasingly for equating (particularly in the development of calibrated item banks).
+
+The \proglang{R} \citep{r08} package \pkg{plink}, available from the Comprehensive \proglang{R}~Archive Network at \url{http://CRAN.R-project.org/package=plink}, was developed to facilitate the linking of mixed-format tests for multiple groups under a common item design \citep{kolen04} using unidimensional and multidimensional IRT-based methods. The aim of this paper is to present the package with a specific focus on the unidimensional methods. An explication of the multidimensional methods will be described in a future article. This paper is divided into three main sections and two appendices. Section \ref{IRT} provides an overview of the item response models and linking methods supported by \pkg{plink}. Section \ref{ptd} describes how to format the various objects needed to run the linking function, and Section \ref{plink} illustrates how to link a set of tests using the \code{plink} function. Appendix \ref{app} provides a brief description of additional features, and Appendix \ref{sec:compare} presents a comparison and critique of available linking software.
+
+\section{Models and methods}
+\label{IRT}
+\pkg{plink} supports nine\footnote{By constraining the parameters in these models, other models like \citeauthor{andrich78}'s (\citeyear{andrich78}) rating scale model or
+\citeauthor{samejima79}'s (\citeyear{samejima79}) extension of the nominal response model can be specified.} unidimensional item response models (the Rasch model, 1PL,
+2PL, 3PL, graded response model, partial credit and generalized partial credit model, nominal response model, and multiple-choice model) and four separate
+calibration linking methods (mean/sigma, mean/mean, Haebara, and Stocking-Lord). All of these models and methods are well documented in the literature, although the parameterizations can vary. The following two sub-sections are included to acquaint the reader with the specific parameterizations used in the package.
+
+\subsection{Item response models}
+Let the variable $X_{ij}$ represent the response of examinee $i$ to item $j$.  Given a test consisting of dichotomously scored items, $X_{ij}=1$ for a correct item response, and $X_{ij}=0$ for an incorrect response. The response probabilities for the three-parameter logistic model \citep[3PL;][]{birnbaum68} take the following form
+\begin{equation}
+\label{eq:3PL}
+P_{ij}=P\left(X_{ij} = 1 | \theta_{i}, a_{j}, b_{j}, c_{j} \right)=c_{j}+(1-c_{j})\frac{\exp\left[Da_{j}\left(\theta_{i}-b_{j}\right)\right]} {1+\exp\left[Da_{j}\left(\theta_{i}-b_{j}\right)\right]}
+\end{equation}
+where $\theta_{i}$ is an examinee's ability on a single construct, $a_{j}$ is the item discrimination, $b_{j}$ is the item difficulty, $c_{j}$ is the lower asymptote (guessing parameter), and $D$ is a scaling constant.
+
+%\footnote{One needs to be careful about the value used for \code{D} in the relevant functions in \pkg{plink}. For instance, if \code{D} is set to 1.702 when estimating the item parameters, they will be on a normal metric, but if \code{D} is also set to 1.702 in \pkg{plink}, the parameters will be scaled again; they will no longer be on the normal metric. If the parameters have already been scaled accordingly in the estimation software, the value of \code{D} in \pkg{plink} should equal 1 (see Section \ref{plink}).}
+
+If the guessing parameter is constrained to be zero, Equation \ref{eq:3PL} becomes the two-parameter logistic model \cite[2PL;][]{birnbaum68}, and if it is further constrained so that the discrimination parameters for all items are equal, it becomes the one-parameter logistic model (1PL). The Rasch model \citep{rasch60} is a special case of the 1PL where all of the item discriminations are constrained to equal one. 
+
+When items are polytomously scored (i.e., items with three or more score categories), the response $X_{ij}$ is coded using a set of values $k = \{1, ..., K_{j}\}$ where $K_{j}$ is the total number of categories for item $j$. When the values of $k$ correspond to successively ordered categories, the response probabilities can be modeled using either the graded response model \citep[GRM;][]{samejima69} or the generalized partial credit model \citep[GPCM;][]{muraki92}. The graded response model takes the following form
+\begin{equation}
+\label{eq:grm}
+\tilde{P}_{ijk}=\tilde{P}\left(X_{ij} = k | \theta_{i}, a_{j}, b_{jk} \right)=\left\{\begin{array}{cl}
+ 1 & k=1 \\ 
+\frac{\displaystyle \exp\left[Da_{j}\left(\theta_{i}-b_{jk}\right)\right]} {\displaystyle 1+\exp\left[Da_{j}\left(\theta_{i}-b_{jk}\right)\right]} & 2 \leq k \leq K_{j}\\ 
+0 & k>K_{j}
+\end{array}\right.
+\end{equation}
+where $a_{j}$ is the item slope and $b_{jk}$ is a threshold parameter. The threshold parameters can be alternately formatted as deviations from an item-specific difficulty commonly referred to as a location parameter. That is, $b_{jk}$ can be respecified as $b_{j}+g_{jk}$ where the location parameter $b_{j}$ is equal to the mean of the $b_{jk}$ and the $g_{jk}$ are deviations from this mean. 
+
+In Equation \ref{eq:grm}, the $\tilde{P}_{ijk}$ correspond to cumulative probabilities, yet the equation can be reformulated to identify the probability of responding in a given category. This is accomplished by taking the difference between the $\tilde{P}_{ijk}$ for adjacent categories. These category probabilities are formulated as
+\begin{equation}
+P_{ijk}=\tilde{P}_{ijk}-\tilde{P}_{ij(k+1)}.
+\end{equation}
+%\footnote{The argument \code{catprob}=TRUE can be specified in all relevant functions to compute category probabilities rather than cumulative probabilities (see Section \ref{future}).}
+
+The generalized partial credit model takes the following form
+\begin{equation}
+P_{ijk}=P\left(X_{ij} = v | \theta_{i}, a_{j}, b_{jk} \right)=\frac{\exp\left[\displaystyle\sum_{v=1}^k Da_{j}\left(\theta_{i}-b_{jv}\right)\right]} {\displaystyle\sum_{h=1}^{K_{j}} \exp\left[\displaystyle\sum_{v=1}^h Da_{j}\left(\theta_{i}-b_{jv}\right) \right]}
+\end{equation}
+where $b_{jk}$ is an intersection or step parameter. As with the graded response model, the $b_{jk}$ for each item can be reformulated to include a location
+parameter and step-deviation parameters (e.g., $b_{j}+g_{jk}$). Further, the slope parameters for the GPCM can be constrained to be equal across all items.
+When they equal one, this is known as the partial credit model \citep[PCM;][]{masters82}. For both the PCM and the GPCM, the parameter $b_{j1}$ can be
+arbitrarily set to any value because it is cancelled from the numerator and denominator (see \citealp{muraki92} for more information). For all of the functions in \pkg{plink} that use either of these models, $b_{j1}$ is excluded, meaning only $K_{j}-1$ step parameters should be specified.
+
+The GRM, PCM, and GPCM assume that the values for $k$ correspond to successively ordered categories, but if the responses are not assumed to be ordered, they can be modeled using the nominal response model \cite[NRM;][]{bock72} or the multiple-choice model \cite[MCM;][]{thissen84}. The nominal response model takes the following form
+\begin{equation}
+\label{eq:nrm}
+P_{ijk}=P\left(X_{ij} = k | \theta_{i}, a_{jk}, b_{jk} \right)=\frac{\exp\left(a_{jk}\theta_{i}  + b_{jk}\right)}{\displaystyle\sum_{h=1}^{K_{j}} \exp\left(a_{jh}\theta_{i}  + b_{jh}\right)}
+\end{equation}
+where $a_{jk}$ is a category slope and $b_{jk}$ is a category ``difficulty'' parameter. For the purpose of identification, the model is typically specified under the constraint that
+\begin{center}
+$\displaystyle\sum_{k=1}^{K_{j}} a_{jk}=0$ ~~and~~ $\displaystyle\sum_{k=1}^{K_{j}} b_{jk}=0$.
+\end{center}
+
+The final model supported by \pkg{plink} is the multiple-choice model. It is an extension of the NRM that includes lower asymptotes on each of the response categories and additional parameters for a ``do not know'' category. The model is specified as 
+\begin{equation}
+P_{ijk}=P\left(X_{ij} = k | \theta_{i}, a_{jk}, b_{jk}, c_{jk}\right)=\frac{\exp\left(a_{jk}\theta_{i}  + b_{jk}\right)+c_{jk}\exp\left(a_{j0}\theta_{i}+b_{j0}\right)} {\displaystyle\sum_{h=0}^{K_{j}} \exp\left(a_{jh}\theta_{i}  + b_{jh}\right)}
+\end{equation}
+where $K_{j}$ is equal to the number of actual response categories plus one, $a_{j0}$ and $b_{j0}$ are the slope and category parameters respectively for the ``do not know'' category, and $a_{jk}$ and $b_{jk}$ have the same interpretation as the parameters in Equation \ref{eq:nrm}. This model is typically identified using the same constraints on $a_{jk}$ and $b_{jk}$ as the NRM, and given that $c_{jk}$ represents the proportion of individuals who ``guessed'' a specific distractor, the MCM imposes an additional constraint, where
+\begin{center}
+$\displaystyle\sum_{k=1}^{K_{j}} c_{jk}=1$.
+\end{center}
+
+\subsection{Calibration methods}
+\label{calibration}
+The ultimate goal of test linking is to place item parameters and/or ability estimates from two or more tests onto a common scale. When there are only two tests, this involves finding a set of linking constants to transform the parameters from one test (the \emph{from} scale) to the scale of the other (the \emph{to} scale). The parameters associated with these tests are subscripted by an \emph{F} and \emph{T} respectively. When there are more than two tests, linking constants are first estimated for each pair of ``adjacent'' tests (see Section \ref{sec:irtpars}) and then chain-linked together to place the parameters for all tests onto a base scale. For a given pair of tests, the equation to transform $\theta_{F}$ to the $\theta_{T}$ scale is
+\begin{equation}
+\label{eq:theta}
+\theta_{T}= A\theta_{F}+B=\theta_{F}^{*}
+\end{equation}
+where the linking constants $A$ and $B$ are used to adjust the standard deviation and mean respectively, and the $*$ denotes a transformed value on the \emph{to} scale. See \cite{kim06} for an explanation of the properties and assumptions of IRT that form the basis for this equation, the following transformations, and a more detailed explanation of the linking methods.
+
+Since the item parameters are inextricably tied to the $\theta$ scale, any linear transformation of the scale will necessarily change the item parameters such that the expected probabilities will remain unchanged. As such, it can be readily shown that  $a_{j}$ and $b_{jk}$ for the GRM, GPCM, and dichotomous models on the \emph{from} scale can be transformed to the \emph{to} scale by
+\begin{subequations}
+\begin{align}
+\label{eq:to1}
+a^{*}_{jF}= & ~a_{jF}/A \\
+b^{*}_{jkF}= & ~Ab_{jkF}+B
+\end{align}
+\end{subequations}
+where the constants $A$ and $B$ are the same as those used to transform $\theta_{F}$ \citep{lord68,baker92}. Since the NRM and MCM are parameterized using a slope/intercept formulation (i.e., $a_{jk}\theta_{i}+b_{jk}$) rather than a slope/difficulty formulation (i.e., $a_{j}[\theta_{i}-b_{jk}]$), the slopes and category parameters are transformed using \citep{baker93a,kimj02}
+\begin{subequations}
+\begin{align}
+a^{*}_{jkF}= & ~a_{jkF}/A \\
+\label{eq:to2}
+b^{*}_{jkF}= & ~b_{jkF}-\left(B/A\right)a_{jkF}.
+\end{align}
+\end{subequations}
+When lower asymptote parameters are included in the model, as with the 3PL and MCM, they are unaffected by the transformation; hence, $c^{*}_{jF}=c_{jF}$.
+
+Equations \ref{eq:theta} to \ref{eq:to2} illustrate the transformation of item and ability parameters from the \emph{from} scale to the \emph{to} scale; however, a reformulation of these equations can be used to transform the parameters on the \emph{to} scale to the \emph{from} scale. These transformations are important when considering symmetric linking (discussed later). The item parameters for the GRM, GPCM and dichotomous models are transformed by
+\begin{subequations}
+\begin{align}
+a^{\#}_{jT}= & ~Aa_{jT} \\ 
+b^{\#}_{jkT}= & ~\left(b_{jkT}-B\right)/A
+\end{align}
+\end{subequations}
+and the item parameters for the NRM and MCM are transformed by
+\begin{subequations}
+\begin{align}
+a^{\#}_{jkT}= & ~Aa_{jkT} \\
+b^{\#}_{jkT}= & ~b_{jkT}+Ba_{jkT}
+\end{align}
+\end{subequations}
+where the $\#$ denotes a transformed value on the \emph{From} scale. Again, the lower asymptote parameters remain unaffected, so $c^{\#}_{jT}=c_{jT}$.
+
+This package supports four of the most commonly used methods for estimating linking constants under an equivalent or non-equivalent groups common item design \citep{kolen04}. Within this framework, a subset of $S \leq J$ common items between the $to$ and $from$ tests are used to estimate the constants. The mean/sigma \citep{marco77} and mean/mean \citep{loyd80} methods, known as moment methods, are the simplest approaches to estimating $A$ and $B$ because they only require the computation of means and standard deviations for various item parameters. For the mean/sigma, only the $b_{sk}$ are used. That is,
+\begin{subequations}
+\begin{align}
+A=&~\frac{\sigma(b_{T})}{\sigma(b_{F})}\\
+B=&~\mu(b_{T})-A\mu(b_{F})
+\end{align}
+\end{subequations}
+where the means and standard deviations are taken over all $S$ common items and $K_{s}$ response categories. One potential limitation of this approach, however, is that it does not consider the slope parameters. The mean/mean, on the other hand, uses both the $a_{sk}$ and $b_{sk}$ to estimate the linking constants where
+\begin{subequations}
+\begin{align}
+A=&~\frac{\mu(a_{F})}{\mu(a_{T})}\\
+B=&~\mu(b_{T})-A\mu(b_{F}).
+\end{align}
+\end{subequations}
+Both of these approaches assume that the items are parameterized using a slope/difficulty formulation, but because NRM and MCM items use a slope/intercept parameterization, the $b_{sk}$ must be reformulated as $\tilde{b}_{sk}=-b_{sk}/a_{sk}$ before computing the means and standard deviations. Given this reparameterization, there are several issues related to the use of NRM and MCM items with the moment methods \citep[see][for more information]{kim06}.
+
+As an alternative to the moment methods, \cite{haebara80} and \cite{stocking83} developed characteristic curve methods that use an iterative approach to estimate the linking constants by minimizing the sum of squared differences between item characteristic curves and test characteristic curves for the common items for the two methods respectively. These methods are typically implemented by finding the constants that best characterize the \emph{from} scale parameters on the \emph{to} scale; however, this assumes that the parameters on the \emph{to} scale were estimated without error. For this reason, \cite{haebara80} proposed a criterion that simultaneously considers the transformation of parameters from the \emph{from} scale to the \emph{to} scale and vice-versa. The former case---the typical implementation---is referred to as a non-symmetric approach and the later is referred to as a symmetric approach. 
+
+The Haebara method minimizes the following criterion
+\begin{subequations}
+\label{HB}
+\begin{equation}
+Q=Q_{1}+Q_{2}
+\end{equation}
+where
+\begin{equation}
+\label{HBa}
+Q_{1}=\frac{1}{L_{1}}\displaystyle\sum_{m=1}^{M}\displaystyle\sum_{s=1}^{S} \displaystyle\sum_{k=1}^{K_{s}}\left[P_{sk}\left(\theta_{mT}\right)- P_{sk}^{*}\left(\theta_{mT}\right)\right]^{2}W_{1}\left(\theta_{mT}\right)
+\end{equation}
+and
+\begin{equation}
+\label{HBb}
+Q_{2}=\frac{1}{L_{2}}\displaystyle\sum_{m=1}^{M}\displaystyle\sum_{s=1}^{S} \displaystyle\sum_{k=1}^{K_{s}}\left[P_{sk}\left(\theta_{mF}\right)- P_{sk}^{\#}\left(\theta_{mF}\right)\right]^{2}W_{2}\left(\theta_{mF}\right)
+\end{equation}
+\end{subequations}
+where
+\begin{center}
+$L_{1}=\displaystyle\sum_{m=1}^{M}W_{1}\left(\theta_{mT}\right)
+\displaystyle\sum_{s=1}^{S}K_{s}$ ~~and ~~
+$L_{2}=\displaystyle\sum_{m=1}^{M}W_{2}\left(\theta_{mF}\right)
+\displaystyle\sum_{s=1}^{S}K_{s}$.
+\end{center}
+The $\theta_{mT}$ are a set of $M$ points on the \emph{to} scale where differences in expected probabilities are evaluated, $P_{sk}\left(\theta_{mT}\right)$ are expected probabilities based on the untransformed \emph{to} scale common item parameters, $P_{sk}^{*}\left(\theta_{mT}\right)$ are expected probabilities based on the transformed \emph{from} scale common item parameters, and the $W_{1}\left(\theta_{mT}\right)$ are a set of quadrature weights corresponding to $\theta_{mT}$. The $\theta_{mF}$ are a set of points on the \emph{from} scale where differences in expected probabilities are evaluated,  $P_{sk}\left(\theta_{mF}\right)$ are expected probabilities based on the untransformed \emph{from} scale common item parameters, $P_{sk}^{\#}\left(\theta_{mF}\right)$ are expected probabilities based on the transformed \emph{to} scale common item parameters, and the $W_{2}\left(\theta_{mF}\right)$ are a set of quadrature weights corresponding to $\theta_{mF}$. $L_{1}$ and $L_{2}$ are constants used to standardize the criterion function to prevent the value from exceeding upper or lower bounds in the optimization. The inclusion of $L_{1}$ and $L_{2}$ does not affect the estimated linking constants \citep{kim06}. $Q$ is minimized in the symmetric approach, but only $Q1$ is minimized in the non-symmetric approach.  
+
+The Stocking-Lord method minimizes the following criterion
+\begin{subequations}
+\label{SL}
+\begin{equation}
+F=F_{1}+F_{2}
+\end{equation}
+where
+\begin{equation}
+\label{SLa}
+F_{1}=\frac{1}{L_{1}^{*}}\displaystyle\sum_{m=1}^{M} \left[\displaystyle\sum_{s=1}^{S}\displaystyle\sum_{k=1}^{K_{s}}U_{sk} P_{sk}\left(\theta_{mT}\right)-\displaystyle\sum_{s=1}^{S} \displaystyle\sum_{k=1}^{K_{s}}U_{sk}P_{sk}^{*}\left(\theta_{mT}\right) \right]^{2}W_{1}\left(\theta_{mT}\right)
+\end{equation}
+and
+\begin{equation}
+\label{SLb}
+F_{2}=\frac{1}{L_{2}^{*}}\displaystyle\sum_{m=1}^{M} \left[\displaystyle\sum_{s=1}^{S}\displaystyle\sum_{k=1}^{K_{s}}U_{sk} P_{sk}\left(\theta_{mF}\right)-\displaystyle\sum_{s=1}^{S} \displaystyle\sum_{k=1}^{K_{s}}U_{sk}P_{sk}^{\#}\left(\theta_{mF}\right) \right]^{2}W_{2}\left(\theta_{mF}\right)
+\end{equation}
+\end{subequations}
+where
+\begin{center}
+$L_{1}^{*}=\displaystyle\sum_{m=1}^{M}W_{1}\left(\theta_{mT}\right)$ ~~and ~~
+$L_{2}^{*}=\displaystyle\sum_{m=1}^{M}W_{2}\left(\theta_{mF}\right)$.
+\end{center}
+To create the test characteristic curves, the scoring function $U_{sk}$ must be included to weight each response category. These values are typically specified as $U_{sk}=\{0, ..., K_{s}-1\}$, which assumes that the categories are ordered. $F$ is minimized in the symmetric approach, but only $F1$ is minimized in the non-symmetric approach.
+
+
+\section{Preparing the data}
+\label{ptd}
+There are four necessary elements that must be created to prepare the data prior to linking a set of tests using the function \code{plink}:
+\begin{enumerate}
+\item an object containing the item parameters,
+\item an object specifying the number of response categories for each item,
+\item an object identifying the item response models associated with each item,
+\item an object identifying the common items between groups.
+\end{enumerate}
+In short, these elements create a blueprint of the unique and common items across two or more tests. The following section describes how to specify the first three elements for a single set of item parameters then shows how the elements for two or more groups can be combined---incorporating the common item object---for use in \code{plink}. The section concludes with a discussion of methods for importing data from commonly used IRT estimation software. If the parameters are imported from one of the software packages identified in Section \ref{sec:irt-software}, no additional formatting is required (i.e., Sections \ref{format}, \ref{cat}, and \ref{poly.mod} can be skipped).
+
+
+\subsection{Formatting the item parameters}
+\label{format}
+The key elements of any IRT-based linking method---using a common item design---are the item parameters, but depending on the program used to estimate them, they may come in a variety of formats. \pkg{plink} is designed to allow a fair amount of flexibility in how the parameters are specified to minimize the need for reformatting. This object, named \code{x} in all related functions, can be specified for single-format or mixed-format items as a vector, matrix, or list.
+
+\subsubsection{Vector formulation}
+When the Rasch model is used, \code{x} can be formatted as a vector of item difficulties, but for all other models a matrix or list specification must be used (the Rasch model can be specified using these formulations as well). 
+
+\subsubsection{Matrix formulation}
+\label{sec:parsmat}
+The general format for structuring \code{x} as a matrix can be thought of as an additive column approach. The object should be an $N \times R$ matrix for $N$ items and $R$ equal to the  number of parameters for the item with the most parameters. The left-most columns are typically for discrimination/slope parameters, the next column (if applicable) is for location parameters, the next set of columns is for difficulty/threshold/step/category parameters, and the final set of columns is for lower asymptote (guessing) parameters.
+
+For dichotomous items, \code{x} can include one, two, or three columns (see formulation~(\ref{drm-format})). The item response model for these items is not explicitly specified; rather, it is determined based on the included item parameters. For instance, instead of formatting \code{x} as a vector for the Rasch model, an $N \times 1$ matrix of item difficulties can be supplied. An $N \times 2$ matrix can also be used with all of the values in the first column equal to one and difficulty parameters in the second column. For discrimination values other than one---for the 1PL---\code{x} should include at least two columns where the discrimination parameters are identical for all items. In all of these cases the lower asymptote values will default to zero; however, three columns can be specified where the values in the last column all equal zero. For the 2PL, \code{x} should include at least two columns for the discrimination and difficulty parameters respectively. As with the 1PL, the lower asymptote values will default to zero, but a third column of zeros can be included. For the 3PL, \code{x} should include all three columns.
+\begin{equation}
+\label{drm-format}
+\begin{bmatrix}
+a_{1}\\ 
+\cdot \\ 
+a_{j}\\
+\end{bmatrix}
+\begin{bmatrix}
+b_{1}\\ 
+\cdot \\ 
+b_{j}\\
+\end{bmatrix}
+\begin{bmatrix}
+c_{1}\\ 
+\cdot \\ 
+c_{j}\\
+\end{bmatrix}
+\end{equation}
+For GRM, PCM, and GPCM items, \code{x} may include up to three blocks of parameters (see formulation~(\ref{grm-format})). If no location parameter is included, the first column will contain the slopes and the remaining columns will include the threshold/step parameters. When a location parameter is included, the first column will be for the slopes, the second column for the location parameters, and the remaining columns for the threshold/step deviation parameters. For the PCM, if the slope is equal to one, the column of slope parameters is not required; otherwise, this column needs to be included.
+\begin{equation}
+\label{grm-format}
+\begin{bmatrix}
+a_{1}\\ 
+\cdot \\ 
+\cdot \\
+a_{j}\\
+\end{bmatrix}
+\begin{bmatrix}
+b_{11} & \cdot & \cdot & b_{1k}\\ 
+\cdot & \cdot & & \cdot \\ 
+\cdot & & \cdot & \cdot \\
+b_{j1} & \cdot & \cdot & b_{jk}\\
+\end{bmatrix}
+~~\rm{or}~~
+\begin{bmatrix}
+a_{1}\\ 
+\cdot \\ 
+\cdot \\
+a_{j}\\
+\end{bmatrix}
+\begin{bmatrix}
+b_{1}\\ 
+\cdot \\ 
+\cdot \\
+b_{j}\\
+\end{bmatrix}
+\begin{bmatrix}
+g_{11} & \cdot & \cdot & g_{1k}\\ 
+\cdot & \cdot & & \cdot \\ 
+\cdot & & \cdot & \cdot \\
+g_{j1} & \cdot & \cdot & g_{jk}\\
+\end{bmatrix}
+\end{equation}
+For the nominal response model, \code{x} should include two blocks of parameters (see formulation~(\ref{nrm-format})). The first $k$ columns are for the
+slopes (ordered in the same manner as the category parameters) and the next $k$ columns are for the category parameters. One nuance of this formulation is
+the placement of missing values when items have different numbers of response categories. When extracting NRM parameters from the entire matrix of item
+parameters, the $k$ columns of slopes are treated as a single block, meaning all of the category parameters must begin in column $k+1$. Therefore, missing
+values should appear at the end of a given row within the block of slopes or category parameters. Visually, it will seem as if there is a gap in the middle
+of the row (see formulation~(\ref{x-format})).
+
+\begin{equation}
+\label{nrm-format}
+\begin{bmatrix}
+a_{11} & \cdot & \cdot & a_{1k}\\ 
+\cdot & \cdot & & \cdot \\ 
+\cdot & & \cdot & \cdot \\
+a_{j1} & \cdot & \cdot & a_{jk}\\
+\end{bmatrix}
+\begin{bmatrix}
+b_{11} & \cdot & \cdot & b_{1k}\\ 
+\cdot & \cdot & & \cdot \\ 
+\cdot & & \cdot & \cdot \\
+b_{j1} & \cdot & \cdot & b_{jk}\\
+\end{bmatrix}
+\end{equation}
+
+The specification of item parameters for the multiple-choice model is very similar to the specification for NRM items with the only difference being the
+addition of a block of lower asymptote parameters (see formulation~(\ref{mcm-format})). The same placement of missing values applies here as well.
+
+\begin{equation}
+\label{mcm-format}
+\begin{bmatrix}
+a_{11} & \cdot & \cdot & a_{1k}\\ 
+\cdot & \cdot & & \cdot \\ 
+\cdot & & \cdot & \cdot \\
+a_{j1} & \cdot & \cdot & a_{jk}\\
+\end{bmatrix}
+\begin{bmatrix}
+b_{11} & \cdot & \cdot & b_{1k}\\ 
+\cdot & \cdot & & \cdot \\ 
+\cdot & & \cdot & \cdot \\
+b_{j1} & \cdot & \cdot & b_{jk}\\
+\end{bmatrix}
+\begin{bmatrix}
+c_{11} & \cdot & c_{1k-1}\\ 
+\cdot & \cdot & \cdot \\ 
+\cdot & \cdot & \cdot \\
+c_{j1} & \cdot & c_{jk-1}\\
+\end{bmatrix}
+\end{equation}
+
+As an illustration of how to format the item parameters for a mixed-format test, say we have nine items: four 3PL items (items 1, 4, 5, and 8), three GRM items with location parameters (items 2, 3, and 9 with 3, 5, and 3 categories respectively), and two NRM items (items 6 and 7 with 4 and 5 categories respectively). The matrix should be formatted as follows where all of the blank spaces would contain \code{NA}s.
+
+\begin{equation}
+\label{x-format}
+\begin{bmatrix}
+a_1 & b_1 & c_1 &  &  &  &  &  &  &\\ 
+a_2 & b_2 & g_{21} & g_{22} &  &  &  &  &  &\\ 
+a_3 & b_3 & g_{31} & g_{32} & g_{33} & g_{34} &  &  &  &\\ 
+a_4 & b_4 & c_4 &  &  &  &  &  &  &\\ 
+a_5 & b_5 & c_5 &  &  &  &  &  &  &\\ 
+a_{61} & a_{62} & a_{63} & a_{64} &  & b_{61} & b_{62} & b_{63} & b_{64} &\\
+a_{71} & a_{72} & a_{73} & a_{74} & a_{75} & b_{71} & b_{72} & b_{73} & b_{74} & b_{75} \\
+a_8 & b_8 & c_8 &  &  &  &  &  &  &\\ 
+a_9 & b_9 & g_{91} & g_{92} &  &  &  &  &  &\\
+\end{bmatrix}
+\end{equation}
+Using actual values, the matrix \code{x} would look like this
+\label{sec:matrix}
+<<echo=FALSE,results=hide>>=
+x <- matrix(c(
+    0.844, -1.630,  0.249,     NA,     NA,    NA,     NA,     NA,     NA,    NA,
+    1.222, -0.467, -0.832,  0.832,     NA,    NA,     NA,     NA,     NA,    NA,
+    1.101, -0.035, -1.404, -0.285,  0.541, 1.147,     NA,     NA,     NA,    NA,
+    1.076,  0.840,  0.164,     NA,     NA,    NA,     NA,     NA,     NA,    NA,
+    0.972, -0.140,  0.137,     NA,     NA,    NA,     NA,     NA,     NA,    NA,
+    0.905,  0.522, -0.469, -0.959,     NA, 0.126, -0.206, -0.257,  0.336,    NA,
+    0.828,  0.375, -0.357, -0.079, -0.817, 0.565,  0.865, -1.186, -1.199, 0.993,
+    1.134,  2.034,  0.022,     NA,     NA,    NA,     NA,     NA,     NA,    NA,
+    0.871,  1.461, -0.279,  0.279,     NA,    NA,     NA,     NA,     NA,    NA),
+  9, 10, byrow = TRUE)
+@
+<<echo=FALSE>>=
+round(x, 2)
+@
+
+\pagebreak
+
+\subsubsection{List formulation}
+\label{sec:parslist}
+The creation of \code{x} as a list is similar to the matrix formulation in that it is an additive element approach. The list can contain one, two, or three elements. The first element is typically for discrimination/slope parameters, the second element is for location parameters (if applicable) and difficulty/threshold/step/category parameters, and the third element is for lower asymptote parameters. However, the number of elements may vary depending on the item response model(s). Within each list element, the parameters should be formatted as a vector or matrix. The combination of multiple models is equivalent to formatting each type of item parameter for each response model separately, stacking the matrices on top of one another---filling in any missing cells with \code{NA}s if necessary---then combining these elements into a list (see the documentation included in \pkg{plink} for more information). Below is an illustration of how the item parameters above would look using the list formulation.
+<<echo=FALSE,results=hide>>=
+a <- round(matrix(c(
+    0.844, NA,    NA,     NA,     NA,
+    1.222, NA,    NA,     NA,     NA,
+    1.101, NA,    NA,     NA,     NA,
+    1.076, NA,    NA,     NA,     NA,
+    0.972, NA,    NA,     NA,     NA,
+    0.905, 0.522, -0.469, -0.959, NA, 
+    0.828, 0.375, -0.357, -0.079, -0.817, 
+    1.134, NA,    NA,     NA,     NA,
+    0.871, NA,    NA,     NA,     NA),
+  9, 5, byrow = TRUE), 2)
+
+b <- round(matrix(c(
+    -1.630,     NA,     NA,     NA,    NA,     
+    -0.467, -0.832,  0.832,     NA,    NA,    
+    -0.035, -1.404, -0.285,  0.541, 1.147,    
+     0.840,     NA,     NA,     NA,    NA,     
+    -0.140,     NA,     NA,     NA,    NA,
+     0.126, -0.206, -0.257,  0.336,    NA,
+     0.565,  0.865, -1.186, -1.199, 0.993,
+     2.034,     NA,     NA,     NA,    NA,
+     1.461, -0.279,  0.279,     NA,    NA),
+  9, 5, byrow = TRUE), 2)
+
+c <- round(c(0.249, NA, NA, 0.164, 0.137, NA, NA, 0.022, NA), 2)
+@
+<<echo=FALSE>>=
+list(a = a, b = b, c = c)
+@
+
+
+\subsection{Specifying response categories}
+\label{cat}
+Since the item parameters can be formatted in different ways, particularly for polytomous items, it is necessary to identify the number of response categories for each item. This is by far the simplest object to create. In the functions that use it, the argument is named \code{cat}. For a single set of item parameters, \code{cat} is a vector. The values for dichotomous items will always equal 2 while the values for polytomous items will vary depending on the number of response categories. The values for items corresponding to the multiple-choice model should equal the number of response categories plus one---for the ``do not know'' category. For instance, \code{cat} would equal five for an MCM item with four actual responses. The ordering of  values in \code{cat} should coincide with the order of item parameters in \code{x}. To create this object for the set of items in Section \ref{format}, \code{cat} can be specified as 
+<<>>=
+cat <- c(2, 3, 5, 2, 2, 4, 5, 2, 3)
+@
+
+\subsection{Specifying item response models}
+\label{poly.mod}
+The third required element is an object that identifies the item response model used for each item. This is known as a \code{poly.mod} object. It is created using the function \code{as.poly.mod}. The function has three arguments:
+\begin{description}
+\item \code{n}: The total number of items.
+\item \code{model}: A character vector identifying the IRT models used to estimate the item parameters.
+\item \code{items}: A list identifying the item numbers (i.e., the rows in \code{x}) corresponding to the given model in \code{model}.
+\end{description}
+The \code{model} argument can include the following elements: \code{"drm"} for dichotomous response models (i.e., Rasch, 1PL, 2PL, or 3PL), \code{"grm"} for the graded response model, \code{"gpcm"} for the partial credit/generalized partial credit model, \code{"nrm"} for the nominal response model, and \code{"mcm"} for the multiple-choice model.
+
+When all of the items are dichotomous, only \code{n} is needed. If all of the items correspond to a single polytomous model, only the first two arguments are needed, but if two or more item response models are used, all three arguments are required. For example, the \code{poly.mod} object for the items in Section \ref{format} can be created as
+<<>>=
+pm <- as.poly.mod(9, c("drm", "grm", "nrm"),
+  list(c(1, 4, 5, 8), c(2, 3, 9), 6:7))
+@
+The order of elements in \code{model} is not important, but the order of the list elements in \code{items} does matter. The list elements must correspond to the order of the elements in \code{model}. As such, the \code{poly.mod} object could be respecified as 
+<<>>=
+pm <- as.poly.mod(9, c("grm", "drm", "nrm"), 
+  list(c(2, 3, 9), c(1, 4, 5, 8), 6:7))
+@
+
+\subsection{Combining elements and identifying common items}
+\label{sec:irtpars}
+The three elements described above (\code{x}, \code{cat}, and \code{poly.mod}) characterize the items for a single test, but in the context of test linking we will necessarily have two or more sets of item parameters (these objects must be created for each test). As an alternative to keeping track of several objects for each test, we can combine these elements into a single object using the \code{as.irt.pars} function (this type of object is also required for \code{plink}). This function creates an \code{irt.pars} object that characterizes the items for one or more tests and includes built-in validation checks to ensure that there are no obvious incongruences between the parameters, response categories, and item response models. The \code{as.irt.pars} function has the following arguments:
+\begin{description}
+  \item \code{x}: An object containing item parameters. When multiple groups are present, \code{x} should be a list of parameter objects (a combination of
+  objects using the vector, matrix, and/or list formulation).
+
+  \item \code{common}: An $S \times 2$ matrix or list of matrices identifying the common items between adjacent groups in \code{x}. This argument is only
+  applicable when \code{x} includes two or more groups.
+
+  \item \code{cat}: A vector or list of vectors (for two or more groups) identifying the number of response categories.
+
+  \item \code{poly.mod}: A \code{poly.mod} object or list of \code{poly.mod} objects (for two or more groups).
+
+  \item \code{dimensions}: A numeric vector identifying the number of modeled dimensions in each group. The default is \code{1}.
+
+  \item \code{location}: A logical vector indicating whether the parameters for each group in \code{x} include a location parameter. The default is
+  \code{FALSE}.
+
+  \item \code{grp.names}: A character vector of group names.
+\end{description}
+
+To create an \code{irt.pars} object for the single set of parameters specified in Section \ref{format} we would use 
+<<>>=
+pars <- as.irt.pars(x, cat = cat, poly.mod = pm, location = TRUE)
+@
+where \code{x}, \code{cat}, and \code{pm} are the objects created in Sections \ref{format}, \ref{cat} and \ref{poly.mod} respectively. When creating an \code{irt.pars} object that includes item attributes for multiple tests, it is assumed that there is a set of common items between each ``adjacent'' test (i.e., adjacent list elements in \code{x}). Hence, it is necessary to create an object, \code{common}, that identifies these common items. \code{common} should be formatted as an $S_{xy} \times 2$ matrix (for two tests), or a list of matrices (for more than two tests), for $S$ common items between each pair of adjacent tests $x$ and $y$. The values in a given matrix are the row numbers corresponding to the rows in the matrix/list of item parameters for the two paired tests. For example, say we have two tests, D and E, with 60 items each where the last 10 items on test D are the same as the first 10 items on test E. \code{common} would be created as
+
+<<>>=
+common <- matrix(c(51:60, 1:10), 10, 2)
+common
+@
+In words, this means that item 51 on test D is the same as item 1 on test E, and so on. The ordering of items---rows---in this matrix is not important (i.e., the values do not need to be in, say, ascending order). 
+
+Now that all of the necessary objects have been created, they can be can combined in a single \code{irt.pars} object. This is accomplished in one of two ways: the objects created above (\code{x}, \code{cat}, \code{poly.mod}) for each test can be combined with the \code{common} object by running \code{as.irt.pars} directly, or \code{irt.pars} objects can be created for each test first and then combined with \code{common} using the \code{combine.pars} function. Using the first approach, if we have three tests D, E, and F with corresponding objects \code{x.D}, \code{x.E}, \code{x.F}, \code{cat.D}, \code{cat.E}, \code{cat.F}, \code{poly.mod.D}, \code{poly.mod.E}, \code{poly.mod.F}, \code{common.DE}, and \code{common.EF}, the \code{irt.pars} object would be created as follows
+<<eval=FALSE>>=
+pars <- as.irt.pars(x = list(x.D, x.E, x.F), 
+  common = list(common.DE, common.EF), cat = list(cat.D, cat.E, cat.F), 
+  poly.mod = list(poly.mod.D, poly.mod.E, poly.mod.F))
+@ 
+The item parameter objects, response category vectors, \code{poly.mod} objects, and the common item matrices are combined as a list for each type of object separately then passed to the function. 
+
+For the second approach, the \code{combine.pars} function can be used to create an \code{irt.pars} object for multiple groups. Say we originally created an \code{irt.pars} object \code{pars.DE} by combining the information for tests D and E then later created an \code{irt.pars} object \code{pars.F} for a single test F. We can combine these two objects into a single object using \code{common.EF}.
+<<eval=FALSE>>=
+pars <- combine.pars(x = list(pars.DE, pars.F), common = common.EF)
+@
+
+\subsection{Importing parameters from IRT software}
+\label{sec:irt-software}
+In certain cases the item parameters will come in a format that necessitates the creation of \code{x}, \code{cat}, and \code{poly.mod} and subsequently the creation of an \code{irt.pars} object, but if the parameters are estimated using common IRT software, they can be imported as an \code{irt.pars} object without having to create any of these objects directly. \pkg{plink} includes functions to import item parameters (and ability estimates) from \pkg{BILOG-MG} \citep{zimowski03}, \pkg{PARSCALE} \citep{muraki03}, \pkg{MULTILOG} \citep{thissen03}, \pkg{ICL} \citep{hanson02}, and the \proglang{R} packages \pkg{eRm} \citep{mair07} and \pkg{ltm} \citep{rizopoulos06}.\footnote{Multidimensional parameters can be imported from \pkg{TESTFACT} \citep{wood03} and \pkg{BMIRT} \citep{yao08}.} These functions are named \code{read.bilog}, \code{read.parscale}, \code{read.multilog}, \code{read.icl}, \code{read.erm}, and \code{read.ltm} respectively. They include four principal arguments:
+\begin{description}
+  \item \code{file}: The filename of the file containing the item or ability parameters.
+
+  \item \code{ability}: A logical value indicating whether the file contains ability parameters. The default is \code{FALSE}.
+
+  \item \code{loc.out}: A logical value indicating whether threshold/step parameters should be formatted as deviations from a location parameter (not
+  applicable for \code{read.bilog}). The default is \code{FALSE}.
+
+  \item \code{as.irt.pars}: A logical value indicating whether the item parameters should be imported as an \code{irt.pars} object. The default is \code{TRUE}.
+\end{description}
+
+In addition to the four arguments above, there are other function-specific arguments. For instance, with \code{read.erm} and \code{read.ltm}, there is no
+\code{file} argument because the output is created in \proglang{R}. The main argument in these functions, \code{x}, is the output object from one of the
+following functions in \pkg{eRm}: \code{RM}, \code{RSM}, \code{PCM}, \code{LLTM}, \code{RSM}, or \code{PCM}; or from \pkg{ltm}:\footnote{\pkg{plink} and
+\pkg{ltm} both have functions named \code{grm} and \code{gpcm}. With both packages running, it may be necessary to call the appropriate function using
+\code{plink::grm}, \code{plink::gpcm}, \code{ltm::grm}, or \code{ltm::gpcm}} \code{rasch}, \code{ltm}, \code{tpm}, \code{grm}, or \code{gpcm}. For the
+\code{read.icl} function, a \code{poly.mod} object must be created because no information about the item type is included in the \code{.par} file, and for the functions \code{read.bilog} and \code{read.parscale} a logical argument, \code{pars.only}, can be included to indicate whether information like standard errors should be included with the returned parameters.  
+
+Relative to the other applications, \pkg{MULTILOG} has the greatest flexibility for specifying item response models, yet the information in the \code{.par}
+file provides minimal information about the model(s) and the associated constraints (the \code{.par} file only includes contrast parameters). As such, for \code{read.multilog}, it is necessary to create both a \code{cat} and \code{poly.mod} object, and depending on the specified model(s), it may be necessary to include the arguments \code{drm.3PL} and/or \code{contrast}. \code{drm.3PL} is a logical argument indicating whether the 3PL was used to model the dichotomous items (the default is \code{TRUE}). The \code{contrast} argument is a bit more complex. With the exception of the 1PL, 2PL, and GRM, all of the models in \pkg{MULTILOG} are constrained versions of the multiple-choice model where various contrast parameters are estimated \citep[see][]{thissen86}. These can include deviation, polynomial, or triangular contrasts for individual parameters on specific items. The \code{contrast} argument is used to identify these constraints. A full explanation of this argument, in addition to information on importing parameters from the other software packages, is included in the documentation in \pkg{plink}.
+
+
+\section{Running the calibration}
+\label{plink}
+Once an \code{irt.pars} object with two or more tests has been created, the function \code{plink} can be used to estimate linking constants and (if desired) transform all of the item and/or ability parameters onto a base scale. The function includes one essential argument \code{x}, and twelve optional arguments.\footnote{There are two additional arguments, \code{dilation} and \code{dim.order}, that only pertain to multidimensional linking methods.} These arguments are presented in the context of several examples.
+
+\begin{description}
+\item \code{x}: An \code{irt.pars} object with two or more groups.
+
+\item \code{rescale}: A character value identifying the linking constants to use to transform the parameters to the base scale. Applicable values are ``MS'', ``MM'', ``HB'', and ``SL'' for the mean/sigma, mean/mean, Haebara, and Stocking-Lord methods respectively.
+
+\item \code{ability}: A list of $\theta$ values where the number of list elements equals the number of groups in \code{x}.
+ 
+\item \code{method}: A character vector identifying the method(s) to use when estimating the linking constants. Applicable values are ``MS'', ``MM'', ``HB'', and ``SL''. If missing, linking constants will be estimated using all four methods.
+
+\item \code{weights.t}: A list containing quadrature points and weights on the \emph{to} scale for use with the characteristic curve methods.
+
+\item \code{weights.f}: A list containing quadrature points and weights on the \emph{from} scale for use with the characteristic curve methods. This argument will be ignored if \code{symmetric} = \code{FALSE}.
+
+\item \code{startvals}: A vector of starting values for $A$ and $B$ respectively for use in the characteristic curve methods or a character value equal to ``MS'' or ``MM'' indicating that estimates from the given moment method should be used. If the argument is missing, values from the mean/sigma method are used.
+
+\item \code{exclude}: A character vector or list identifying common items that should be excluded when estimating the linking constants.
+
+\item \code{score}: An integeridentifying the scoring function to use for the Stocking-Lord method. When \code{score = 1}, the ordered categories for each item are scored from $0$ to $k-1$, and when \code{score = 2}, the categories are scored from $1$ to $k$. The default is \code{1}. A vector of scores for each response category can also be supplied, but this is only recommended for advanced users.
+
+\item \code{base.grp}: An integer identifying the reference scale---base group---onto which all item and ability parameters should be placed. The default is \code{1}.
+
+\item \code{symmetric}: A logical value indicating whether symmetric optimization should be used for the characteristic curve methods. The default is \code{FALSE}.
+
+\item \code{rescale.com}: A logical value. If \code{TRUE}, rescale the common item parameters using the estimated linking constants; otherwise, insert the non-transformed common item parameters into the set of unique transformed item parameters. The default is \code{TRUE}.
+
+\item \code{grp.names}: A character vector of names for each group in \code{x} (i.e., names for each test). If group names are identified when creating the \code{irt.pars} object, this argument is unnecessary.
+
+\item \code{...}: Further arguments passed to other methods. 
+\end{description}
+
+\subsection{Two groups, dichotomous data}
+
+The simplest linking scenario is the case where there are only two tests and all of the items (unique and common) are dichotomously scored. This example uses the \code{KB04} dataset which reproduces the data presented by \cite{kolen04} in Table 6.5 (p.~192). There are 36 items on each test with 12 common items between them. The \code{KB04} dataset is formatted as a list with two elements. The first element is a list of length two containing the item parameters for ``new'' and ''old'' forms respectively, and the second element is a matrix identifying the common items between the two tests. These elements correspond to the objects \code{x} and \code{common}, but \code{cat} and \code{poly.mod} still need to be created. The following code is used to create these objects and the combined \code{irt.pars} object
+<<>>=
+cat <- rep(2, 36)
+pm <- as.poly.mod(36)
+x <- as.irt.pars(KB04$pars, KB04$common, cat = list(cat, cat), 
+  poly.mod = list(pm, pm), grp.names = c("new", "old"))
+@
+Once this object is created, \code{plink} can be run without specifying any additional arguments.
+<<>>=
+out <- plink(x)
+summary(out)
+@
+There are two things to notice in this output. First, no \code{method} argument was specified, so linking constants were estimated using all four approaches, and second, there is an asterisk included next to the group name ``new'' indicating that this is the base group (this will be of particular importance in the examples with more than two groups). Although not obvious in this example, no rescaled parameters are returned. To return the rescaled item parameters, the \code{rescale} argument must be included. More than one method can be used to estimate the linking constants, but parameters can only be rescaled using a single approach, meaning only one method can be specified for \code{rescale}.
+
+In the following example, the parameters are rescaled using the Stocking-Lord method with the ``old'' form (i.e., the second set of parameters in \code{x}) treated as the base scale. 
+<<>>=
+out <- plink(x, rescale = "SL", base.grp = 2)
+summary(out)
+@
+The function \code{link.pars} can be used to extract the rescaled parameters (the only argument is the output object from \code{plink}). These parameters are returned as an \code{irt.pars} object. Similarly, the function \code{link.con} can be used to extract the linking constants. 
+
+To illustrate the use of additional arguments, the estimation is respecified using a symmetric approach with 30 standard normal quadrature points and weights (created using the \code{as.weight} function). A set of ability estimates is also included. To keep it simple, the abilities for both groups are the same and range from $-4$ to $4$ logits. That is,
+<<>>=
+ability <- list(group1 = -4:4, group2 = -4:4)
+@
+The respecification is implemented as follows
+<<>>=
+out <- plink(x, rescale = "SL", ability = ability, base.grp = 2, 
+  weights.t = as.weight(30, normal.wt = TRUE), symmetric = TRUE)
+summary(out)
+@
+The most obvious difference in this output is the inclusion of summary statistics for the rescaled ability estimates, but the differences in estimated constants for the characteristic curve methods relative to the previous estimation should also be noted. As with rescaled item parameters, the function \code{link.ability} can be used to extract the rescaled ability parameters. 
+<<>>=
+link.ability(out)
+@
+
+\subsection{Two groups, mixed-format data}
+
+The next set of examples illustrate how two tests with mixed-format items can be linked using \code{plink}. These examples use the \code{dgn} dataset which includes 55 items on two tests modeled using the 3PL, generalized partial credit model, and nominal response model. \code{dgn} is a list that includes four elements. The first element is a list of item parameters, the second  is a list of numbers of response categories, the third  is a list of lists that identifies the items associated with each response model, and the final element is a matrix identifying the common items between tests. The \code{irt.pars} object can be created as follows
+<<>>=
+pm1 <- as.poly.mod(55, c("drm", "gpcm", "nrm"), dgn$items$group1)
+pm2 <- as.poly.mod(55, c("drm", "gpcm", "nrm"), dgn$items$group2)
+x <- as.irt.pars(dgn$pars, dgn$common, dgn$cat, list(pm1, pm2))
+@
+Let us start by running \code{plink} without any additional arguments. 
+<<>>= 
+out <- plink(x) 
+summary(out)
+@
+Notice that the $B$ constants for the moment methods are quite different from those for the characteristic curve methods. This is likely due to the inclusion of NRM common items. To illustrate how the linking constants  change when the NRM common items are excluded, the \code{exclude} argument is used. Descriptive statistics for the common item parameters are also displayed when summarizing the output.
+<<>>=
+out1 <- plink(x, exclude = "nrm") 
+summary(out1, descrip = TRUE)
+@
+
+\subsection{Six groups, mixed-format data}
+\label{sec:multi}
+In the final example, the \code{reading} dataset is used to illustrate how the parameters from multiple mixed-format tests can be chain-linked together using \code{plink}. For these data there are six tests that span four grades and three years (see Table \ref{mg-design}). The adjacent groups follow a stair-step pattern (e.g., the grade 3 and grade 4 tests in year 0 are linked then the grade 4 tests in years 0 and 1 are linked, etc.) As with \code{dgn}, the object \code{reading} includes most of the elements needed to create the \code{irt.pars} object, but it is still necessary to create the \code{poly.mod} objects for each test. The following code is used for this purpose.
+<<>>=
+pm1 <- as.poly.mod(41, c("drm", "gpcm"), reading$items[[1]])
+pm2 <- as.poly.mod(70, c("drm", "gpcm"), reading$items[[2]])
+pm3 <- as.poly.mod(70, c("drm", "gpcm"), reading$items[[3]])
+pm4 <- as.poly.mod(70, c("drm", "gpcm"), reading$items[[4]])
+pm5 <- as.poly.mod(72, c("drm", "gpcm"), reading$items[[5]])
+pm6 <- as.poly.mod(71, c("drm", "gpcm"), reading$items[[6]])
+pm <- list(pm1, pm2, pm3, pm4, pm5, pm6)
+@
+\begin{table}[t!]
+\begin{center}
+\begin{tabular}{lccc}
+& Year 0 & Year 1 & Year 2 \\
+\hline
+Grade 3 & X & & \\
+Grade 4 & X & X & \\
+Grade 5 & & X & X \\
+Grade 6 & & & X \\
+\hline
+\end{tabular}
+\caption{Linking design.}
+\label{mg-design}
+\end{center}
+\end{table}
+
+Next, the \code{irt.pars} object can be compiled. To distinguish between the groups in the output, a set of group names is specified. The number before the decimal in each name is the grade, and the value after the decimal corresponds to the year.
+<<>>=
+grp.names <- c("Grade 3.0", "Grade 4.0", "Grade 4.1", "Grade 5.1",
+  "Grade 5.2", "Grade 6.2")
+x <- as.irt.pars(reading$pars, reading$common, reading$cat, pm,
+  grp.names = grp.names)
+@
+For this example, only the characteristic curve methods are used to estimate the linking constants (using the \code{method} argument) and the grade 5, year 1 test is treated as the base group. 
+<<eval=FALSE>>=
+out <- plink(x, method = c("HB", "SL"), base.grp = 4)
+summary(out)
+@
+<<echo=FALSE>>=
+out <- plink(x, method = c("HB", "SL"), base.grp = 4)
+summary(out)
+@
+Notice the ordering of the group labels in the summary output, as well as the inclusion of the asterisk. For the first three pairs of adjacent tests, the labels in the header indicate that the associated linking constants can be used to place the parameters for the lower group (relative to the ordering of groups in \code{x}) onto the scale of the higher group. At this point we get to the base group and the order of the labels in the headers changes. They now indicate that the associated linking constants can be used to place the parameters for the higher group onto the scale of the lower group.
+
+In all of these examples, the specification of the \code{plink} function remains essentially unchanged regardless of the number of groups or the combination of item response models. As such, most of the work in linking a set of tests is tied to the creation of the \code{irt.pars} object. After that, it is simply a matter of deciding which optional arguments (if any) to include.
+
+\bibliography{plink}
+
+\newpage
+
+\begin{appendix}
+
+\section{Additional features}
+\label{app}
+The primary purpose of \pkg{plink} is to facilitate the linking of tests using IRT-based methods; however, there are three other notable features of the package. \pkg{plink} can be used to compute response probabilities, conduct IRT true-score and observed-score equating \citep{kolen04}, and plot item response curves and comparison plots for examining item parameter drift. 
+
+\subsection{Computing response probabilities}
+\label{sec:prob}
+For all of the item response models described in Section~\ref{IRT} there are associated functions for computing response probabilities. These include \code{drm} for Rasch, 1PL, 2PL, and 3PL items, \code{grm} for graded response model items, \code{gpcm} for partial credit/generalized partial credit model items, \code{nrm} for nominal response model items, and \code{mcm} for multiple-choice model items. There is also a function \code{mixed} for computing the response probabilities for mixed-format items. There are two principal arguments for the functions:
+\begin{description}
+\item \code{x}: A vector/matrix/list\footnote{If one of these formulations is used, the objects \code{cat} and/or \code{poly.mod} may need to be passed to the function.} of item parameters or an \code{irt.pars} object.
+\item \code{theta}: A vector of $\theta$ values for which response probabilities should be computed. If not specified, an equal interval range of values
+from $-4$ to $4$ is used with an increment of~0.5.
+\end{description}
+In addition to these  arguments, there are also some model-specific arguments. For the \code{drm} function there is a logical argument \code{incorrect} that identifies whether response probabilities for incorrect responses should be computed. For \code{grm} there is a logical argument, \code{catprob}, that identifies whether category or cumulative probabilities should be computed, and for \code{grm} and \code{gpcm} there is a logical argument, \code{location}, that indicates whether the parameters in \code{x} include a location parameter. Finally, in the functions \code{drm}, \code{grm}, and \code{gpcm} there is an argument \code{D} that can be used to specify a value for a scaling constant. When \code{mixed} is used, a single argument \code{D} can be specified and applied to all applicable models; otherwise, the arguments \code{D.drm}, \code{D.grm}, and \code{D.gpcm} can be used for each model respectively. 
+
+All of these functions output an object of class \code{irt.prob}. To illustrate the use of \code{mixed}, probabilities are computed for two dichotomous (3PL) items and one polytomous (GPCM) item with four categories using nine $\theta$ values ranging from $-4$ to $4$ logits. 
+<<echo=FALSE>>=
+dichot <- matrix(c(1.2, -1.1, 0.19, 0.8, 2.1, 0.13), 2, 3, byrow = TRUE)
+poly <- t(c(0.64, -1.8, -0.73, 0.45))
+mixed.pars <- rbind(cbind(dichot, matrix(NA, 2, 1)), poly)
+cat <- c(2, 2, 4)
+pm <- as.poly.mod(3, c("drm", "gpcm"), list(1:2, 3))
+mixed.pars <- as.irt.pars(mixed.pars, cat = cat, poly.mod = pm)
+@
+<<>>=
+out <- mixed(mixed.pars, theta = -4:4) 
+round(get.prob(out), 3)
+@
+The probabilities are extracted from the output using the function \code{get.prob}. Note that the item names include decimal values. These values identify the response category for the given item. When any of these functions (\code{drm}, \code{grm}, etc.) are used with an \code{irt.pars} object with multiple groups, the output is returned as a list. The subsequent use of \code{get.prob} with this object will return a list containing the matrices of expected probabilities. 
+
+\subsection{IRT true-score and observed-score equating}
+After the item parameters from two or more tests have been placed on a common scale, IRT true-score and observed-score equating methods can be used to relate number-correct scores across tests. In IRT, the true score for a given $\theta$ value is equivalent to the sum of expected probabilities across items at the specified ability. In true-score equating, the goal is to find the $\theta$ value associated with a given true-score on the base scale, then use this value to determine the corresponding true score(s) on the other test(s). When the items have lower asymptotes greater than zero (e.g., when using the 3PL), true-scores are only identified for values greater than the sum of the guessing parameters. In these instances, an ad hoc procedure developed by \cite{kolen81} can be used to determine estimated true-scores below this point---but still in the range of observed scores---for each of the tests. In practice, true-score equating is typically implemented using all possible number-correct scores on the base scale. 
+
+In observed-score equating the goal is still to find equivalent number-correct scores across tests, but the mechanism for accomplishing this is vastly different than the true-score approach. In short, compound binomial/multinomial distributions of observed scores are created using synthetic populations for each test and then combined using a set of \emph{a priori} established weights. These distributions are then equated using traditional equipercentile methods to identify the corresponding observed scores on the different tests \citep[see][for a complete explanation of observed-score equating]{kolen04}.
+
+In \pkg{plink}, the \code{equate} function is used for IRT true-score and observed-score equating using all of the item response models described in section \ref{IRT}. The function has one essential argument, \code{x}, and nine optional arguments. The available arguments are as follows:
+\begin{description}
+\item \code{x}: An \code{irt.pars} object with two or more groups or the output from \code{plink} containing rescaled item parameters.
+
+\item \code{method}: A character vector identifying the equating method(s) to use. Values can include \code{"TSE"} and/or \code{"OSE"} for true-score and observed-score equating respectively.
+
+\item \code{true.scores}: A numeric vector of true-score values to be equated. If missing, values corresponding to all possible observed scores will be used.
+
+\item \code{ts.low}: A logical value. If \code{TRUE}, extrapolate values for the equated true-scores in the range of observed scores from one to the value below     the lowest estimated true-score. The default is \code{TRUE}.
+
+\item \code{base.grp}: An integer identifying the group for the base scale.
+
+\item \code{score}: An integer identifying the scoring function to use to compute the true-scores. When \code{score = 1}, the ordered categories for each item are scored from $0$ to $k-1$, and when \code{score = 2}, the categories are scored from $1$ to $k$. The default is \code{1}.
+
+\item \code{startval}: An integer starting value for the first value of \code{true.score}.
+
+\item \code{weights1}: A list containing quadrature points and weights to be used in the observed-score equating for population 1.
+
+\item \code{weights2}: A list containing quadrature points and weights to be used in the observed-score equating for population 2.
+
+\item \code{syn.weights}: A vector of length two or a list containing vectors of length two with synthetic population weights to be used for each pair of tests for populations 1 and 2 respectively for observed-score equating. If missing, weights of 0.5 will be used for both populations for all groups. If \code{syn.weights} is a list, the number of list elements should be equal to the number of groups in \code{x} minus one.
+
+\item \code{...}: Further arguments passed to or from other methods.
+\end{description}
+
+As an illustration of the \code{equate} function, the example presented in \cite[][pp. 191-198]{kolen04} is recreated using the dichotomous item parameters from the \code{KB04} dataset. As a first step, the forms are linked using the mean/sigma method, excluding item 27, with the ``old'' test as the base scale and the scaling constant, $D$, equal to 1.7. 
+
+<<>>=
+pm <- as.poly.mod(36)
+x <- as.irt.pars(KB04$pars, KB04$common, 
+  cat = list(rep(2, 36), rep(2, 36)), poly.mod = list(pm, pm))
+@
+<<>>=
+out <- plink(x, rescale = "MS", base.grp = 2, D = 1.7, 
+  exclude = list(27, 27), grp.names = c("new", "old"))
+@
+
+As a next step, the \code{equate} function is run using the ``new'' form as the reference scale. For the true-score equating, all number-correct scores are used. The lowest values are determined using the ad hoc procedure. For the observed-score equating, the synthetic distribution is created using a specific set of quadrature points and weights with synthetic weights of 1 and 0 for the two populations respectively. In the output only the first ten equated true/observed scores are displayed. The marginal and synthetic population distributions are included in the output for the observed-score equating, but they are not displayed here to conserve space.
+
+<<>>=
+wt <- as.weight(theta = c(-5.21, -4.16, -3.12, -2.07, -1.03, 0.02, 1.06,
+  2.11, 3.15, 4.20), weight = c(0.0001, 0.0028, 0.0302, 0.1420, 0.3149,
+  0.3158, 0.1542, 0.0359, 0.0039, 0.0002))
+@
+
+<<>>=
+eq.out <- equate(out, method = c("TSE", "OSE"), weights1 = wt, 
+  syn.weights = c(1, 0), D = 1.7)
+@
+
+\pagebreak
+
+\emph{Equated true-scores}
+<<>>=
+eq.out$tse[1:10,]
+@
+
+\emph{Equated observed-scores}
+<<>>=
+eq.out$ose$scores[1:10,]
+@
+
+\subsection{Plotting results}
+\label{sec:plot}
+Two types of unidimensional plots can be created with \pkg{plink}: plots of item response curves and comparison plots for examining item parameter drift. The \code{plot} function---based on the \code{xyplot} function in the \pkg{lattice} package \citep{sarkar08}---has one essential argument, \code{x}, and ten optional arguments:\footnote{There is an additional, optional argument \code{type} that can be used to create different multidimensional plots.}
+\begin{description}
+\item \code{x}: An \code{irt.prob} or \code{irt.pars} object.  
+
+\item \code{separate}: A logical value identifying whether to plot the item category curves for polytomous items in separate panels.
+
+\item \code{combine}: A numeric vector identifying the number of response categories to plot in each panel.  If \code{NULL}, the curves will be grouped by item. This is typically used to plot curves for more than one item in a panel.
+
+\item \code{items}: A numeric vector identifying the items to plot. When there are more than two groups (when \code{x} is an \code{irt.pars} object), \code{items} should be specified as a list with length equal to the number of groups where the list elements contain numeric vectors for the items that should be plotted for each group.
+
+\item \code{item.names}: A vector of item names. When there are two or more groups (when \code{x} is an \code{irt.pars} object), \code{item.names} should be specified as a list with length equal to the number of groups in \code{x} where the list elements contain vectors of item names for each group. 
+
+\item \code{panels}: The number of panels to display in the output window. If the number of items is greater than \code{panels}, the plots will be created on multiple pages. 
+
+\item \code{drift}: A character vector identifying the plots to create to examine item parameter drift. Acceptable values are \code{a}, \code{b}, \code{c} for the various parameters respectively, \code{pars} to compare all of these parameters, \code{TCC} to compare test characteristic curves, \code{ICC} to compare item characteristic curves, or \code{all} to produce all of these plots.
+
+\item \code{groups}: A numeric vector identifying the groups in \code{x} for which plots should be created (only applicable when there are two or more groups). When drift plots are being created, the values in \code{groups} should correspond to the group number of the lowest group of each pair of adjacent groups in \code{x}.
+
+\item \code{grp.names}: A character vector of group names to use when creating the drift plots.
+
+\item \code{sep.mod}: A logical value. If \code{TRUE}, use different markers in the drift plots to identify parameters related to different item response models.
+
+\item \code{drift.sd}: A numeric value identifying the number of standard deviations to use when creating the perpendicular confidence region for the drift
+comparison plots. The default is \code{3}.
+
+\end{description}
+
+When plotting item response curves based on an \code{irt.pars} object, probabilities will be computed first using the \code{mixed} function. Any of the
+arguments in Appendix~\ref{sec:prob} can be included. For example, a panel of item response curves is created using the \code{irt.pars} object
+from Section \ref{format} with incorrect response probabilities plotted for the dichotomous items. A key is also included to identify the curves associated
+with each response category. The result is shown in Figure~\ref{fig1}.
+<<echo=FALSE, results=hide>>=
+pdf.options(family = "Times")
+trellis.device(device = "pdf", file = "IRC.pdf")
+tmp <- plot(pars, incorrect = TRUE, auto.key = list(space = "right"))
+print(tmp)
+dev.off()
+@
+<<results=hide>>=
+plot(pars, incorrect = TRUE, auto.key = list(space = "right"))
+@
+%
+\begin{figure}[p!]
+\begin{center}
+\includegraphics[width=0.8\textwidth]{IRC.pdf}
+\caption{\label{fig1} Item response curves.}
+\end{center}
+\end{figure}
+
+To illustrate the drift plots, the rescaled item parameters from Section \ref{sec:multi} are compared for the Grade 5 tests in years 1 and 2. Different plot
+indicators for the two response models are used and a perpendicular confidence interval of two standard deviations is specified. The result is shown in
+Figure~\ref{fig2}.
+%
+<<echo=FALSE, results=hide>>=
+pm1 <- as.poly.mod(41, c("drm", "gpcm"), reading$items[[1]])
+pm2 <- as.poly.mod(70, c("drm", "gpcm"), reading$items[[2]])
+pm3 <- as.poly.mod(70, c("drm", "gpcm"), reading$items[[3]])
+pm4 <- as.poly.mod(70, c("drm", "gpcm"), reading$items[[4]])
+pm5 <- as.poly.mod(72, c("drm", "gpcm"), reading$items[[5]])
+pm6 <- as.poly.mod(71, c("drm", "gpcm"), reading$items[[6]])
+pm <- list(pm1, pm2, pm3, pm4, pm5, pm6)
+grp.names <- c("Grade 3.0", "Grade 4.0", "Grade 4.1", "Grade 5.1", "Grade 5.2", "Grade 6.2")
+x <- as.irt.pars(reading$pars, reading$common, reading$cat, pm)
+out <- plink(x, method = "SL",rescale = "SL", base.grp = 4, grp.names = grp.names)
+
+pdf.options(family="Times")
+pdf("drift_a.pdf", 4, 4.2)
+plot(out, drift = "a", sep.mod = TRUE, groups = 4, drift.sd = 2)
+dev.off()
+
+pdf.options(family="Times")
+pdf("drift_b.pdf", 4, 4.2)
+plot(out, drift = "b", sep.mod = TRUE, groups = 4, drift.sd = 2)
+dev.off()
+
+pdf.options(family="Times")
+pdf("drift_c.pdf", 4, 4.2)
+plot(out, drift = "c", sep.mod = TRUE, groups = 4, drift.sd = 2)
+dev.off()
+@
+%
+<<results=hide>>=
+plot(out, drift = "pars", sep.mod = TRUE, groups = 4, drift.sd = 2)
+@
+%
+\begin{figure}[p!]
+\begin{center}$
+\begin{array}{ccc}
+\includegraphics[width=2in]{drift_a.pdf}
+\includegraphics[width=2in]{drift_b.pdf}
+\includegraphics[width=2in]{drift_c.pdf}
+\end{array}$
+\caption{\label{fig2} Common item parameter comparison.}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+\section{Related software}
+\label{software}
+There are a number of software applications currently available for conducting IRT-based linking; however, no formal comparison of these programs has ever been done. The following section provides an overview/critique of each of these applications then compares the estimated linking constants across programs for a set of mixed-format item parameters under various conditions (e.g., non-symmetric versus symmetric optimization and uniform versus normal weights) to determine if there are any appreciable differences.
+
+One of the earliest programs to see widespread use was \pkg{EQUATE} \citep{baker93} although now it is rarely used in practice. In the original version the program implemented the Stocking-Lord method for items modeled using the 1PL, 2PL, and 3PL. Two years later it was updated to allow for use of the graded response and nominal response models (the NRM utilizes the Haebara method). The program only allows for uniform weights at fixed ability intervals and does not support mixed-format tests, but it does include functionality to transform item and ability parameters using the estimated linking constants. 
+
+In the same year as the update to \pkg{EQUATE}, \cite{hanson95} released the program \pkg{ST} for linking dichotomous items, implementing the mean/sigma, mean/mean, Haebara, and Stocking-Lord methods. In addition to the inclusion of the moment methods, the program allows one to specify quadrature points and weights for the characteristic curve methods. \cite{hanson00} also developed the program \pkg{mcmequate} for linking nominal response and multiple-choice model items using the Haebara method, but unlike \pkg{ST} no weighting options are available.
+
+Two years after the release of \pkg{ST}, \cite{lee97} released the program \pkg{IpLink} which allows for both unidimensional and multidimensional linking of dichotomously scored items using the mean/sigma and characteristic curve methods with some flexibility for specifying quadrature points (the weights cannot be explicitly defined). Unlike the previous applications, \pkg{IpLink} has a graphical user interface (GUI). Still, the program does not appear to have been used much in practice for unidimensional linking.
+
+As an extension of these programs (excluding the multidimensional methods), \cite{kim03} developed \pkg{POLYST} for linking dichotomous and polytomous items. The program implements the same four linking methods as \pkg{ST} for the 1PL, 2PL, 3PL, GRM, PCM/GPCM, NRM, and MCM, although the calibration can only be run for items corresponding to a single model at a time. In addition to the inclusion of more polytomous models, \pkg{POLYST} added increased functionality over the previous applications by allowing for symmetric and non-symmetric optimization with the characteristic curve methods and extensive options for weighting the response probabilities in the criterion function. 
+
+As a further extension of \pkg{POLYST}, \cite{kim04} developed the program \pkg{STUIRT} to handle mixed-format tests. \pkg{STUIRT} also includes two additional features: the ability to check for local minima near the final solution of the characteristic curve methods and functionality to create input files for use in \pkg{POLYEQUATE} \citep{kolen04a} to conduct IRT true-score and observed-score equating. In \pkg{ST}, \pkg{mcmequate}, \pkg{IpLink}, \pkg{POLYST}, and \pkg{STUIRT} there is no functionality for transforming item parameters or ability estimates using the estimated linking constants.
+
+One of the more recently developed applications is \pkg{IRTEQ} \citep{han07}. This program implements the same four linking methods as \pkg{STUIRT} in addition to the robust mean/sigma method \citep{linn80} for the same item response models with the exception of the nominal response and multiple-choice models. There are fewer options for weighting the response probabilities in the criterion function, and the program does not allow for symmetric optimization; however, the program does include functionality for rescaling item/ability parameters and conducting true-score equating. Two additional features of \pkg{IRTEQ} are the availability of a GUI---the program can still be run from a syntax file if desired---and the ability to create plots comparing the item parameters and test characteristic curves.
+
+Two \proglang{R} packages, \pkg{irtoys} \citep{partchev08} and \pkg{MiscPsycho} \citep{doran08}, also implement various linking methods, but both packages only include functionality for dichotomous items. \pkg{irtoys} is essentially a recreation of \pkg{ST} and \pkg{MiscPsycho} only implements the Stocking-Lord method. 
+
+There are two shortcomings to all of these applications: formatting of the input files, with the possible exception of the \proglang{R} packages, and functionality for linking multiple tests. The first five programs (not including \pkg{IpLink}) require the creation of control files that can be highly sensitive to formatting. For instance, including an extra carriage return, lowercase letter, etc. in the file may cause the program not to run at all. For \pkg{IRTEQ}, the issue relates specifically to how the item parameters must be formatted; they must conform to the \pkg{PARSCALE} \citep{muraki03} or \pkg{WinGen2} \citep{han07a} output format. This is an added hassle for individuals not using \pkg{PARSCALE} to estimate item parameters or \pkg{WinGen2} to generate item parameters. The \proglang{R} packages require the item parameters to be formatted as a matrix or list for \pkg{irtoys} and \pkg{MiscPsycho} respectively, but depending on how the parameters are formatted when brought into \proglang{R}, some reformatting may be required. As described earlier, \pkg{plink} was written to provide a fair amount of flexibility in the formatting of item parameters by allowing them to be specified as vectors, matrices, lists, or imported from common IRT estimation programs.
+
+The second major shortcoming is that none of the above programs allow for chain linking of item and/or ability parameters across multiple tests. In all of these applications, linking constants can only be estimated for two groups at a time, meaning multiple control files must be created to estimate each set of constants. Then, as a second step, item parameters and/or ability estimates must be iteratively transformed using another application. One of the key goals in developing \pkg{plink} was to overcome this limitation.
+
+There are three features missing from \pkg{plink} that are available in other programs: the use of polygonal approximation and the ability to check for local minima with the characteristic curve methods (as implemented in \pkg{STUIRT}), and the availability of the robust mean/sigma method (as implemented in \pkg{IRTEQ}). However, \pkg{plink} provides greater flexibility for formatting and importing item parameters than any other program, it is the only program that supports chain-linking, and (although not addressed here) it includes extensive functionality for multidimensional test linking.
+
+\subsection{Comparing the applications}
+\label{sec:compare}
+To examine the comparability of these applications and \pkg{plink}, linking constants were estimated with each program using the mixed-format item parameters available in \pkg{STUIRT} (example 3). There are two groups of 20 items (all common) which include ten 3PL items, five graded response model items, and five nominal response model items. Since most of the applications are unable to handle mixed-format tests, the item parameters were separated into five comparison groups: 3PL items only, GRM items only, NRM items only, 3PL+GRM items, and 3PL+GRM+NRM items. Linking constants were estimated for each comparison group, when applicable, using all available methods in each application. For the characteristic curve methods, a combination of two additional options, when applicable, were specified: uniform versus normal weights and symmetric versus non-symmetric optimization. 
+
+There were no differences in the linking constants estimated using the moment methods, but one should not expect any given that estimates are based solely on means and standard deviations. The only instance where differences might occur is with the mean/sigma method if the denominator for the standard deviations is $n-1$ versus $n$. \pkg{ST} has the option to use either, but all other programs that implement this approach use $n$ in the denominator. For the characteristic curve methods, all of the programs produced nearly identical results, and when differences did occur they were at or beyond the third decimal place. Since all of the programs provide consistent estimates for the linking constants, the only distinguishing features are the availability of options and ease of use. 
+
+\end{appendix}
+
+\end{document}

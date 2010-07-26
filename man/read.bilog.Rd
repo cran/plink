@@ -140,6 +140,11 @@ Returns a data.frame or an object of class \code{\linkS4class{irt.pars}} if
   A taxonomy of item response models.
   \emph{Psychometrika}, \emph{51}(4), 567-577.
 
+  Weeks, J. P. (2010) 
+  \bold{plink}: An R package for linking mixed-format tests using IRT-based methods. 
+  \emph{Journal of Statistical Software}, \bold{35(12)}, 1--33. 
+  URL \url{http://www.jstatsoft.org/v35/i12/}
+
   Wood, R., Wilson, D. T., Muraki, E., Schilling, S. G., Gibbons, R., & Bock, R. D. (2003).
   TESTFACT 4: Test scoring, item statistics, and item factor analysis [Computer Program].
   Chicago, IL: Scientific Software International. URL \url{http://www.ssicentral.com}

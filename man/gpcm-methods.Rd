@@ -181,6 +181,11 @@ are ordered from dimension 1 to m.
   \emph{Handbook of Modern Item Response Theory} (pp. 153-164). 
   New York: Springer-Verlag.
 
+  Weeks, J. P. (2010) 
+  \bold{plink}: An R package for linking mixed-format tests using IRT-based methods. 
+  \emph{Journal of Statistical Software}, \bold{35(12)}, 1--33. 
+  URL \url{http://www.jstatsoft.org/v35/i12/}
+
   Yao, L. (2003). 
   BMIRT: Bayesian multivariate item response theory [Computer Program]. 
   Monterey, CA: CTB/McGraw-Hill.	
