@@ -35,10 +35,10 @@ setMethod("plink", signature(x="list", common="data.frame"), function(x, common,
 setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score, base.grp, symmetric, rescale.com, grp.names, dilation, dim.order, ...) {
 
 
-	##################################################################
+	############################################################################
 	##      Function that will be minimized for the characteristic curve methods
 	##                       (both unidimensional and multidimensional)
-	##################################################################
+	############################################################################
 	
 	.CC <- function(sv, to, from, dimensions, weights.t, weights.f, sc, transform, symmetric, dilation, T, ...) {
 		
@@ -292,16 +292,16 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		tmp <- sum((to-from%*%ginv(T*-1))^2)
 		if (mn>tmp) {
 			mn <- tmp
-			TF <- T*-1
+			T <- T*-1
 		}
 		
 		return(T)
 	}
 	
 	
-	###########################################################
+	###############################################################
 	##             Functions used to compute response probabilities
-	###########################################################
+	###############################################################
 	
 	##   This is a stripped down version of the {mixed} function
 	.Mixed <- function(x, theta, D.drm, D.gpcm, D.grm, incorrect, catprob) {
@@ -558,10 +558,10 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	}
 	
 	
-	########################################################
+	###############################################################
 	##             Function used to computes descriptive statistics 
 	##                        for the common item parameters
-	########################################################
+	###############################################################
 	
 	.Descriptives <- function(a1, a2, b1, b2, c1, c2, pm, cat, dimensions) {
 	
@@ -1214,7 +1214,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				##   Use the Mean/Sigma values
 				sv <- ms
 			} else {
-				if (is.character(startvals)) {
+				if (is.character(startvals[[i]])) {
 					if (toupper(startvals[[i]])=="MM") sv <- mm
 					if (toupper(startvals[[i]])=="MS") sv <- ms
 				} else {
@@ -1224,7 +1224,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			
 			if (rasch.flag==TRUE) {
 				##   Only include starting values for the B constant
-				sv <- startvals[[i]][2]
+				sv <- sv[2]
 			}
 			
 		##   Multidimensional case

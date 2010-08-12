@@ -1,7 +1,17 @@
+Changes in version: plink_1.2-5
+
+Bug Fixes:
+
+  o When no starting values were specified when linking Rasch items, the
+    characteristic curve estimation would crash. 
+
+==============================
+
 Changes in version: plink_1.2-4
 
   o A vignette was added which explains unidimensional linking with plink
 
+==============================
 
 Changes in version: plink_1.2-3
 
