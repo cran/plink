@@ -1,3 +1,12 @@
+Changes in version: plink_1.2-6
+
+Bug Fixes:
+
+  o The function read.multilog did not import item parameters properly
+     when certain polynomial contrasts were specified. 
+
+==============================
+
 Changes in version: plink_1.2-5
 
 Bug Fixes:

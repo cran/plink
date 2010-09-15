@@ -244,6 +244,7 @@ read.parscale <- function(file, ability=FALSE,  loc.out=FALSE, pars.only=TRUE, a
 
 
 
+
 ##   Import item parameters or ability estimates from MULTILOG 7
 read.multilog <- function(file, cat, poly.mod, ability=FALSE, contrast="dev", drm.3PL=TRUE, loc.out=FALSE, as.irt.pars=TRUE) {
 	
@@ -296,6 +297,16 @@ read.multilog <- function(file, cat, poly.mod, ability=FALSE, contrast="dev", dr
 		k <- 1
 		for (i in 1:length(cat)) {
 			p[[i]] <- pars[k:(k-1+p.cat[i])]
+			
+			##  Check to see if there are any 2PL items
+			if (cat[i]==2) {
+				if (drm.3PL==TRUE) {
+					if (p[[i]][4]!=1) {
+						p.cat[i] <- 2
+						p[[i]] <- c(pars[k:(k-1+p.cat[i])], 0)
+					}
+				}
+			}
 			k <- k+p.cat[i]
 		}
 		
@@ -343,8 +354,59 @@ read.multilog <- function(file, cat, poly.mod, ability=FALSE, contrast="dev", dr
 		##   Du Toit, M. (Ed.) IRT from SSI. (2003) pp. 570-575
 		
 		##   Create a list polynomial contrasts
-		poly <- list(c(-.5,.5),-1:1, -1.5:1.5, -2:2, -2.5:2.5, -3:3, -3.5:3.5, -4:4)
+		poly <- list(
+		##  Two categories
+		c(-.5,.5),
+		
+		##  Three categories
+		matrix(c(-1,0,1,
+			.58,-1.15,.58), 2, 3, byrow=TRUE),
 			
+		##  Four categories
+		matrix(c(-1.5, -.5, .5, 1.5,
+			1.12, -1.12, -1.12, 1.12,
+			-.5, 1.5, -1.5, .5), 3, 4, byrow=TRUE),
+			
+		##  Five categories
+		matrix(c(-2, -1, 0, 1, 2,
+			1.69, -.85, -1.69, -.85, 1.69,
+			-1, 2, 0, -2, 1,
+			.38, -1.51, 2.27, -1.51, .38), 4, 5, byrow=TRUE),
+		
+		##  Six categories
+		matrix(c(-2.5, -1.5, -.5, .5, 1.5, 2.5,
+			2.28, -.46, -1.83, -1.83, -.46, 2.28,
+			-1.56, 2.18, 1.25, -1.25, -2.18, 1.56,
+			.79, -2.37, 1.58, 1.58, -2.37, .79,
+			-.26, 1.32, -2.64, 2.64, -1.32, .26), 5, 6, byrow=TRUE),
+		
+		##  Seven categories
+		matrix(c(-3, -2, -1, 0, 1, 2, 3,
+			2.89, 0, -1.73, -2.31, -1.73, 0, 2.89,
+			-2.16, 2.16, 2.16, 0, -2.16, -2.16, 2.16,
+			1.28, -2.98, 0.43, 2.56, .43, -2.98, 1.28,
+			-.58, 2.31, -2.89, 0, 2.89, -2.31, .58,
+			.17, -1.04, 2.61, -3.48, 2.61, -1.04, .17), 6, 7, byrow=TRUE),
+		
+		##  Eight categories
+		matrix(c(-3.5, -2.5, -1.5, -.5, .5, 1.5, 2.5, 3.5,
+			3.5, .5, -1.5, -2.5, -2.5, -1.5, .5, 3.5,
+			-2.79, 1.99, 2.79, 1.2, -1.2, -2.79, -1.99, 2.79,
+			1.83, -3.39, -.78, 2.35, 2.35, -.78, -3.39, 1.83,
+			-.97, 3.19, -2.36, -2.08, 2.08, 2.36, -3.19, .97,
+			.4, -1.99, 3.59, -1.99, -1.99, 3.59, -1.99, .4,
+			-.11, .77, -2.32, 3.87, -3.87, 2.32, -.77, 0.11), 7, 8, byrow=TRUE),
+		
+		##  Nine categories
+		matrix(c(-4, -3, -2, -1, 0, 1, 2, 3, 4,
+			4.12, 1.03, -1.18, -2.5, -2.94, -2.5, -1.18, 1.03, 4.12,
+			-3.45, 1.72, 3.2, 2.22, 0, -2.22, -3.2, -1.72, 3.45,
+			2.42, -3.64, -1.9, 1.56, 3.12, 1.56, -1.9, -3.64, 2.42,
+			-1.43, 3.94, -1.43, -3.22, 0, 3.22, 1.43, -3.94, 1.43,
+			.7, -2.96, 3.83, .17, -3.48, .17, 3.83, -2.96, .7,
+			-.26, 1.59, -3.7, 3.7, 0, -3.7, 3.7, -1.59, .26,
+			.07, -.55, 1.91, 3.82, 4.78, -3.82, 1.91, -.55, .07), 8, 9, byrow=TRUE))
+		
 		##   Number of items
 		n <- length(cat)
 		
@@ -449,13 +511,15 @@ read.multilog <- function(file, cat, poly.mod, ability=FALSE, contrast="dev", dr
 				##   be reformatted using the contrasts
 				if (mod[[i]]=="drm") {
 					if (drm.3PL==TRUE) {
-						p[[j]] <- p[[j]][1:3]
-						p[[j]][2] <- p[[j]][2]/-p[[j]][1]
-						p[[j]][1] <- p[[j]][1]/1.7
-						if (j %in% con$tri.c) {
-							p[[j]][3] <- exp(-p[[j]][3])/(1+exp(-p[[j]][3]))
-						} else {
-							p[[j]][3] <- exp(p[[j]][3])/(1+exp(p[[j]][3]))
+						if (p.cat[items[[i]]][j]!=2) {
+							p[[j]] <- p[[j]][1:3]
+							p[[j]][2] <- p[[j]][2]/-p[[j]][1]
+							p[[j]][1] <- p[[j]][1]/1.7
+							if (j %in% con$tri.c) {
+								p[[j]][3] <- exp(-p[[j]][3])/(1+exp(-p[[j]][3]))
+							} else {
+								p[[j]][3] <- exp(p[[j]][3])/(1+exp(p[[j]][3]))
+							}
 						}
 					}
 					p[[j]] <- c(p[[j]], rep(NA,col.max-length(p[[j]])))
@@ -480,42 +544,47 @@ read.multilog <- function(file, cat, poly.mod, ability=FALSE, contrast="dev", dr
 					
 					##   Reformat the slope parameters
 					if (j %in% con$dev.a) {
-						C <- rep(-1/(tmp+1),tmp)
-						tmp.a <- ak%*%C
-						ak <- c(tmp.a, tmp.a+ak)
+						C <- cbind(-1/(tmp+1), matrix(-1/(tmp+1), tmp, tmp)+diag(rep(1,tmp)))
+						if (mod[[i]]=="gpcm") {
+							C <- C[,1]
+						}
 					} else if (j %in% con$poly.a) {
-						C <- poly[[tmp-1]]
-						ak <- ak%*%C
+						C <- poly[[tmp]]
 					} else if (j %in% con$tri.a) {
-						C <- c(0,rep(-1,tmp-1))
-						ak <- ak%*%C
+						C <- matrix(0, tmp, tmp+1)
+						for (k in 1:(tmp)) {
+							C[k,(k+1):(tmp+1)] <- -1
+						}
 					}
+					ak <- ak%*%C
 					
 					##   Reformat the step/category parameters
 					if (j %in% con$dev.c) {
-						TC<- rep(-1/(tmp+1),tmp)
-						tmp.c <- ck%*%C
-						ck <- c(tmp.c, tmp.c+ck)
+						C <- cbind(-1/(tmp+1), matrix(-1/(tmp+1), tmp, tmp)+diag(rep(1,tmp)))
 					} else if (j %in% con$poly.c) {
-						C <- poly[[tmp-1]]
-						ck <- ck%*%C
+						C <- poly[[tmp]]
 					} else if (j %in% con$tri.c) {
-						C <- c(0,rep(-1,tmp-1))
-						ck <- ck%*%C
+						C <- matrix(0, tmp, tmp+1)
+						for (k in 1:(tmp)) {
+							C[k,(k+1):(tmp+1)] <- -1
+						}
 					}
+					ck <- ck%*%C
+					if (mod[[i]]=="gpcm") ck <- ck[-1]
 					
 					##   Reformat the lower asymptote parameters
 					if (j %in% con$dev.d) {
-						C <- rep(-1/(tmp+1),tmp-1)
-						tmp.d <- dk%*%C
-						dk <- c(tmp.d, tmp.d+dk)
+						C <- cbind(-1/tmp, matrix(-1/tmp, tmp-1, tmp-1)+diag(rep(1,tmp-1)))
 					} else if (j %in% con$poly.d) {
-						C <- poly[[tmp-2]]
-						dk <- dk%*%C
+						C <- poly[[tmp-1]]
 					} else if (j %in% con$tri.d) {
-						C <- c(0,rep(-1,tmp-2))
-						dk <- dk%*%C
+						C <- matrix(0, tmp-1, tmp)
+						for (k in 1:(tmp-1)) {
+							C[k,(k+1):tmp] <- -1
+						}
 					}
+					dk <- dk%*%C
+					
 					num <- exp(dk)
 					dk <- num/sum(num)
 					
@@ -571,6 +640,7 @@ read.multilog <- function(file, cat, poly.mod, ability=FALSE, contrast="dev", dr
 	}
 	return(pars)
 }
+
 
 
 

@@ -1,5 +1,9 @@
 plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names, item.nums, panels, drift, groups, grp.names, sep.mod, drift.sd, save.hist) {
 	
+	if (!missing(y)) {
+		if (is.irt.pars(y)) stop("It looks like you are trying to compare the parameters from two {irt.pars} objects.\n In the current specification there is no way of knowing which items are common.\n Create a single {irt.pars} object using the combine.pars() function then try again.")
+	}
+	
 	##   Delete plot history
 	if (!missing(save.hist)) {
 		if (save.hist==FALSE) {
