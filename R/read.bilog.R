@@ -268,11 +268,6 @@ read.multilog <- function(file, cat, poly.mod, ability=FALSE, contrast="dev", dr
 		##   Remove this row
 		if (sum(abs(pars[nrow(pars),1:3])-c(1,0,1))==0) pars <- pars[-nrow(pars),]
 		
-		##   Reformat the read-in data as a vector
-		##   and eliminate all missing values
-		pars <- as.vector(t(as.matrix(pars)))
-		pars <- pars[!is.na(pars)]
-		
 		##   Prepare to extract the item parameters for each item
 		mod <- poly.mod@model
 		items <- poly.mod@items
@@ -283,11 +278,22 @@ read.multilog <- function(file, cat, poly.mod, ability=FALSE, contrast="dev", dr
 			##   Identify the number of parameters that should 
 			##   be extracted for each item
 			if (mod[i]=="drm") {
-				if (drm.3PL==TRUE) p.cat[items[[i]]] <- 4
+				if (drm.3PL==TRUE) {
+					p.cat[items[[i]]] <- 4
+					
+					## Check for 2PL items
+					p.cat[items[[i]][is.na(pars[items[[i]],3])]] <- 2
+				}
+				
 			} else if (mod[i] %in% c("gpcm","nrm","mcm")) {
 				p.cat[items[[i]]] <- (p.cat[items[[i]]]-1)*3
 			}
 		}
+		
+		##   Reformat the read-in data as a vector
+		##   and eliminate all missing values
+		pars <- as.vector(t(as.matrix(pars)))
+		pars <- pars[!is.na(pars)]
 		
 		##   Initialize a list to hold the parameters for each item
 		p <- vector("list", length(cat))
@@ -297,16 +303,7 @@ read.multilog <- function(file, cat, poly.mod, ability=FALSE, contrast="dev", dr
 		k <- 1
 		for (i in 1:length(cat)) {
 			p[[i]] <- pars[k:(k-1+p.cat[i])]
-			
-			##  Check to see if there are any 2PL items
-			if (cat[i]==2) {
-				if (drm.3PL==TRUE) {
-					if (p[[i]][4]!=1) {
-						p.cat[i] <- 2
-						p[[i]] <- c(pars[k:(k-1+p.cat[i])], 0)
-					}
-				}
-			}
+			if (p.cat[i]==2) p[[i]] <- c(pars[k:(k-1+p.cat[i])], 0)
 			k <- k+p.cat[i]
 		}
 		
@@ -871,6 +868,7 @@ read.ltm <- function(x, loc.out=FALSE, as.irt.pars=TRUE) {
 			
 			##   Identify the number of response categories
 			cat <- rep(ncol(pars)-1,nrow(pars))
+			cat[cat==1] <- 2
 		
 		##   There are different numbers of response
 		##   categories across items
@@ -907,6 +905,7 @@ read.ltm <- function(x, loc.out=FALSE, as.irt.pars=TRUE) {
 			
 			##   Identify the number of response categories
 			cat <- rep(ncol(pars)-1,nrow(pars))
+			cat[cat==1] <- 2
 			
 		##   There are different numbers of response
 		##   categories across items

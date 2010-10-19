@@ -56,7 +56,7 @@ setMethod("drm", signature(x="irt.pars"), function(x, theta, dimensions, D, inco
 			tmp <- sep.pars(x@pars[[i]], x@cat[[i]], x@poly.mod[[i]], dimensions=x@dimensions[i], ...)
 			out[[i]] <- drm(tmp, ...)
 		}
-		names(out) <- paste("Group",1:x@groups,sep="")
+		names(out) <- names(x@pars)
 		return(out)
 	} else {
 		x <- sep.pars(x@pars, x@cat, x@poly.mod, dimensions=x@dimensions, ...)

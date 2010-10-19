@@ -305,7 +305,9 @@ pars <- matrix(c(0.5038,2.1910,1.1317,0.2493,0.5240,0.1763,
 colnames(pars) <- c("a1","a2","a3","a4","d","c")
 x <- drm(pars, dimensions=4, print.mod=TRUE)
 # Plot the item response surfaces for item 4
+\dontrun{
 plot(x,items=4,item.names="Item 4",drape=TRUE)
+}
 }
 
 \keyword{methods}

@@ -54,11 +54,53 @@ setMethod("sep.pars", signature(x="matrix"), function(x, cat, poly.mod, dimensio
 	##   Create a sorting vector for ordering the items after separating out the parameters
 	sort <- NULL
 	
-	##   Extract the dichotomous items
-	dichot <- as.matrix(x[poly.mod@items$drm,])
+	##  Check to see if any dichotomous items were improperly specified as polytomous items
+	if ("grm" %in% poly.mod@model) {
+		tmp.cat <- cat[poly.mod@items$grm]
+		if (length(tmp.cat[tmp.cat==2])) {
+			if ("drm" %in% poly.mod@model) {
+				poly.mod@items$drm <- c(poly.mod@items$drm, poly.mod@items$grm[tmp.cat==2])
+			} else {
+				poly.mod@model <- c(poly.mod@model, "drm")
+				poly.mod@items$drm <- poly.mod@items$grm[tmp.cat==2]
+			}
+			poly.mod@items$drm <- poly.mod@items$drm[order(poly.mod@items$drm)]
+			poly.mod@items$grm <- poly.mod@items$grm[-poly.mod@items$grm[tmp.cat==2]]
+			if (length(poly.mod@items$grm)==0) {
+				poly.mod@model <- poly.mod@model[poly.mod@model!="grm"]
+				poly.mod@items$grm <- NULL
+			}
+			cat("One or more {grm} items was specified with 2 response categories.\n")
+			cat("These items were re-specified as dichotomous items\n")
+		}
+	}
+	
+	if ("gpcm" %in% poly.mod@model) {
+		tmp.cat <- cat[poly.mod@items$gpcm]
+		if (length(tmp.cat[tmp.cat==2])) {
+			if ("drm" %in% poly.mod@model) {
+				poly.mod@items$drm <- c(poly.mod@items$drm, poly.mod@items$gpcm[tmp.cat==2])
+			} else {
+				poly.mod@model <- c(poly.mod@model, "drm")
+				poly.mod@items$drm <- poly.mod@items$gpcm[tmp.cat==2]
+			}
+			poly.mod@items$drm <- poly.mod@items$drm[order(poly.mod@items$drm)]
+			poly.mod@items$gpcm <- poly.mod@items$gpcm[-poly.mod@items$gpcm[tmp.cat==2]]
+			if (length(poly.mod@items$gpcm)==0) {
+				poly.mod@model <- poly.mod@model[poly.mod@model!="gpcm"]
+				poly.mod@items$gpcm <- NULL
+			}
+			cat("One or more {gpcm} items was specified with 2 response categories.\n")
+			cat("These items were re-specified as dichotomous items\n")
+		}
+	}
 	
 	##   Number of dichotomous items
 	ndi <- length(poly.mod@items$drm)
+	
+	##   Extract the dichotomous items
+	dichot <- as.matrix(x[poly.mod@items$drm,])
+	if (ndi==1) dichot <- t(dichot)
 	
 	if (ndi>0) {
 		##   Identify the dichotomous items for re-ordering all of the items later
@@ -445,6 +487,47 @@ setMethod("sep.pars", signature(x="list"), function(x, cat, poly.mod, dimensions
 	
 	##   Create a sorting vector for ordering the items after separating out the parameters
 	sort <- NULL
+	
+	##  Check to see if any dichotomous items were improperly specified as polytomous items
+	if ("grm" %in% poly.mod@model) {
+		tmp.cat <- cat[poly.mod@items$grm]
+		if (length(tmp.cat[tmp.cat==2])) {
+			if ("drm" %in% poly.mod@model) {
+				poly.mod@items$drm <- c(poly.mod@items$drm, poly.mod@items$grm[tmp.cat==2])
+			} else {
+				poly.mod@model <- c(poly.mod@model, "drm")
+				poly.mod@items$drm <- poly.mod@items$grm[tmp.cat==2]
+			}
+			poly.mod@items$drm <- poly.mod@items$drm[order(poly.mod@items$drm)]
+			poly.mod@items$grm <- poly.mod@items$grm[-poly.mod@items$grm[tmp.cat==2]]
+			if (length(poly.mod@items$grm)==0) {
+				poly.mod@model <- poly.mod@model[poly.mod@model!="grm"]
+				poly.mod@items$grm <- NULL
+			}
+			cat("One or more {grm} items was specified with 2 response categories.\n")
+			cat("These items were re-specified as dichotomous items\n")
+		}
+	}
+	
+	if ("gpcm" %in% poly.mod@model) {
+		tmp.cat <- cat[poly.mod@items$gpcm]
+		if (length(tmp.cat[tmp.cat==2])) {
+			if ("drm" %in% poly.mod@model) {
+				poly.mod@items$drm <- c(poly.mod@items$drm, poly.mod@items$gpcm[tmp.cat==2])
+			} else {
+				poly.mod@model <- c(poly.mod@model, "drm")
+				poly.mod@items$drm <- poly.mod@items$gpcm[tmp.cat==2]
+			}
+			poly.mod@items$drm <- poly.mod@items$drm[order(poly.mod@items$drm)]
+			poly.mod@items$gpcm <- poly.mod@items$gpcm[-poly.mod@items$gpcm[tmp.cat==2]]
+			if (length(poly.mod@items$gpcm)==0) {
+				poly.mod@model <- poly.mod@model[poly.mod@model!="gpcm"]
+				poly.mod@items$gpcm <- NULL
+			}
+			cat("One or more {gpcm} items was specified with 2 response categories.\n")
+			cat("These items were re-specified as dichotomous items\n")
+		}
+	}
 	
 	##   Number of dichotomous items
 	ndi <- length(poly.mod@items$drm)

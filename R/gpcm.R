@@ -48,7 +48,7 @@ setMethod("gpcm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, di
 			tmp <- sep.pars(x@pars[[i]], x@cat[[i]], x@poly.mod[[i]], x@dimensions[i], x@location[i], loc.out=FALSE, ...)
 			out[[i]] <- gpcm(tmp, ...)
 		}
-		names(out) <- paste("Group",1:x@groups,sep="")
+		names(out) <- names(x@pars)
 		return(out)
 	} else {
 		x <- sep.pars(x@pars, x@cat, x@poly.mod, x@dimensions, x@location, loc.out=FALSE, ...)

@@ -1,3 +1,23 @@
+Changes in version: plink_1.2-7
+
+Bug Fixes:
+
+  o The function read.multilog returned an error when the items are
+    modeled using a combination of the 2PL and 3PL. 
+
+  o The read.ltm function returned an error when trying to import
+    mixed-format item parameters estimated using grm or gpcm
+
+Misc:
+
+  o The sep.pars function was changed to allow individuals to specify
+    grm and gpcm items with only two response categories. 
+
+  o The group names for the object returned by drm, grm, gpcm, nrm,
+    mcm, and mixed defaults to the group names for the irt.pars object
+
+==============================
+
 Changes in version: plink_1.2-6
 
 Bug Fixes:

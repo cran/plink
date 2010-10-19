@@ -322,6 +322,7 @@ constants <- link.con(out) # Extract linking constants
 # Create an irt.pars object and a sep.pars object for two groups of
 # nominal response model items. Compare non-symmetric and symmetric 
 # minimization. Note: This example may take a minute or two to run
+\dontrun{
 pm <- as.poly.mod(60, "nrm", 1:60)
 pars1 <- as.irt.pars(act.nrm$yr97, cat=rep(5,60), poly.mod=pm)
 pars2 <- sep.pars(act.nrm$yr98, cat=rep(5,60), poly.mod=pm)
@@ -329,12 +330,13 @@ out <- plink(list(pars1, pars2), matrix(1:60,60,2))
 out1 <- plink(list(pars1, pars2), matrix(1:60,60,2), symmetric=TRUE)
 summary(out, descrip=TRUE)
 summary(out1, descrip=TRUE)
-
+}
 
 # Compute linking constants for two groups with multiple-choice model
 # item parameters. Rescale theta values and item parameters using
 # the Haebara linking constants
 # Note: This example may take a minute or two to run
+\dontrun{
 theta <- rnorm(100) # In practice, estimated theta values would be used
 pm <- as.poly.mod(60, "mcm", 1:60)
 x <- as.irt.pars(act.mcm, common=matrix(1:60,60,2), cat=list(rep(6,60),
@@ -343,7 +345,7 @@ out <- plink(x, ability=list(theta,theta), rescale="HB")
 pars.out <- link.pars(out)
 ability.out <- link.ability(out)
 summary(out, descrip=TRUE)
-
+}
 
 # Compute linking constants for two groups using mixed-format items and 
 # a mixed placement of common items. Compare calibrations with the
@@ -405,6 +407,7 @@ ability.out <- out$ability
 # Compute linking constants for two groups using mixed-format items 
 # modeled with the M3PL and MGPCM. Only compute constants using the 
 # Reckase-Martineau and the Stocking-Lord method with a MIN dilation.
+\dontrun{
 pm <- as.poly.mod(60,c("drm","gpcm"), list(c(1:60)[md.mixed$cat==2],
   c(1:60)[md.mixed$cat>2]))
 x <- as.irt.pars(md.mixed$pars, matrix(1:60,60,2), 
@@ -413,7 +416,7 @@ x <- as.irt.pars(md.mixed$pars, matrix(1:60,60,2),
 out <- plink(x,method=c("RM","SL"),dilation="MIN",
   weights.t=as.weight(n=3,dimensions=4))
 summary(out, descrip=TRUE)
-
+}
 
 
 # Illustration of construct shift and how to specify common dimensions

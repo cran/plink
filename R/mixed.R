@@ -53,7 +53,7 @@ setMethod("mixed", signature(x="irt.pars", cat="ANY"), function(x, cat, poly.mod
 			tmp <- sep.pars(x@pars[[i]], x@cat[[i]], x@poly.mod[[i]], loc.out=FALSE, dimensions=x@dimensions[i], ...)
 			out[[i]] <- mixed(tmp, ...)
 		}
-		names(out) <- paste("Group",1:x@groups,sep="")
+		names(out) <- names(x@pars)
 		return(out)
 	} else {
 		x <- sep.pars(x@pars, x@cat, x@poly.mod, loc.out=FALSE, dimensions=x@dimensions, ...)
