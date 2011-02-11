@@ -14,22 +14,22 @@ items for a given set of theta values using the multiple-choice model or multidi
 multiple-choice model.}
 
 \usage{
-mcm(x, cat, theta, dimensions = 1, ...)
+mcm(x, cat, theta, dimensions = 1, items, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
-mcm(x, cat, theta, dimensions, ...)
+mcm(x, cat, theta, dimensions, items, ...)
 
 ## S4 method for signature 'data.frame', 'numeric'
-mcm(x, cat, theta, dimensions, ...)
+mcm(x, cat, theta, dimensions, items, ...)
 
 ## S4 method for signature 'list', 'numeric'
-mcm(x, cat, theta, dimensions, ...)
+mcm(x, cat, theta, dimensions, items, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
-mcm(x, cat, theta, dimensions, ...)
+mcm(x, cat, theta, dimensions, items, ...)
 
 ## S4 method for signature 'sep.pars', 'ANY'
-mcm(x, cat, theta, dimensions, ...)
+mcm(x, cat, theta, dimensions, items, ...)
 }
 
 \arguments{
@@ -43,6 +43,8 @@ mcm(x, cat, theta, dimensions, ...)
   with an increment of 0.5. See details below for more information. }
 
   \item{dimensions}{number of modeled dimensions }
+
+  \item{items}{numeric vector identifying the items for which probabilities should be computed}
 
   \item{...}{further arguments passed to or from other methods }
 }

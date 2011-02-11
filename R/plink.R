@@ -1,7 +1,7 @@
 ##   This function estimates the linking constants between two or
 ##   more groups of tests and can rescale item and/or ability parameters
 
-setGeneric("plink", function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score=1, base.grp=1, symmetric=FALSE, rescale.com=TRUE, grp.names=NULL, dilation="MIN",  dim.order=NULL, ...) standardGeneric("plink"))
+setGeneric("plink", function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score=1, base.grp=1, symmetric=FALSE, rescale.com=TRUE, grp.names=NULL, dilation="LL",  dim.order=NULL, ...) standardGeneric("plink"))
 
 
 
@@ -35,13 +35,12 @@ setMethod("plink", signature(x="list", common="data.frame"), function(x, common,
 setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score, base.grp, symmetric, rescale.com, grp.names, dilation, dim.order, ...) {
 
 
-	############################################################################
+	##################################################################
 	##      Function that will be minimized for the characteristic curve methods
 	##                       (both unidimensional and multidimensional)
-	############################################################################
+	##################################################################
 	
 	.CC <- function(sv, to, from, dimensions, weights.t, weights.f, sc, transform, symmetric, dilation, T, ...) {
-		
 		##   In general, the criterion that will minimized is Q = Q1+Q2
 		##   where Q1 corresponds to the differences in probabilities after
 		##   transforming the parameters on the FROM scale to the TO scale
@@ -50,15 +49,16 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		##   When {symmetric}=TRUE, Q is minimized, but when
 		##   {symmetric}=FALSE, only Q1 will be minimized. 
 		
-		##   Identify optional arguments that might be passed
-		##   to the various functions used to compute response probabilities
+		##  Identify optional arguments that might be passed
+		##  to the various functions used to compute response probabilities
 		dots <- list(...)
 		if (length(dots$D)) D <- dots$D else D <- 1
 		if (length(dots$D.drm)) D.drm <- dots$D.drm else D.drm <- D
 		if (length(dots$D.gpcm)) D.gpcm <- dots$D.gpcm else D.gpcm <- D
 		if (length(dots$D.grm)) D.grm <- dots$D.grm else D.grm <- D
-		if (length(dots$incorrect)) incorrect <- dots$incorrect else incorrect <- FALSE
 		if (length(dots$catprob)) catprob <- dots$catprob else catprob <- TRUE
+		
+		if (transform=="SL") incorrect <- TRUE else incorrect <- FALSE
 		
 		##   The theta values that will be used to compute response probabilities for Q1
 		theta.t <- as.matrix(weights.t[[1]])
@@ -149,13 +149,21 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			##   Transform the FROM scale parameters onto the TO scale
 			##   using the linking constants A and m
 			from.t@a <- from@a%*%ginv(A)
-			from.t@b <- from@b-matrix(from.t@a %*% m, nrow(from@b),ncol(from@b))
+			if (dilation=="ODL") {
+				from.t@b <- from@b-matrix(from.t@a %*% m, nrow(from@b),ncol(from@b))
+			} else {
+				from.t@b <- from@b-matrix(from@a %*% ginv(T) %*% m, nrow(from@b),ncol(from@b))
+			}
 			
 			##   Transform the TO scale parameters onto the FROM scale
 			##   using the linking constants A and m
 			if (symmetric==TRUE) {
-				to.f@a <- to@a%*%A
-				to.f@b <- to@b+matrix(to@ a%*% m, nrow(to@b),ncol(to@b))
+				to.f@a <- to@a %*% A
+				if (dilation=="ODL") {
+					to.f@b <- to@b+matrix(to@a %*% ginv(A) %*% m, nrow(to@b),ncol(to@b))
+				} else {
+					to.f@b <- to@b+matrix(to@a %*% ginv(T) %*% m, nrow(to@b),ncol(to@b))
+				}
 				
 				##   Compute response probabilities using the TO scale parameters that 
 				##   have been transformed onto the FROM scale
@@ -203,7 +211,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		if (length(sc)==1) {
 		
 			##   Use this if the lowest category should have a scoring weight of zero
-			if (sc==2) {
+			if (sc==1) {
 				scr <- scr-1
 				
 				##   If the argument {incorrect} equals FALSE, either explicitly or
@@ -299,9 +307,9 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	}
 	
 	
-	###############################################################
+	###########################################################
 	##             Functions used to compute response probabilities
-	###############################################################
+	###########################################################
 	
 	##   This is a stripped down version of the {mixed} function
 	.Mixed <- function(x, theta, D.drm, D.gpcm, D.grm, incorrect, catprob) {
@@ -558,10 +566,10 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	}
 	
 	
-	###############################################################
+	########################################################
 	##             Function used to computes descriptive statistics 
 	##                        for the common item parameters
-	###############################################################
+	########################################################
 	
 	.Descriptives <- function(a1, a2, b1, b2, c1, c2, pm, cat, dimensions) {
 	
@@ -682,6 +690,10 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			c1k <- c1[pm.it[[j]],]
 			c2k <- c2[pm.it[[j]],]
 			catk <- cat[pm.it[[j]]]
+			if (length(pm.it[[j]])==1) {
+				a1k <- t(a1k)
+				a2k <- t(a2k)
+			}
 			
 			a <- NULL
 			if (pm.mod[j]=="nrm"|pm.mod[j]=="mcm") {
@@ -1003,6 +1015,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		##   Initialize an object to store the item numbers associated with
 		##   the item response models used for the common items
 		poly <- NULL
+		poly <- vector("list",1:5)
 	
 		##   Identify the common items associated with each model
 		##   Not all models need to have common items
@@ -1025,11 +1038,13 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				mod1 <- c(mod1,mod[k])
 				
 				##   Add the items associated with the given model
-				poly[[step]] <- tmp
+				poly[[k]] <- tmp
+				#poly[[step]] <- tmp
 				step <- step+1
 			}
 		}
 		
+		poly <- poly[unlist(lapply(poly,length))>0]
 		# Create poly.mod object for the common items
 		pm[[i]] <- as.poly.mod(length(it.com),mod1,poly) }
 		
@@ -1118,7 +1133,19 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		
 		##   Identify the weights to be used for the given group for the TO scale
 		if (missing(weights.t)) {
-			wgt.t <- as.weight(dimensions=dimensions)
+			if (dimensions>2) {
+				s <- matrix(.6,dimensions,dimensions)
+				diag(s) <- rep(1,dimensions)
+				th <- mvrnorm(1000,rep(0,dimensions),s)
+				colnames(th) <- paste("theta",1:dimensions,sep="")
+				wt <- 1
+				for (j in 1:dimensions) {
+					wt <- wt*dnorm(th[,j])
+				}
+				wgt.t <- list(points=th,weights=wt)
+			} else {
+				wgt.t <- as.weight(dimensions=dimensions)
+			}
 		} else {
 			if (is.list(weights.t[[1]])) wgt.t <- weights.t[[i]] else wgt.t <- weights.t
 		}
@@ -1132,12 +1159,12 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		
 		##   Use all methods (if none are specified)
 		if (missing(method)) {
-			if (dimensions==1) method <- c("MM","MS","HB","SL") else method <- c("RM","HB","SL") 
+			if (dimensions==1) method <- c("MM","MS","HB","SL") else method <- "LS"
 		} else {
 			method <- toupper(method)
-			if (sum(method%in% c("MM","MS","HB","SL","RM") )==0) {
-				warning("No appropriate method was selected. All methods will be used")
-				if (dimensions==1) method <- c("MM","MS","HB","SL") else method <- c("RM","HB","SL") 
+			if (sum(method%in% c("MM","MS","HB","SL","LS") )==0) {
+				warning("No appropriate method was selected. All default methods will be used")
+				if (dimensions==1) method <- c("MM","MS","HB","SL") else method <- "LS"
 			}
 		}
 		
@@ -1212,7 +1239,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			##   Determine starting values for the characteristic curve methods
 			if (is.null(startvals[[i]])) {
 				##   Use the Mean/Sigma values
-				sv <- ms
+				sv <- mm
 			} else {
 				if (is.character(startvals[[i]])) {
 					if (toupper(startvals[[i]])=="MM") sv <- mm
@@ -1239,15 +1266,6 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				rasch.flag <- FALSE
 			}
 			
-			##   Compute the rotation matrix using the direct method
-			tmp <- as.vector(a1)
-			if (rasch.flag==TRUE){
-				A <- diag(rep(1,dimensions))
-			} else {
-				# This actually estimates the inverse of A
-				A <- .Rotate(a1,a2,FALSE)
-			}
-			
 			##   Reformat b1 and b2 as vectors.  This is necessary
 			##   when there are polytomous items
 			tmp.b1 <- as.vector(b1)[!is.na(as.vector(b1))]
@@ -1258,7 +1276,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			##   if there are polytomous items.  As such, the matrix
 			##   of slope parameters needs to be adjusted so that
 			##   appropriate slopes are matched up with each of 
-			##   the reformatted b parameters.  For the direct method
+			##   the reformatted b parameters.  For the LS methods
 			##   it is only necessary to re-specify the matrix of 
 			##   slopes for the "From" group
 			tmp.a2 <- NULL
@@ -1269,90 +1287,134 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				tmp.a2 <- cbind(tmp.a2,tmp.a2a)
 			}
 			
-			##   Compute the translation vector using the direct method
-			y <- tmp.b2-tmp.b1 
-			X <- tmp.a2%*%A
-			m <- ginv(t(X)%*%X)%*%t(X)%*%y
-			
-			##   Format the constants for the moment methods
-			##   to be included in the output
-			m <- as.vector(m)
-			A <- ginv(A)
-			rownames(A) <- rep("",dimensions)
-			colnames(A) <- c(rep("",dimensions-1),"A")
-			names(m) <- paste("m",1:dimensions,sep="")
-			if ("RM" %in% method) {
-				##   When there are two or more common dimensions between the groups
-				if (dim.flag==FALSE) {
-					constants$RM <- list(A=round(A,6),m=round(m,6))
-					
-				##   When there is only one common dimension between the groups
-				} else {
-					constants$RM <- c(round(A[1,1],6),round(m[1],6))
-					names(constants$RM) <- c("A","m")
-				}
-			}
-			
-			
-			##   Compute the rotation matrix for the characteristic curve methods
-			##   using the LL or MIN dilation (i.e., an orthogonal rotation matrix)
+			##   Compute linking constants using the least squares (LS) method (oblique or orthogonal)
+			##   Create the rotation matrix
+			tmp <- as.vector(a1)
 			if (rasch.flag==TRUE) {
-				T <- diag(rep(1,dimensions)) 
+				A <- diag(rep(1,dimensions))
 			} else {
-				T <- .Rotate(a1,a2,TRUE)
-			}
-			
-			##   Determine starting values for the characteristic curve methods
-			if (rasch.flag==TRUE) {
-				if (is.null(startvals[[i]])) {
-					##   Use the values from the direct method
-					sv <- m 
-				} else {
-					sv <- startvals[[i]][((length(startvals[[i]])-dimensions)+1):length(startvals[[i]])]
-				}
-			} else {
-				if (is.null(startvals[[i]])) {
-				
-					##   Oshima, Davey, & Lee method
-					if (dilation=="ODL") {
-						##   Use all of the constants from the direct method
-						sv <- c(as.vector(A),m) 
-						
-					##   Li & Lissitz method
-					} else if (dilation=="LL") {
-						##   Use the values from the translation vector from the direct method
-						sv <- c(1,m)
-						
-					##   Min method
-					} else if (dilation=="MIN") {
-						##   Use the values from the translation vector from the direct method
-						sv <- c(rep(1,dimensions),m)
+				##   Oblique procrustes method
+				if (dilation=="ODL") {
+					# This actually estimates the inverse of A
+					A <- .Rotate(a1,a2,FALSE)
 					
-					} 
+					##   Compute the translation vector 
+					y <- tmp.b2-tmp.b1 
+					X <- tmp.a2%*%A
+					m <- ginv(t(X)%*%X)%*%t(X)%*%y
+					
+					m <- as.vector(m)
+					A <- ginv(A)
+					rownames(A) <- rep("",dimensions)
+					colnames(A) <- c(rep("",dimensions-1),"A")
+					names(m) <- paste("m",1:dimensions,sep="")
+					
+					if ("LS" %in% method) {
+						##   When there are two or more common dimensions between the groups
+						if (dim.flag==FALSE) {
+							constants$LS <- list(A=round(A,6),m=round(m,6))
+							
+						##   When there is only one common dimension between the groups
+						} else {
+							constants$LS <- c(round(A[1,1],6),round(m[1],6))
+							names(constants$LS) <- c("A","m")
+						}
+					}
+					
+				##   Orthogonal procrustes method
 				} else {
 				
-					sv <- startvals[[i]]
+					a1c <- a1-matrix(apply(a1,2,mean,na.rm=TRUE),nrow(a1),ncol(a1),byrow=TRUE)
+					a2c <- a2-matrix(apply(a2,2,mean,na.rm=TRUE),nrow(a2),ncol(a2),byrow=TRUE)
+					T <- .Rotate(a1,a2,TRUE)
 					
-					##   Check to see if the correct number of starting values have been specified
-					if (dilation=="ODL") {
-						if ((length(sv))!=dimensions+dimensions^2) {
-							sv <- c(as.vector(A),m) 
-							warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions+dimensions^2,". The default values were used>"))
-						}
-					} else if (dilation=="LL") {
-						if ((length(sv))!=dimensions+1) {
-							sv <- c(1,m)
-							warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions+1,". The default values were used>"))
-						}
+					##   Estimate the translation vector 
+					y <- tmp.b2-tmp.b1 
+					X <- tmp.a2%*%T
+					m <- ginv(t(X)%*%X)%*%t(X)%*%y
+					
+					##   Estimate the dilation parameter(s)
+					if (dilation=="LL") {
+						k <- sum(diag(t(T)%*%t(a2c)%*%a1c))/sum(diag(t(a2c)%*%a2c))
+						K <- diag(rep(k,dimensions))
 					} else if (dilation=="MIN") {
-						if ((length(sv))!=dimensions*2) {
-							sv <- c(rep(1,dimensions),m)
-							warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions*2,". The default values were used>"))
+						K <- diag(diag(t(a1c)%*%a2c%*%T))%*%solve(diag(diag(t(T)%*%t(a2c)%*%a2c%*%T)))
+					}
+					
+					K <- ginv(K)
+					m <- as.vector(m)
+					rownames(T) <- rownames(K) <- rep("",dimensions)
+					colnames(T) <- c(rep("",dimensions-1),"T")
+					colnames(K) <- c(rep("",dimensions-1),"K")
+					names(m) <- paste("m",1:dimensions,sep="")
+					
+					if ("LS" %in% method) {
+						##   When there are two or more common dimensions between the groups
+						if (dim.flag==FALSE) {
+							constants$LS <- list(T=round(T,6),K=round(K,6),m=round(m,6))
+							
+						##   When there is only one common dimension between the groups
+						} else {
+							constants$LS <- c(round(T[1,1]*K[1,1],6),round(m[1],6))
+							names(constants$LS) <- c("A","m")
 						}
 					}
 				}
 			}
 			
+			
+			if ("HB" %in% method | "SL" %in% method) {
+				##   Determine starting values for the characteristic curve methods
+				if (rasch.flag==TRUE) {
+					if (is.null(startvals[[i]])) {
+						##   Use the values from the LS method
+						sv <- m 
+					} else {
+						sv <- startvals[[i]][((length(startvals[[i]])-dimensions)+1):length(startvals[[i]])]
+					}
+				} else {
+					if (is.null(startvals[[i]])) {
+					
+						##   Oshima, Davey, & Lee method
+						if (dilation=="ODL") {
+							##   Use the values from the LS method
+							sv <- c(as.vector(A),m) 
+							
+						##   Li & Lissitz method
+						} else if (dilation=="LL") {
+							##   Use the values from the LS method
+							sv <- c(K[1,1],m)
+							
+						##   Min method
+						} else if (dilation=="MIN") {
+							##   Use the values from the LS method
+							sv <- c(diag(K),m)
+						
+						} 
+					} else {
+					
+						sv <- startvals[[i]]
+						
+						##   Check to see if the correct number of starting values have been specified
+						if (dilation=="ODL") {
+							if ((length(sv))!=dimensions+dimensions^2) {
+								sv <- c(as.vector(A),m) 
+								warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions+dimensions^2,". The default values were used>"))
+							}
+						} else if (dilation=="LL") {
+							if ((length(sv))!=dimensions+1) {
+								sv <- c(K[1,1],m)
+								warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions+1,". The default values were used>"))
+							}
+						} else if (dilation=="MIN") {
+							if ((length(sv))!=dimensions*2) {
+								sv <- c(diag(K),m)
+								warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions*2,". The default values were used>"))
+							}
+						}
+					}
+				}
+			}
 		}
 		
 		
@@ -1385,30 +1447,24 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 					##   Extract the constants for the translation vector
 					m <- hb$par[-1]
 					
-					##   Create the combined rotation matrix
-					A <- T%*%K
-					
 				} else if (dilation=="MIN") {
 					##   Reformat the dilation parameters as a diagonal matrix
 					if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(hb$par[1:dimensions])
 					
 					##   Extract the constants for the translation vector
 					m <- hb$par[-c(1:dimensions)]
-					
-					##   Create the combined rotation matrix
-					A <- T%*%K
 				} 
 				
-				rownames(A) <-rep("",dimensions)
-				colnames(A) <- c(rep("",dimensions-1),"A")
 				names(m) <- paste("m",1:dimensions,sep="")
 				if (dilation=="ODL") {
+					rownames(A) <-rep("",dimensions)
+					colnames(A) <- c(rep("",dimensions-1),"A")
 					constants$HB <- list(A=round(A,6), m=round(m,6))
 				} else {
 					rownames(T) <- rownames(K) <- rep("",dimensions)
 					colnames(T) <- c(rep("",dimensions-1),"T")
 					colnames(K) <- c(rep("",dimensions-1),"K")
-					constants$HB <- list(T=round(T,6), K=round(K,6), A=round(A,6), m=round(m,6))
+					constants$HB <- list(T=round(T,6), K=round(K,6), m=round(m,6))
 				}
 			}
 			
@@ -1428,7 +1484,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		if ("SL" %in% method) {
 			
 			##   Estimate the linking constants
-			sl <- nlminb(sv, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, sc=score[[i]], transform="SL", symmetric=symmetric, dilation=dilation, T=T, ...)
+			sl <- nlminb(sv, .CC, to=tmp1, from=tmp2, dimensions=dimensions, weights.t=wgt.t, weights.f=wgt.f, sc=score[[i]], transform="SL", symmetric=symmetric, dilation=dilation, T=T, ,...)
 			
 			##   Reformat the information from the estimation (as necessary)
 			##   to prepare it for being output
@@ -1451,30 +1507,24 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 					##   Extract the constants for the translation vector
 					m <- sl$par[-1]
 					
-					##   Create the combined rotation matrix
-					A <- T%*%K
-					
 				} else if (dilation=="MIN") {
 					##   Reformat the dilation parameters as a diagonal matrix
 					if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(sl$par[1:dimensions])
 					
 					##   Extract the constants for the translation vector
 					m <- sl$par[-c(1:dimensions)]
-					
-					##   Create the combined rotation matrix
-					A <- T%*%K
 				} 
 				
-				rownames(A) <-rep("",dimensions)
-				colnames(A) <- c(rep("",dimensions-1),"A")
 				names(m) <- paste("m",1:dimensions,sep="")
 				if (dilation=="ODL") {
+					rownames(A) <-rep("",dimensions)
+					colnames(A) <- c(rep("",dimensions-1),"A")
 					constants$SL <- list(A=round(A,6), m=round(m,6))
 				} else {
 					rownames(T) <- rownames(K) <- rep("",dimensions)
 					colnames(T) <- c(rep("",dimensions-1),"T")
 					colnames(K) <- c(rep("",dimensions-1),"K")
-					constants$SL <- list(T=round(T,6), K=round(K,6), A=round(A,6), m=round(m,6))
+					constants$SL <- list(T=round(T,6), K=round(K,6), m=round(m,6))
 				}
 			}
 			
@@ -1494,6 +1544,8 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		if (is.null(con)) con <- "N/A"
 		if (is.null(obj)) obj <- 0
 		
+		##  Reset the formal arguments for nlminb
+		formals(nlminb)$control <- list()
 		
 		##   Create labels identifying the pairs of groups for the linking constants
 		##   Include an asterisk identifying the base group
@@ -1525,7 +1577,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			if (dimensions==1) {
 				if ("SL" %in% method) rescale <- "SL" else rescale <- method[length(method)]
 			} else {
-				if ("RM" %in% method) rescale <- "RM" else rescale <- method[length(method)]
+				if ("LS" %in% method) rescale <- "LS" else rescale <- method[length(method)]
 			}
 			warning(paste("No linking constants were computed for the rescale method you selected. The parameters will be rescaled using the ",rescale," method",sep=""))
 		}
@@ -1544,7 +1596,15 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			##   a vector of zeros for the rotation matrix and translation vector in the 
 			##   multidimensional case
 			if (i==base.grp) {
-				if (x@dimensions[i]==1) tmp.con[[i]] <- c(1,0) else tmp.con[[i]] <- list(A=diag(rep(1,x@dimensions[i])),m=rep(0,x@dimensions[i]))
+				if (x@dimensions[i]==1) {
+					tmp.con[[i]] <- c(1,0) 
+				} else {
+					if (dilation=="ODL") {
+						tmp.con[[i]] <- list(A=diag(rep(1,x@dimensions[i])),m=rep(0,x@dimensions[i]))
+					} else {
+						tmp.con[[i]] <- list(T=diag(rep(1,x@dimensions[i])), K=diag(rep(1,x@dimensions[i])),m=rep(0,x@dimensions[i]))
+					}
+				}
 			
 			##   Extract the specific linking constants for the given pair of tests
 			} else {
@@ -1624,14 +1684,30 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 							tmp1@b <- tmp1@b-matrix(tmp1@a[,do1]*tmp.con[[j]][2],nrow(tmp1@b),ncol(tmp1@b))
 							if (!missing(ability)) tmpa[,do1] <- tmp.con[[j]][1]*tmpa[,do1] + tmp.con[[j]][2]
 						} else {
+							if (dilation=="ODL") {
+								tmp1@a[,do1] <- tmp1@a[,do1]%*%ginv(tmp.con[[j]]$A[do4,do4])
+								tmp1@b <- tmp1@b-matrix(tmp1@a[,do1]%*%tmp.con[[j]]$m[do4],nrow(tmp1@b),ncol(tmp1@b))
+								if (!missing(ability)) tmpa[,do1] <- t(tmp.con[[j]]$A[do4,do4]%*%t(tmpa[,do1]) + tmp.con[[j]]$m[do4])
+							} else {
+								tmp1a <- tmp1@a
+								tmp1a[,do1] <- tmp1a[,do1]%*%ginv(tmp.con[[j]]$T[do4,do4])
+								tmp1@a[,do1] <- tmp1@a[,do1]%*%ginv(tmp.con[[j]]$T[do4,do4])%*%ginv(tmp.con[[j]]$K[do4,do4])
+								tmp1@b <- tmp1@b-matrix(tmp1a[,do1]%*%tmp.con[[j]]$m[do4],nrow(tmp1@b),ncol(tmp1@b))
+								if (!missing(ability)) tmpa[,do1] <- t(tmp.con[[j]]$T[do4,do4]%*%tmp.con[[j]]$K[do4,do4]%*%t(tmpa[,do1]) + as.vector(tmp.con[[j]]$K[do4,do4]%*%tmp.con[[j]]$m[do4]))
+							}
+						}
+					} else {
+						if (dilation=="ODL") {
 							tmp1@a[,do1] <- tmp1@a[,do1]%*%ginv(tmp.con[[j]]$A[do4,do4])
 							tmp1@b <- tmp1@b-matrix(tmp1@a[,do1]%*%tmp.con[[j]]$m[do4],nrow(tmp1@b),ncol(tmp1@b))
 							if (!missing(ability)) tmpa[,do1] <- t(tmp.con[[j]]$A[do4,do4]%*%t(tmpa[,do1]) + tmp.con[[j]]$m[do4])
+						} else {
+							tmp1a <- tmp1@a
+							tmp1a[,do1] <- tmp1a[,do1]%*%ginv(tmp.con[[j]]$T[do4,do4])
+							tmp1@a[,do1] <- tmp1@a[,do1]%*%ginv(tmp.con[[j]]$T[do4,do4])%*%ginv(tmp.con[[j]]$K[do4,do4])
+							tmp1@b <- tmp1@b-matrix(tmp1a[,do1]%*%tmp.con[[j]]$m[do4],nrow(tmp1@b),ncol(tmp1@b))
+							if (!missing(ability)) tmpa[,do1] <- t(tmp.con[[j]]$T[do4,do4]%*%tmp.con[[j]]$K[do4,do4]%*%t(tmpa[,do1]) + as.vector(tmp.con[[j]]$K[do4,do4]%*%tmp.con[[j]]$m[do4]))
 						}
-					} else {
-						tmp1@a[,do1] <- tmp1@a[,do1]%*%ginv(tmp.con[[j]]$A[do4,do4])
-						tmp1@b <- tmp1@b-matrix(tmp1@a[,do1]%*%tmp.con[[j]]$m[do4],nrow(tmp1@b),ncol(tmp1@b))
-						if (!missing(ability)) tmpa[,do1] <- t(tmp.con[[j]]$A[do4,do4]%*%t(tmpa[,do1]) + tmp.con[[j]]$m[do4])
 					}
 				}
 			}
@@ -1719,7 +1795,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			if (dimensions==1) {
 				if ("SL" %in% method) rsc <- "SL" else rsc<- method[length(method)]
 			} else {
-				if ("RM" %in% method) rsc <- "RM" else rsc<- method[length(method)]
+				if ("LS" %in% method) rsc <- "LS" else rsc<- method[length(method)]
 			}
 			cat(paste("No rescale method was identified. Ability parameters will be rescaled using the ",rsc," method.\n",sep=""))
 			
@@ -1738,7 +1814,15 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				##   a vector of zeros for the rotation matrix and translation vector in the 
 				##   multidimensional case
 				if (i==base.grp) {
-					if (dimensions==1) tmp.con[[i]] <- c(1,0) else tmp.con[[i]] <- list(A=diag(rep(1,dimensions)),m=rep(0,dimensions))
+					if (dimensions==1) {
+						tmp.con[[i]] <- c(1,0) 
+					} else {
+						if (dilation=="ODL") {
+							tmp.con[[i]] <- list(A=diag(rep(1,dimensions)),m=rep(0,dimensions))
+						} else {
+							tmp.con[[i]] <- list(T=diag(rep(1,dimensions)),K=diag(rep(1,dimensions)),m=rep(0,dimensions))
+						}
+					}
 				} else {
 					##   Extract the specific linking constants for the given pair of tests
 					tmp.con[[i]] <- eval(parse(text=paste("link.out[[",j,"]]@constants$",rsc,sep="")))
@@ -1784,7 +1868,11 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 						if (length(do1)==1) {
 							tmpa[,do1] <- tmp.con[[j]][1]*tmpa[,do1] + tmp.con[[j]][2]
 						} else {
-							tmpa[,do1] <- t(tmp.con[[j]]$A%*%t(tmpa[,do1]) + tmp.con[[j]]$m)
+							if (dilation=="ODL") {
+								tmpa[,do1] <- t(tmp.con[[j]]$A%*%t(tmpa[,do1]) + tmp.con[[j]]$m)
+							} else {
+								tmpa[,do1] <- t(tmp.con[[j]]$T%*%tmp.con[[j]]$K%*%t(tmpa[,do1]) + as.vector(tmp.con[[j]]$K%*%tmp.con[[j]]$m))
+							}
 						}
 					}
 				}

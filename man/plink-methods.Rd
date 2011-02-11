@@ -11,17 +11,18 @@
 This function conducts separate calibration of unidimensional or multidimensional
 IRT single-format or mixed-format item parameters for multiple groups.  The  
 unidimensional methods include the Mean/Mean, Mean/Sigma, Haebara, and Stocking-Lord 
-methods.  The multidimensional methods include the Reckase-Martineau method and
-extensions of the Haebara and Stocking-Lord method using a single dilation parameter
-(Li & Lissitz, 2000), multiple dilation parameters (Min, 2003), or the 
-Oshima, Davey, & Lee (2000) approach.  The methods allow for symmetric and non-symmetric 
-optimization and chain-linked rescaling of item and ability parameters.
+methods.  The multidimensional methods include a least squares approach (Li & Lissitz,
+2000; Min, 2003; Reckase & Martineau, 2004) and extensions of the Haebara and 
+Stocking-Lord method using a single dilation parameter (Li & Lissitz, 2000), multiple 
+dilation parameters (Min, 2003), or the Oshima, Davey, & Lee (2000) approach.  The 
+methods allow for symmetric and non-symmetric optimization and chain-linked rescaling 
+of item and ability parameters.
 }
 
 \usage{
 plink(x, common, rescale, ability, method, weights.t, weights.f, 
   startvals, exclude, score = 1, base.grp = 1, symmetric = FALSE, 
-  rescale.com = TRUE, grp.names = NULL, dilation = "MIN", 
+  rescale.com = TRUE, grp.names = NULL, dilation = "LL", 
   dim.order = NULL, ...)
 
 ## S4 method for signature 'list', 'matrix'
@@ -53,8 +54,8 @@ plink(x, common, rescale, ability, method, weights.t, weights.f,
 
   \item{rescale}{if missing (default), the parameters in \code{x} will not be 
     transformed to the base scale. To transform the parameters use 
-    \code{"MM","MS","HB","SL","RM"} for the mean/mean, mean/sigma, Haebara, 
-    Stocking-Lord, and Reckase-Martineau linking constants respectively.}
+    \code{"MM","MS","HB","SL","LS"} for the Mean/Mean, Mean/Sigma, Haebara, 
+    Stocking-Lord, and least squares linking constants respectively.}
 
   \item{ability}{list of theta values with length equal to the number of groups. 
     If supplied, these values will be transformed to the base scale using the
@@ -62,8 +63,8 @@ plink(x, common, rescale, ability, method, weights.t, weights.f,
     is missing.}
 
   \item{method}{character vector identifying the linking methods to use. Values can
-    include \code{"MM","MS","HB","SL","RM"} for the mean/mean, mean/sigma, Haebara, 
-    Stocking-Lord, and Reckase-Martineau linking constants respectively, or if
+    include \code{"MM","MS","HB","SL","LS"} for the Mean/Mean, Mean/Sigma, Haebara, 
+    Stocking-Lord, and least squares linking constants respectively, or if
     missing, constants will be estimated for all methods.}
 
   \item{weights.t}{list containing information about the theta values and weights
@@ -75,8 +76,8 @@ plink(x, common, rescale, ability, method, weights.t, weights.f,
     argument will be ignored if \code{symmetric}=FALSE. See below for more details. }
 
   \item{startvals}{vector or list of slope and intercept starting values for the 
-    characteristic curve methods or character value(s) of "MM", "MS", or "RM" to identify 
-    that values from the Mean/Mean, Mean/Sigma, or Reckase-Martineau method should be used
+    characteristic curve methods or character value(s) of "MM", "MS", or "LS" to identify 
+    that values from the Mean/Mean, Mean/Sigma, or least squares method should be used
     for the starting values. See below for more details.}
 
   \item{exclude}{character vector or list identifying common items that should be
@@ -144,8 +145,11 @@ the theta values on the \emph{To} scale to integrate over in the characteristic 
 as well as any weights associated with the theta values.  See Kim and Lee (2006) or Kolen 
 and Brennan (2004) for more information of these weights.  The function \code{\link{as.weight}} 
 can be used to facilitate the creation of this object.  If \code{weights.t} is missing, the 
-default is to use equally spaced theta values ranging from -4 to 4 with an increment of 0.05 
-and theta weights equal to one for all theta values.
+default--in the unidimensional case--is to use equally spaced theta values ranging from -4 to 4 
+with an increment of 0.05 and theta weights equal to one for all theta values. In the
+multidimensional case, the default is to use 1000 randomly sampled values from a multivariate
+normal distribution with correlations equal to 0.6 for all dimensions.  The theta weights are
+equal to the normal distribution weights at these points. 
 
 To better understand the elements of \code{weights.t}, let us assume for a moment that \code{x}
 has parameters for only two groups and that we are using non-symmetric linking.  In this instance, 
@@ -287,6 +291,14 @@ set equal to \code{D}. If only \code{D.drm} is specified, the values for \code{D
   URL \url{http://www.jstatsoft.org/v35/i12/}
 }
 
+\note{The translation vector for the multidimensional Stocking-Lord
+method may converge to odd values. The least squares method has been
+shown to produce more accurate constants than the characteristic curve
+methods (in less time); however, if use of a characteristic curve 
+approach is desired, it is recommended that the Haebara method be used 
+and/or the relative tolerance for the optimization be lowered to 0.001 
+using the argument \code{control=list(rel.tol=0.001)}.}
+
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }
 
 \examples{
@@ -381,24 +393,27 @@ summary(out)
 pm <- as.poly.mod(80, "drm", list(1:80))
 x <- as.irt.pars(reckase9$pars, reckase9$common, 
   list(rep(2,80),rep(2,80)), list(pm,pm), dimensions=2)
-# Compute constants using Reckase & Martineau (2004) and 
-# Min (2003). Rescale the item parameters 
-# using the RM method
-out <- plink(x, rescale="RM")
+# Compute constants using the least squares method and 
+# the Min (2003) dilation. Rescale the item parameters 
+# using the LS method
+out <- plink(x, dilation="MIN", rescale="LS")
 summary(out, descrip=TRUE)
 # Extract the rescaled item parameters
 pars.out <- link.pars(out)
 
 # Compute constants using Oshima, Davey, Lee (2000)
-# Display trace output and descriptives
-out <- plink(x, dilation="ODL", control=list(trace=1))
+# Display output and descriptives
+out <- plink(x, dilation="ODL")
 summary(out, descrip=TRUE)
 
 # Compute constants using Li & Lissitz (2000)
-# Rescale item parameters and ability estimates using the "HB" method
+# Rescale item parameters and ability estimates 
+# using the "HB" and "LS" methods.
+# Display the optimization iterations
 ability <- matrix(rnorm(40),20,2)
-out <- plink(x, method=c("HB","SL"), dilation="LL", rescale="HB", 
-   ability=list(ability,ability))
+out <- plink(x, method=c("HB","LS"), dilation="LL", 
+   rescale="HB", ability=list(ability,ability),
+   control=list(trace=1,rel.tol=0.001))
 summary(out)
 # Extract rescaled ability estimates
 ability.out <- out$ability
@@ -406,17 +421,14 @@ ability.out <- out$ability
 
 # Compute linking constants for two groups using mixed-format items 
 # modeled with the M3PL and MGPCM. Only compute constants using the 
-# Reckase-Martineau and the Stocking-Lord method with a MIN dilation.
-\dontrun{
+# MIN dilation.
 pm <- as.poly.mod(60,c("drm","gpcm"), list(c(1:60)[md.mixed$cat==2],
   c(1:60)[md.mixed$cat>2]))
 x <- as.irt.pars(md.mixed$pars, matrix(1:60,60,2), 
   list(md.mixed$cat, md.mixed$cat), 
   list(pm, pm), dimensions=4, grp.names=c("Form.X","Form.Y"))
-out <- plink(x,method=c("RM","SL"),dilation="MIN",
-  weights.t=as.weight(n=3,dimensions=4))
+out <- plink(x,dilation="MIN")
 summary(out, descrip=TRUE)
-}
 
 
 # Illustration of construct shift and how to specify common dimensions
@@ -425,20 +437,10 @@ pars <- cbind(round(runif(80),2),reckase9$pars[[1]])
 x <- as.irt.pars(list(pars,reckase9$pars[[2]]), reckase9$common, 
 list(rep(2,80),rep(2,80)), list(pm,pm), dimensions=c(3,2))
 dim.order <- matrix(c(1,2,3,NA,1,2),2,3,byrow=TRUE)
-out <- plink(x,dim.order=dim.order)
-
-# Assume that all we know is that the first dimension in group 1
-# is a unique dimension (i.e., we do not know if the first dimension 
-# in group 2 maps to the first or second dimension in group 1 
-# (all of the numbered values in dim.order will equal one)
-dim.order <- matrix(c(1,1,1,NA,1,1),2,3,byrow=TRUE)
-out <- plink(x,dim.order=dim.order)
-
-# Assume that there is only one common dimension
-dim.order <- matrix(c(1,2,3,NA,NA,1,NA,2),2,4,byrow=TRUE)
-out <- plink(x,dim.order=dim.order, rescale="HB")
-# Extract rescaled item parameters
+out <- plink(x, dilation="ODL", dim.order=dim.order, rescale="LS")
+summary(out)
 pars.out <- link.pars(out)
+
 }
 
 \keyword{methods}

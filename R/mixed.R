@@ -2,11 +2,11 @@
 ##   modeled using any combination of the models available 
 ##   in the functions {drm}, {gpcm}, {grm}, {mcm}, and {nrm}
 
-setGeneric("mixed", function(x, cat, poly.mod, theta, dimensions=1, ...) standardGeneric("mixed"))
+setGeneric("mixed", function(x, cat, poly.mod, theta, dimensions=1, items, ...) standardGeneric("mixed"))
 
 
 
-setMethod("mixed", signature(x="numeric", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, ...) {
+setMethod("mixed", signature(x="numeric", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, items, ...) {
 	
 	x <- sep.pars(x, cat, poly.mod, dimensions, loc.out=FALSE, ...)
 	callGeneric()
@@ -15,7 +15,7 @@ setMethod("mixed", signature(x="numeric", cat="numeric"), function(x, cat, poly.
 
 
 
-setMethod("mixed", signature(x="matrix", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, ...) {
+setMethod("mixed", signature(x="matrix", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, items, ...) {
 	
 	x <- sep.pars(x, cat, poly.mod, dimensions, loc.out=FALSE, ...)
 	callGeneric()
@@ -24,7 +24,7 @@ setMethod("mixed", signature(x="matrix", cat="numeric"), function(x, cat, poly.m
 
 
 
-setMethod("mixed", signature(x="data.frame", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, ...) {
+setMethod("mixed", signature(x="data.frame", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, items, ...) {
 	
 	x <- sep.pars(x, cat, poly.mod, dimensions, loc.out=FALSE, ...)
 	callGeneric()
@@ -33,7 +33,7 @@ setMethod("mixed", signature(x="data.frame", cat="numeric"), function(x, cat, po
 
 
 
-setMethod("mixed", signature(x="list", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, ...) {
+setMethod("mixed", signature(x="list", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, items, ...) {
 	
 	x <- sep.pars(x, cat, poly.mod, dimensions, loc.out=FALSE, ...)
 	callGeneric()
@@ -44,19 +44,19 @@ setMethod("mixed", signature(x="list", cat="numeric"), function(x, cat, poly.mod
 
 ##   For this method the objects, cat and dimensionsare contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("mixed", signature(x="irt.pars", cat="ANY"), function(x, cat, poly.mod, theta, dimensions, ...) {
+setMethod("mixed", signature(x="irt.pars", cat="ANY"), function(x, cat, poly.mod, theta, dimensions, items, ...) {
 	
 	##   Loop through all groups. In this scenario, a list of {irt.prob} objects will be returned
 	if (x@groups>1) {
 		out <- vector("list", x@groups)
 		for (i in 1:x@groups) {
-			tmp <- sep.pars(x@pars[[i]], x@cat[[i]], x@poly.mod[[i]], loc.out=FALSE, dimensions=x@dimensions[i], ...)
+			tmp <- sep.pars(x@pars[[i]], x@cat[[i]], x@poly.mod[[i]], loc.out=FALSE, location=x@location[i], dimensions=x@dimensions[i], ...)
 			out[[i]] <- mixed(tmp, ...)
 		}
 		names(out) <- names(x@pars)
 		return(out)
 	} else {
-		x <- sep.pars(x@pars, x@cat, x@poly.mod, loc.out=FALSE, dimensions=x@dimensions, ...)
+		x <- sep.pars(x@pars, x@cat, x@poly.mod, loc.out=FALSE, location=x@location, dimensions=x@dimensions, items, ...)
 		callGeneric()
 	}
 })
@@ -65,7 +65,7 @@ setMethod("mixed", signature(x="irt.pars", cat="ANY"), function(x, cat, poly.mod
 
 ##   For this method the objects, cat and dimensionsare contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("mixed", signature(x="sep.pars", cat="ANY"), function(x, cat, poly.mod, theta, dimensions, ...) {
+setMethod("mixed", signature(x="sep.pars", cat="ANY"), function(x, cat, poly.mod, theta, dimensions, items, ...) {
 
 	##   The equation to compute probabilities is not (actually) parameterized using
 	##   the location/(step or threshold)-deviation formulation. As such, in instances where a location
@@ -76,12 +76,46 @@ setMethod("mixed", signature(x="sep.pars", cat="ANY"), function(x, cat, poly.mod
 		x <- sep.pars(pars, x@cat, pm, location=TRUE, loc.out=FALSE, x@dimensions, ...)
 	}
 	
+	##   Total number of items
+	if (missing(items)) {
+		items <- seq(1,length(x@cat))
+		item.nms <- items
+	} else {
+		## Recreate the set of item parameters
+		tmp <- as.irt.pars(x)
+		tmp@pars <- tmp@pars[items,]
+		if (length(items)==1) tmp@pars <- t(tmp@pars)
+		tmp@pars <- tmp@pars[,apply(!is.na(tmp@pars),2,sum)>0]
+		if (length(items)==1) tmp@pars <- t(tmp@pars)
+		tmp@cat <- tmp@cat[items]
+		
+		n <- length(items)
+		pm <- tmp@poly.mod
+		mod <- NULL
+		it <- vector("list",5)
+		for (i in 1:length(pm@model)) {
+			if (length(pm@items[[i]][pm@items[[i]]%in%items])) {
+				mod <- c(mod, pm@model[i])
+				for (j in 1:n) {
+					if (items[j]%in%pm@items[[i]]) it[[i]] <- c(it[[i]], j)
+				}
+			}
+		}
+		flag <- NULL
+		for (i in 1:5) {
+			if (length(it[[i]])==0) flag <- c(flag,i)
+		}
+		it <- it[-flag]
+		tmp@poly.mod <- as.poly.mod(n,mod,it)
+		x <- sep.pars(tmp)
+		item.nms <- items
+		items <- seq(1,length(x@cat))
+	}
+	
+	
 	pars <- list(a=x@a, b=x@b, c=x@c)
 	dots <- list(...)
 	cat <- x@cat
-	
-	##   Total number of items
-	items <- seq(1,length(cat))
 	
 	mod <- x@model
 	dimensions <- x@dimensions
@@ -146,11 +180,11 @@ setMethod("mixed", signature(x="sep.pars", cat="ANY"), function(x, cat, poly.mod
 	
 	##   Loop through all of the item response models and compute response probabilities
 	for (i in 1:length(mod)) {
-		if (mod[i]=="drm") tmp <- suppressWarnings(plink::drm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="gpcm") tmp <- suppressWarnings(plink::gpcm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="grm") tmp <- suppressWarnings(plink::grm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="mcm") tmp <- suppressWarnings(plink::mcm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="nrm") tmp <- suppressWarnings(plink::nrm(x, theta=theta, dimensions=dimensions, ...)@prob[,-c(1:dimensions)])
+		if (mod[i]=="drm") tmp <- suppressWarnings(plink::drm(x, theta=theta, dimensions=dimensions, items=items, ...)@prob[,-c(1:dimensions)])
+		if (mod[i]=="gpcm") tmp <- suppressWarnings(plink::gpcm(x, theta=theta, dimensions=dimensions, items=items, ...)@prob[,-c(1:dimensions)])
+		if (mod[i]=="grm") tmp <- suppressWarnings(plink::grm(x, theta=theta, dimensions=dimensions, items=items, ...)@prob[,-c(1:dimensions)])
+		if (mod[i]=="mcm") tmp <- suppressWarnings(plink::mcm(x, theta=theta, dimensions=dimensions, items=items, ...)@prob[,-c(1:dimensions)])
+		if (mod[i]=="nrm") tmp <- suppressWarnings(plink::nrm(x, theta=theta, dimensions=dimensions, items=items, ...)@prob[,-c(1:dimensions)])
 		p <- cbind(p,as.matrix(tmp))
 	}
 	
@@ -197,7 +231,7 @@ setMethod("mixed", signature(x="sep.pars", cat="ANY"), function(x, cat, poly.mod
 	##   Label the items and categories
 	lab=NULL
 	for(i in 1:length(cat1)) {
-		lab=c(lab,paste("item_",i,".",seq(1,cat[i]),sep=""))
+		lab=c(lab,paste("item_",item.nms[i],".",seq(1,cat[i]),sep=""))
 	}
 	
 	##   If there is only a single polytomous item, p needs to be transposed

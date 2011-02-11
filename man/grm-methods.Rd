@@ -17,22 +17,22 @@ response model.
 
 \usage{
 grm(x, cat, theta, dimensions = 1, catprob = FALSE, D = 1, 
-  location = FALSE, ...)
+  location = FALSE, items, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
-grm(x, cat, theta, dimensions, catprob, D, location, ...)
+grm(x, cat, theta, dimensions, catprob, D, location, items, ...)
 
 ## S4 method for signature 'data.frame', 'numeric'
-grm(x, cat, theta, dimensions, catprob, D, location, ...)
+grm(x, cat, theta, dimensions, catprob, D, location, items, ...)
 
 ## S4 method for signature 'list', 'numeric'
-grm(x, cat, theta, dimensions, catprob, D, location, ...)
+grm(x, cat, theta, dimensions, catprob, D, location, items, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
-grm(x, cat, theta, dimensions, catprob, D, location, ...)
+grm(x, cat, theta, dimensions, catprob, D, location, items, ...)
 
 ## S4 method for signature 'sep.pars', 'ANY'
-grm(x, cat, theta, dimensions, catprob, D, location, ...)
+grm(x, cat, theta, dimensions, catprob, D, location, items, ...)
 }
 
 \arguments{
@@ -56,6 +56,8 @@ grm(x, cat, theta, dimensions, catprob, D, location, ...)
 
   \item{location}{if \code{TRUE}, the step parameters are deviations from a difficulty
     parameter }
+
+  \item{items}{numeric vector identifying the items for which probabilities should be computed}
 
   \item{...}{further arguments passed to or from other methods }
 }

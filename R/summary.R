@@ -24,7 +24,7 @@ summary.list <- function(object, ..., descrip=FALSE) {
 			##   Create a matrix containing the shortened name
 			##   and the descrtiptive name for all the linking methods
 			##   (both unidimensional and multidimensional)
-			nms <- matrix(c("MM","MS","HB","SL","RM","Mean/Mean","Mean/Sigma","Haebara","Stocking-Lord","Reckase-Martineau"),5,2)
+			nms <- matrix(c("MM","MS","HB","SL","LS","Mean/Mean","Mean/Sigma","Haebara","Stocking-Lord","Least Squares"),5,2)
 			
 			##   Loop through all of the {link} objects and summarize
 			##   the linking constants and (if specified) the descriptive
@@ -350,9 +350,9 @@ summary.sep.pars <- function(object, ..., descrip=FALSE){
 			##   Compute and print the descriptive statistics
 			if (descrip==TRUE) {
 				if (object@n[j]>1) {
-				
+					
 					##   Extract the item parameters for the given model
-					a1 <- as.matrix(object@a)[items,]
+					a1 <- as.matrix(as.matrix(object@a)[items,])
 					b1 <- as.matrix(object@b)[items,]
 					c1 <- as.matrix(object@c)[items,]
 					if (length(c1[is.na(c1)])==length(c1)) c1[is.na(c1)] <- 0
@@ -429,7 +429,7 @@ summary.link <- function(object, ..., descrip=FALSE) {
 	##   Create a matrix containing the shortened name
 	##   and the descrtiptive name for all the linking methods
 	##   (both unidimensional and multidimensional)
-	nms <- matrix(c("MM","MS","HB","SL","RM","Mean/Mean","Mean/Sigma","Haebara","Stocking-Lord","Reckase-Martineau"),5,2)
+	nms <- matrix(c("MM","MS","HB","SL","LS","Mean/Mean","Mean/Sigma","Haebara","Stocking-Lord","Least Squares"),5,2)
 	
 	##   Initialize an object to hold the names for all used methods
 	tmp.nms <- NULL
@@ -465,8 +465,8 @@ summary.link <- function(object, ..., descrip=FALSE) {
 			##   Print the linking constants for the orthogonal procrustes methods
 			} else {
 				tmp <- object@constants[[j]]
-				tmp1 <- format(cbind(tmp$A,NA,tmp$T,NA,tmp$K),digits=6,drop0trailing=FALSE)
-				tmp1[,c(ncol(tmp$A)+1,2*ncol(tmp$A)+2)] <- NA
+				tmp1 <- format(cbind(tmp$T,NA,tmp$K),digits=6,drop0trailing=FALSE)
+				tmp1[,ncol(tmp$T)+1] <- NA
 				print(tmp1,na.print="",quote=F)
 				cat("\n")
 				print(format(tmp$m,digits=6,drop0trailing=FALSE),nsmall=6,quote=FALSE)

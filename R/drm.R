@@ -1,13 +1,12 @@
 ##   This function computes response probabilities for items
-##   modeled using the Rasch model, 1PL, 2PL, 3PL, M1PL,
-##   M2PL, or the M3PL
+##   modeled using the Rasch model, 1PL, 2PL, 3PL, M1PL, M2PL, or the M3PL
 
-setGeneric("drm", function(x, theta, dimensions=1, D=1, incorrect=FALSE, print.mod=FALSE, ...) standardGeneric("drm"))
+setGeneric("drm", function(x, theta, dimensions=1, D=1, incorrect=FALSE, print.mod=FALSE, items, ...) standardGeneric("drm"))
 
 
 ##   This method applies when {x} is a  vector of difficulty parameters
 
-setMethod("drm", signature(x="numeric"), function(x, theta, dimensions, D, incorrect, print.mod, ...) {
+setMethod("drm", signature(x="numeric"), function(x, theta, dimensions, D, incorrect, print.mod, items, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(length(x))
 	x <- sep.pars(x, poly.mod=poly.mod, dimensions=dimensions, ...)
@@ -17,7 +16,7 @@ setMethod("drm", signature(x="numeric"), function(x, theta, dimensions, D, incor
 
 
 
-setMethod("drm", signature(x="matrix"), function(x, theta, dimensions, D, incorrect, print.mod, ...) {
+setMethod("drm", signature(x="matrix"), function(x, theta, dimensions, D, incorrect, print.mod, items, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x))
 	x <- sep.pars(x, poly.mod=poly.mod, dimensions=dimensions, ...)
@@ -27,7 +26,7 @@ setMethod("drm", signature(x="matrix"), function(x, theta, dimensions, D, incorr
 
 
 
-setMethod("drm", signature(x="data.frame"), function(x, theta, dimensions, D, incorrect, print.mod, ...) {
+setMethod("drm", signature(x="data.frame"), function(x, theta, dimensions, D, incorrect, print.mod, items, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x))
 	x <- sep.pars(x, poly.mod=poly.mod, dimensions=dimensions, ...)
@@ -37,7 +36,7 @@ setMethod("drm", signature(x="data.frame"), function(x, theta, dimensions, D, in
 
 
 
-setMethod("drm", signature(x="list"), function(x, theta, dimensions, D, incorrect, print.mod, ...) {
+setMethod("drm", signature(x="list"), function(x, theta, dimensions, D, incorrect, print.mod, items, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(as.matrix(x[[1]])))
 	x <- sep.pars(x, poly.mod=poly.mod, dimensions=dimensions, ...)
@@ -47,7 +46,7 @@ setMethod("drm", signature(x="list"), function(x, theta, dimensions, D, incorrec
 
 
 
-setMethod("drm", signature(x="irt.pars"), function(x, theta, dimensions, D, incorrect, print.mod, ...) {
+setMethod("drm", signature(x="irt.pars"), function(x, theta, dimensions, D, incorrect, print.mod, items, ...) {
 	
 	##   Loop through all groups. In this scenario, a list of {irt.prob} objects will be returned
 	if (x@groups>1) {
@@ -67,13 +66,15 @@ setMethod("drm", signature(x="irt.pars"), function(x, theta, dimensions, D, inco
 
 
 
-setMethod("drm", signature(x="sep.pars"), function(x, theta, dimensions, D, incorrect, print.mod, ...) {
+setMethod("drm", signature(x="sep.pars"), function(x, theta, dimensions, D, incorrect, print.mod, items, ...) {
 	
 	##   Number of dimensions
 	dimensions <- x@dimensions
 	
 	##   Identify the dichotomous items
-	items <- x@items$drm
+	if (missing(items)) items <- 1:x@n[1]
+	tmp.items <- x@items$drm
+	items <- tmp.items[tmp.items%in%items]
 	
 	##   Number of items
 	n <- length(items)
@@ -163,10 +164,10 @@ setMethod("drm", signature(x="sep.pars"), function(x, theta, dimensions, D, inco
 		}
 		if (incorrect==TRUE) {
 			p <- cbind(p,(1-cp),cp)
-			colnames(p)[(ncol(p)-1):ncol(p)] <- paste("item_",i,".",c(0,1),sep="")
+			colnames(p)[(ncol(p)-1):ncol(p)] <- paste("item_",items[i],".",c(0,1),sep="")
 		} else {
 			p <- cbind(p,cp)
-			colnames(p)[ncol(p)] <- paste("item_",i,".1",sep="")
+			colnames(p)[ncol(p)] <- paste("item_",items[i],".1",sep="")
 		}
 	}
 	

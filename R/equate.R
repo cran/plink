@@ -23,17 +23,18 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 
 	##      Function that will be minimized for the True Score Equating
 	.TSE <- function(startval, truescore, pars, sc, ...) {
-	
+		
 		##   Compute response probabilities for the base group first
 		prob <- .Mixed(pars, startval, ...)
 		
 		scr <- .scr(prob, sc)
+		scr1 <- .scr(prob, sc=1)
 		
 		##   Compute the TCC for the given startval
 		tcc <- prob$p %*% scr
 		
 		##   Compute the derivative of the TCC for the given startval
-		tcc.der <- prob$p1 %*% scr
+		tcc.der <- prob$p1 %*% scr1
 		
 		new.ts <- startval-((truescore-tcc)/-tcc.der)
 		
@@ -51,7 +52,6 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 		if (length(dots$D.drm)) D.drm <- dots$D.drm else D.drm <- D
 		if (length(dots$D.gpcm)) D.gpcm <- dots$D.gpcm else D.gpcm <- D
 		if (length(dots$D.grm)) D.grm <- dots$D.grm else D.grm <- D
-		if (length(dots$incorrect)) incorrect <- dots$incorrect else incorrect <- FALSE
 		if (length(dots$catprob)) catprob <- dots$catprob else catprob <- TRUE
 		
 		mod <- x@model
@@ -59,7 +59,7 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 		p.cat <- NULL
 		p.mod <- NULL
 		for (i in 1:length(mod)) {
-			if (mod[i]=="drm") tmp <- .Drm(x, theta, D.drm, incorrect)
+			if (mod[i]=="drm") tmp <- .Drm(x, theta, D.drm, incorrect=TRUE)
 			if (mod[i]=="gpcm") tmp <- .Gpcm(x, theta, D.gpcm)
 			if (mod[i]=="grm") tmp <- .Grm(x, theta, catprob, D.grm)
 			if (mod[i]=="nrm") tmp <- .Nrm(x, theta)
@@ -93,7 +93,7 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 			
 			if (incorrect==TRUE) {
 				p <- cbind(p,(1-cp),cp) 
-				p1 <- cbind(p,(1-cp1),cp1) 
+				p1 <- cbind(p1,(1-cp1),cp1) 
 			} else {
 				p <- cbind(p,cp)
 				p1 <- cbind(p1,cp1)
@@ -155,7 +155,7 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 	
 	##   This is a modified version of the {grm} function
 	.Grm <- function(x, theta, catprob, D.grm) {
-	
+		
 		items <- x@items$grm
 		n <- length(items)
 		a <- x@a[items,1]
@@ -174,7 +174,7 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 				cp <- 1-1/(1+exp(-D.grm*a[i]*(theta-b[i,1])))
 				
 				##   Compute the derivative of the probability for the lowest category
-				cp1 <- -(D.grm*a[i]*exp(D.grm*a[i]*(theta-b[i,k])))/(1+exp(D.grm*a[i]*(theta-b[i,k])))^2
+				cp1 <- -(D.grm*a[i]*exp(D.grm*a[i]*(theta-b[i,1])))/(1+exp(D.grm*a[i]*(theta-b[i,1])))^2
 				
 				p <- cbind(p, cp)
 				p1 <- cbind(p1,cp1)
@@ -397,7 +397,7 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 		if (length(sc)==1) {
 		
 			##   Use this if the lowest category should have a scoring weight of zero
-			if (sc==2) {
+			if (sc==1) {
 				scr <- scr-1
 				
 				##   If the argument {incorrect} equals FALSE, either explicitly or
@@ -405,6 +405,11 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 				##   probabilities for each dichotomous item. This formulation of the
 				##   scoring function will set the weight for these columns equal to 
 				##   zero. As such, set the weights for these items equal to one
+				cat <- rep(p.cat,p.cat)
+				scr[cat==1] <- 1
+			} else if (sc>2) {
+				warning("The value specified for {score} is invalid. Score was set to 1")
+				scr <- scr-1
 				cat <- rep(p.cat,p.cat)
 				scr[cat==1] <- 1
 			}
@@ -425,7 +430,6 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 	
 	##########   START EQUATE  ##########
 	
-	
 	##   Number of groups
 	ng <- x@groups
 	
@@ -440,7 +444,7 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 	
 	##   TRUE SCORE EQUATING
 	if ("TSE" %in% method) {
-	
+		
 		##   Separate the item parameters for each of the groups
 		pars <- sep.pars(x)
 		
@@ -454,10 +458,12 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 		
 		##   Generate a set of observed scores that fall within 
 		##   the range of true scores
+		ts.low.flag <- FALSE
 		if (missing(true.scores)) {
 			tmp.min <- sum(pars[[base.grp]]@c, na.rm=TRUE)
 			tmp.max <- sum(pars[[base.grp]]@cat-1)
-			true.scores <- ceiling(tmp.min):(tmp.max-1)
+			true.scores <- ceiling(tmp.min):(tmp.max)
+			ts.low.flag <- TRUE
 		}
 		
 		##   Initialize an object to indentify the lowest true score
@@ -492,7 +498,7 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 				theta <- .TSE(startval, ts, pars[[base.grp]], score[[base.grp]], ...)
 				
 				##   Check to see if the convergence has gone awry
-				if (theta==Inf|is.nan(theta)) {
+				if (theta==Inf|theta==-Inf|is.nan(theta)) {
 				
 					##   Attempt to get a starting value closer to the final theta value
 					startval <- new.startval(pars[[base.grp]], ts, score[[base.grp]], ...)
@@ -504,7 +510,7 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 						theta <- NA
 						
 						##   Check to see if some other theta value has already been found
-						##   If so, make is so all remaining theta values will be missing
+						##   If so, make it so all remaining theta values will be missing
 						##   (this assumes that the remaining true scores are higher than
 						##   the current true score)
 						if (start>0) na.flag <- TRUE
@@ -573,7 +579,8 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 		##   (from one to the value below the lowest estimated true score)
 		if (ng>1) {
 		
-			if (ts.low==TRUE) {
+			if (ts.low==TRUE & ts.low.flag==TRUE) {
+				
 				##   Compute the sum of the guessing parameters for the base group
 				tmp <- sum(pars[[base.grp]]@c, na.rm=TRUE)
 				
@@ -585,15 +592,16 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 				for (i in c(1:ng)[-base.grp]) {
 					sum.c <- c(sum.c, sum(pars[[i]]@c, na.rm=TRUE)/tmp)
 				}
+				sum.c[is.nan(sum.c)|sum.c==Inf|sum.c==-Inf] <- 1
 				
 				##   Initialize a vector of observed scores below the true score range
-				tse.low <- NULL
+				tse.low <- rep(0,ng)
 				
 				for (i in 1:start) {
-					
 					tse.low <- rbind(tse.low, c(i,sum.c*i))
 				}
 				tse.low <- cbind(NA,tse.low)
+				row.names(tse.low) <- NULL
 				colnames(tse.low) <- colnames(tse.out)
 				
 				
@@ -608,6 +616,15 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 				
 				##  Combine the lower estimated true scores with equated true scores
 				tse.out <- rbind(tse.low, tse.out)
+				tse.out <- tse.out[!is.nan(tse.out[,3]),]
+				
+				##  There is a possibility that duplicate values are created. Remove them
+				tmp <- table(tse.out[,2])
+				tmp <- as.numeric(names(tmp[tmp>1]))
+				if (length(tmp)) {
+					tmp <- c(1:nrow(tse.out))[tse.out[,2] %in% tmp & is.na(tse.out[,1])]
+					tse.out <- tse.out[-tmp,]
+				}
 			}
 		}
 		

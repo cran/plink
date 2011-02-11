@@ -15,22 +15,22 @@ nominal response model.
 }
 
 \usage{
-nrm(x, cat, theta, dimensions = 1, ...)
+nrm(x, cat, theta, dimensions = 1, items, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
-nrm(x, cat, theta, dimensions, ...)
+nrm(x, cat, theta, dimensions, items, ...)
 
 ## S4 method for signature 'data.frame', 'numeric'
-nrm(x, cat, theta, dimensions, ...)
+nrm(x, cat, theta, dimensions, items, ...)
 
 ## S4 method for signature 'list', 'numeric'
-nrm(x, cat, theta, dimensions, ...)
+nrm(x, cat, theta, dimensions, items, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
-nrm(x, cat, theta, dimensions, ...)
+nrm(x, cat, theta, dimensions, items, ...)
 
 ## S4 method for signature 'sep.pars', 'ANY'
-nrm(x, cat, theta, dimensions, ...)
+nrm(x, cat, theta, dimensions, items, ...)
 }
 
 \arguments{
@@ -43,6 +43,8 @@ nrm(x, cat, theta, dimensions, ...)
   with an increment of 0.5. See details below for more information. }
 
   \item{dimensions}{number of modeled dimensions }
+
+  \item{items}{numeric vector identifying the items for which probabilities should be computed}
 
   \item{...}{further arguments passed to or from other methods }
 }

@@ -4,13 +4,13 @@ link.con <- function(x, method="ALL") {
 	##   Create a matrix containing the shortened name
 	##   and the descrtiptive name for all the linking methods
 	##   (both unidimensional and multidimensional)
-	nms <- matrix(c("MM","MS","HB","SL","RM","Mean/Mean","Mean/Sigma","Haebara","Stocking-Lord","Reckase-Martineau"),5,2)
+	nms <- matrix(c("MM","MS","HB","SL","LS","Mean/Mean","Mean/Sigma","Haebara","Stocking-Lord","Least Squares"),5,2)
 	
 	##   Function to 
 	link.con.loop <- function(obj, method) {
 	
 		##   Determine if the constants correspond to a unidimensional or multidimensional model
-		if (is.numeric(obj[[1]])) dimensions <- 1 else dimensions <- nrow(obj[[1]]$A)
+		if (is.numeric(obj[[1]])) dimensions <- 1 else dimensions <- nrow(obj[[1]][[1]])
 		
 		##   Initialize an object to store the linking constants
 		cons <- NULL
@@ -42,16 +42,9 @@ link.con <- function(x, method="ALL") {
 			##   Extract the list of the linking matrices/vectors
 			cons <- obj
 			
-			##   Remove the rotation matrices T and K (only return A)
-			##   for the orthogonal procrustes methods
-			cons$HB$T <- NULL
-			cons$HB$K <- NULL
-			cons$SL$T <- NULL
-			cons$SL$K <- NULL
-			
 			##   Remove the constants for certain methods
 			if (("ALL" %in% toupper(method))==FALSE) {
-				if (("RM" %in% toupper(method))==FALSE) cons$RM <- NULL
+				if (("LS" %in% toupper(method))==FALSE) cons$LS <- NULL
 				if (("HB" %in% toupper(method))==FALSE) cons$HB <- NULL
 				if (("SL" %in% toupper(method))==FALSE) cons$SL <- NULL
 			} 

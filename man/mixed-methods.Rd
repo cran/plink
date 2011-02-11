@@ -15,25 +15,25 @@ items for a given set of theta values when the items are from a mixed-format tes
 }
 
 \usage{
-mixed(x, cat, poly.mod, theta, dimensions = 1, ...)
+mixed(x, cat, poly.mod, theta, dimensions = 1, items, ...)
 
 ## S4 method for signature 'numeric', 'numeric'
-mixed(x, cat, poly.mod, theta, dimensions, ...)
+mixed(x, cat, poly.mod, theta, dimensions, items, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
-mixed(x, cat, poly.mod, theta, dimensions, ...)
+mixed(x, cat, poly.mod, theta, dimensions, items, ...)
 
 ## S4 method for signature 'data.frame', 'numeric'
-mixed(x, cat, poly.mod, theta, dimensions, ...)
+mixed(x, cat, poly.mod, theta, dimensions, items, ...)
 
 ## S4 method for signature 'list', 'numeric'
-mixed(x, cat, poly.mod, theta, dimensions, ...)
+mixed(x, cat, poly.mod, theta, dimensions, items, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
-mixed(x, cat, poly.mod, theta, dimensions, ...)
+mixed(x, cat, poly.mod, theta, dimensions, items, ...)
 
 ## S4 method for signature 'sep.pars', 'ANY'
-mixed(x, cat, poly.mod, theta, dimensions, ...)
+mixed(x, cat, poly.mod, theta, dimensions, items, ...)
 }
 
 \arguments{
@@ -52,6 +52,8 @@ mixed(x, cat, poly.mod, theta, dimensions, ...)
   with an increment of 0.5. See details below for more information. }
 
   \item{dimensions}{number of modeled dimensions }
+
+  \item{items}{numeric vector identifying the items for which probabilities should be computed}
 
   \item{...}{further arguments passed to or from other methods. See details below. }
 }

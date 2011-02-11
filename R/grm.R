@@ -2,11 +2,11 @@
 ##   modeled using the graded response model and the 
 ##   multidimensional graded response model
 
-setGeneric("grm", function(x, cat, theta, dimensions=1, catprob=FALSE, D=1, location=FALSE, ...) standardGeneric("grm"))
+setGeneric("grm", function(x, cat, theta, dimensions=1, catprob=FALSE, D=1, location=FALSE, items, ...) standardGeneric("grm"))
 
 
 
-setMethod("grm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, catprob, D, location, ...) {
+setMethod("grm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, catprob, D, location, items, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"grm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, location, loc.out=FALSE, ...)
@@ -16,7 +16,7 @@ setMethod("grm", signature(x="matrix", cat="numeric"), function(x, cat, theta, d
 
 
 
-setMethod("grm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, dimensions, catprob, D, location, ...) {
+setMethod("grm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, dimensions, catprob, D, location, items, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"grm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, location, loc.out=FALSE, ...)
@@ -26,7 +26,7 @@ setMethod("grm", signature(x="data.frame", cat="numeric"), function(x, cat, thet
 
 
 
-setMethod("grm", signature(x="list", cat="numeric"), function(x, cat, theta, dimensions, catprob, D, location, ...) {
+setMethod("grm", signature(x="list", cat="numeric"), function(x, cat, theta, dimensions, catprob, D, location, items, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(as.matrix(x[[1]])),"grm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, location, loc.out=FALSE, ...)
@@ -38,7 +38,7 @@ setMethod("grm", signature(x="list", cat="numeric"), function(x, cat, theta, dim
 
 ##   For this method the objects, cat, dimensions, and location are contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("grm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dimensions, catprob, D, location, ...) {
+setMethod("grm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dimensions, catprob, D, location, items, ...) {
 	
 	##   Loop through all groups. In this scenario, a list of {irt.prob} objects will be returned
 	if (x@groups>1) {
@@ -60,7 +60,7 @@ setMethod("grm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dim
 
 ##   For this method the objects, cat, dimensions, and location are contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("grm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dimensions, catprob, D, location, ...) {
+setMethod("grm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dimensions, catprob, D, location, items, ...) {
 
 	##   The equation to compute probabilities is not (actually) parameterized using
 	##   the location/threshold-deviation formulation. As such, in instances where a location
@@ -75,7 +75,9 @@ setMethod("grm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dim
 	dimensions <- x@dimensions
 	
 	##   Identify the grm items
-	items <- x@items$grm
+	if (missing(items)) items <- 1:x@n[1]
+	tmp.items <- x@items$grm
+	items <- tmp.items[tmp.items%in%items]
 	
 	##   Number of items
 	n <- length(items)
@@ -173,7 +175,7 @@ setMethod("grm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dim
 				cp <- 1-1/(1+exp(-(theta %*% a[i,]+b[i,1])))
 			}
 			p <- cbind(p, cp)
-			colnames(p)[ncol(p)] <- paste("item_",i,".0",sep="")
+			colnames(p)[ncol(p)] <- paste("item_",items[i],".0",sep="")
 			
 			for (k in 1:ct) {
 				if (dimensions==1) {
@@ -192,7 +194,7 @@ setMethod("grm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dim
 					}
 				}
 				p <- cbind(p, cp)
-				colnames(p)[ncol(p)] <- paste("item_",i,".",k,sep="")
+				colnames(p)[ncol(p)] <- paste("item_",items[i],".",k,sep="")
 			}
 		}
 		
@@ -206,7 +208,7 @@ setMethod("grm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dim
 					cp <- 1/(1+exp(-(theta %*% a[i,]+b[i,k])))
 				}
 				p <- cbind(p, cp)
-				colnames(p)[ncol(p)] <- paste("item_",i,".",k,sep="")
+				colnames(p)[ncol(p)] <- paste("item_",items[i],".",k,sep="")
 			}
 		}
 	}

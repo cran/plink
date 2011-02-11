@@ -17,22 +17,22 @@ on the included item parameters and the specified number of dimensions.
 
 \usage{
 gpcm(x, cat, theta, dimensions = 1, D = 1, location = FALSE, 
-  print.mod = FALSE, ...)
+  print.mod = FALSE, items, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
-gpcm(x, cat, theta, dimensions, D, location, print.mod, ...)
+gpcm(x, cat, theta, dimensions, D, location, print.mod, items, ...)
 
 ## S4 method for signature 'data.frame', 'numeric'
-gpcm(x, cat, theta, dimensions, D, location, print.mod, ...)
+gpcm(x, cat, theta, dimensions, D, location, print.mod, items, ...)
 
 ## S4 method for signature 'list', 'numeric'
-gpcm(x, cat, theta, dimensions, D, location, print.mod, ...)
+gpcm(x, cat, theta, dimensions, D, location, print.mod, items, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
-gpcm(x, cat, theta, dimensions, D, location, print.mod, ...)
+gpcm(x, cat, theta, dimensions, D, location, print.mod, items, ...)
 
 ## S4 method for signature 'sep.pars', 'ANY'
-gpcm(x, cat, theta, dimensions, D, location, print.mod, ...)
+gpcm(x, cat, theta, dimensions, D, location, print.mod, items, ...)
 }
 
 \arguments{
@@ -57,6 +57,8 @@ gpcm(x, cat, theta, dimensions, D, location, print.mod, ...)
   \item{print.mod}{if \code{TRUE}, print the model that was used (i.e., Partial Credit
     Model, Generalized Partial Credit Model, Multidimensional Partial Credit
     Model or Multidimensional Generalized Partial Credit Model) }
+
+  \item{items}{numeric vector identifying the items for which probabilities should be computed}
 
   \item{...}{further arguments passed to or from other methods }
 }

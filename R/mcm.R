@@ -2,21 +2,11 @@
 ##   modeled using the multiple-choice model and the 
 ##   multidimensional multiple-choice model
 
-setGeneric("mcm", function(x, cat, theta, dimensions=1, ...) standardGeneric("mcm"))
+setGeneric("mcm", function(x, cat, theta, dimensions=1, items, ...) standardGeneric("mcm"))
 
 
 
-setMethod("mcm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, ...) {
-
-	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"mcm")
-	x <- sep.pars(x, cat, poly.mod, dimensions, ...)
-	callGeneric()
-	
-})
-
-
-
-setMethod("mcm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, dimensions, ...) {
+setMethod("mcm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, items, ...) {
 
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"mcm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, ...)
@@ -26,7 +16,17 @@ setMethod("mcm", signature(x="data.frame", cat="numeric"), function(x, cat, thet
 
 
 
-setMethod("mcm", signature(x="list", cat="numeric"), function(x, cat, theta, dimensions, ...) {
+setMethod("mcm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, dimensions, items, ...) {
+
+	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"mcm")
+	x <- sep.pars(x, cat, poly.mod, dimensions, ...)
+	callGeneric()
+	
+})
+
+
+
+setMethod("mcm", signature(x="list", cat="numeric"), function(x, cat, theta, dimensions, items, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(as.matrix(x[[1]])),"mcm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, ...)
@@ -38,7 +38,7 @@ setMethod("mcm", signature(x="list", cat="numeric"), function(x, cat, theta, dim
 
 ##   For this method the objects, cat and dimensionsare contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("mcm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dimensions, ...) {
+setMethod("mcm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dimensions, items, ...) {
 
 	##   Loop through all groups. In this scenario, a list of {irt.prob} objects will be returned
 	if (x@groups>1) {
@@ -60,10 +60,12 @@ setMethod("mcm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dim
 
 ##   For this method the objects, cat and dimensionsare contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("mcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dimensions, ...) {
+setMethod("mcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dimensions, items, ...) {
 
 	##   Identify the mcm items
-	items <- x@items$mcm
+	if (missing(items)) items <- 1:x@n[1]
+	tmp.items <- x@items$mcm
+	items <- tmp.items[tmp.items%in%items]
 	
 	##   Number of items
 	n <- length(items)
@@ -186,7 +188,7 @@ setMethod("mcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dim
 				cp <- (exp((theta %*% a1[(tmp+1):tmp1])+b1[k])+c1[k-1]*(exp((theta %*% a1[1:dimensions])+b1[1])))/den
 			}
 			p <- cbind(p,cp)
-			colnames(p)[ncol(p)] <- paste("item_",i,".",k-1,sep="")
+			colnames(p)[ncol(p)] <- paste("item_",items[i],".",k-1,sep="")
 		}
 	}
 	p <- data.frame(cbind(theta,p))

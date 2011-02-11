@@ -2,11 +2,11 @@
 ##   modeled using the nominal response model and the
 ##   multidimensional nominal response model
 
-setGeneric("nrm", function(x, cat, theta, dimensions=1, ...) standardGeneric("nrm"))
+setGeneric("nrm", function(x, cat, theta, dimensions=1, items, ...) standardGeneric("nrm"))
 
 
 
-setMethod("nrm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, ...) {
+setMethod("nrm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, items, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"nrm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, ...)
@@ -16,7 +16,7 @@ setMethod("nrm", signature(x="matrix", cat="numeric"), function(x, cat, theta, d
 
 
 
-setMethod("nrm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, dimensions, ...) {
+setMethod("nrm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, dimensions, items, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"nrm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, ...)
@@ -26,7 +26,7 @@ setMethod("nrm", signature(x="data.frame", cat="numeric"), function(x, cat, thet
 
 
 
-setMethod("nrm", signature(x="list", cat="numeric"), function(x, cat, theta, dimensions, ...) {
+setMethod("nrm", signature(x="list", cat="numeric"), function(x, cat, theta, dimensions, items, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(as.matrix(x[[1]])),"nrm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, ...)
@@ -38,7 +38,7 @@ setMethod("nrm", signature(x="list", cat="numeric"), function(x, cat, theta, dim
 
 ##   For this method the objects, cat and dimensionsare contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("nrm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dimensions, ...) {
+setMethod("nrm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dimensions, items, ...) {
 	
 	##   Loop through all groups. In this scenario, a list of {irt.prob} objects will be returned
 	if (x@groups>1) {
@@ -60,10 +60,12 @@ setMethod("nrm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dim
 
 ##   For this method the objects, cat and dimensionsare contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("nrm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dimensions, ...) {
+setMethod("nrm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dimensions, items, ...) {
 
 	##   Identify the nrm items
-	items <- x@items$nrm
+	if (missing(items)) items <- 1:x@n[1]
+	tmp.items <- x@items$nrm
+	items <- tmp.items[tmp.items%in%items]
 	
 	##   Number of items
 	n <- length(items)
@@ -178,7 +180,7 @@ setMethod("nrm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dim
 			tmp1 <- tmp+dimensions
 			cp <- exp((theta %*% a1[(tmp+1):tmp1])+b1[k])/den
 			p <- cbind(p,cp)
-			colnames(p)[ncol(p)] <- paste("item_",i,".",k,sep="")
+			colnames(p)[ncol(p)] <- paste("item_",items[i],".",k,sep="")
 		}
 	}
 	p <- data.frame(cbind(theta,p))

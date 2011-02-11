@@ -1,3 +1,40 @@
+Changes in version: plink_1.3-0
+
+Bug Fixes:
+
+  o The scoring function for {equate} accidentally defaulted to
+    2 instead of 1.
+
+  o True score equating using the graded response model returned
+    an error.
+
+
+Added Functionality:
+
+  o Least squares estimation added for the ODL, MIN, and LL methods
+    for multidimensional linking. This can be specified by setting
+    the argument {method="LS"}. When dilation="ODL" this uses the 
+    oblique procrustes rotation and returns the same results previously
+    returned by method="RM". In previous versions, the MIN and LL
+    methods could only be used with the characteristic curve methods.
+    The "LS" method is the now the default estimation approach
+    for multidimensional linking given that the results are more
+    stable than with the characteristic curve methods.
+
+  o Argument {items} added to drm, grm, gpcm, nrm, mcm, and mixed
+    that allows probabilities to be computed for a subset of items
+
+
+Misc:
+
+  o The default dilation for multidimensional linking was changed 
+    from "MIN" to "LL". This is because the LL method is technically
+    the only method that produces a symmetric transformation.
+
+  o Some corrections/additions to the .Rd files
+
+==============================
+
 Changes in version: plink_1.2-7
 
 Bug Fixes:

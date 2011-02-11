@@ -1,6 +1,7 @@
 import("methods")
 import("lattice")
 importFrom("MASS", "ginv")
+importFrom("MASS", "mvrnorm")
 importFrom('statmod', "gauss.quad.prob")
 
 export(

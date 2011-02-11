@@ -18,25 +18,25 @@ number of dimensions.
 
 \usage{
 drm(x, theta, dimensions = 1, D = 1, incorrect = FALSE, 
-  print.mod = FALSE, ...)
+  print.mod = FALSE, items, ...)
 
 ## S4 method for signature 'numeric'
-drm(x, theta, dimensions, D, incorrect, print.mod, ...)
+drm(x, theta, dimensions, D, incorrect, print.mod, items, ...)
 
 ## S4 method for signature 'matrix'
-drm(x, theta, dimensions, D, incorrect, print.mod, ...)
+drm(x, theta, dimensions, D, incorrect, print.mod, items, ...)
 
 ## S4 method for signature 'data.frame'
-drm(x, theta, dimensions, D, incorrect, print.mod, ...)
+drm(x, theta, dimensions, D, incorrect, print.mod, items, ...)
 
 ## S4 method for signature 'list'
-drm(x, theta, dimensions, D, incorrect, print.mod, ...)
+drm(x, theta, dimensions, D, incorrect, print.mod, items, ...)
 
 ## S4 method for signature 'irt.pars'
-drm(x, theta, dimensions, D, incorrect, print.mod, ...)
+drm(x, theta, dimensions, D, incorrect, print.mod, items, ...)
 
 ## S4 method for signature 'sep.pars'
-drm(x, theta, dimensions, D, incorrect, print.mod, ...)
+drm(x, theta, dimensions, D, incorrect, print.mod, items, ...)
 }
 
 \arguments{
@@ -55,6 +55,8 @@ drm(x, theta, dimensions, D, incorrect, print.mod, ...)
   \item{incorrect}{if \code{TRUE}, compute probabilities for the incorrect response category) }
 
   \item{print.mod}{if \code{TRUE}, print the model that was used (i.e., 1PL, 2PL, 3PL, M1PL, M2PL, or M3PL) }
+
+  \item{items}{numeric vector identifying the items for which probabilities should be computed}
 
   \item{...}{further arguments passed to or from other methods }
 }

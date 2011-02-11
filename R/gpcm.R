@@ -3,11 +3,11 @@
 ##   partial credit model, multidimensional partial credit model,
 ##   and the multidimensional generalized partial credit model
 
-setGeneric("gpcm", function(x, cat, theta, dimensions=1, D=1, location=FALSE, print.mod=FALSE, ...) standardGeneric("gpcm"))
+setGeneric("gpcm", function(x, cat, theta, dimensions=1, D=1, location=FALSE, print.mod=FALSE, items, ...) standardGeneric("gpcm"))
 
 
 
-setMethod("gpcm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, D, location, print.mod, ...) {
+setMethod("gpcm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, D, location, print.mod, items, ...) {
 
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"gpcm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, location, loc.out=FALSE, ...)
@@ -17,7 +17,7 @@ setMethod("gpcm", signature(x="matrix", cat="numeric"), function(x, cat, theta, 
 
 
 
-setMethod("gpcm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, dimensions, D, location, print.mod, ...) {
+setMethod("gpcm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, dimensions, D, location, print.mod, items, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"gpcm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, location, loc.out=FALSE, ...)
@@ -27,7 +27,7 @@ setMethod("gpcm", signature(x="data.frame", cat="numeric"), function(x, cat, the
 
 
 
-setMethod("gpcm", signature(x="list", cat="numeric"), function(x, cat, theta, dimensions, D, location, print.mod, ...) {
+setMethod("gpcm", signature(x="list", cat="numeric"), function(x, cat, theta, dimensions, D, location, print.mod, items, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(as.matrix(x[[1]])),"gpcm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, location, loc.out=FALSE, ...)
@@ -39,7 +39,7 @@ setMethod("gpcm", signature(x="list", cat="numeric"), function(x, cat, theta, di
 
 ##   For this method the objects, cat, dimensions, and location are contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("gpcm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dimensions, D, location, print.mod, ...) {
+setMethod("gpcm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dimensions, D, location, print.mod, items, ...) {
 	
 	##   Loop through all groups. In this scenario, a list of {irt.prob} objects will be returned
 	if (x@groups>1) {
@@ -61,7 +61,7 @@ setMethod("gpcm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, di
 
 ##   For this method the objects, cat, dimensions, and location are contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("gpcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dimensions, D, location, print.mod, ...) {
+setMethod("gpcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dimensions, D, location, print.mod, items, ...) {
 	
 	##   The equation to compute probabilities is not (actually) parameterized using
 	##   the location/step-deviation formulation. As such, in instances where a location
@@ -76,7 +76,9 @@ setMethod("gpcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, di
 	dimensions <- x@dimensions
 	
 	##   Identify the gpcm items
-	items <- x@items$gpcm
+	if (missing(items)) items <- 1:x@n[1]
+	tmp.items <- x@items$gpcm
+	items <- tmp.items[tmp.items%in%items]
 	
 	##   Number of items
 	n <- length(items)
@@ -193,7 +195,7 @@ setMethod("gpcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, di
 				cp <- exp(k*(theta %*% a[i,])+dif)/den
 			}
 			p <- cbind(p,cp)
-			colnames(p)[ncol(p)] <- paste("item_",i,".",k,sep="")
+			colnames(p)[ncol(p)] <- paste("item_",items[i],".",k,sep="")
 		}
 	}
 		
