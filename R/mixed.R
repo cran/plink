@@ -213,12 +213,16 @@ setMethod("mixed", signature(x="sep.pars", cat="ANY"), function(x, cat, poly.mod
 		}
 	}
 	
-	##   Based on the included models, determine the value(s) that need to be returned for D
-	D <- NULL
-	if (length(dots$D.drm)) D <- c(D, D.drm=dots$D.drm)
-	if (length(dots$D.gpcm)) D <- c(D, D.gpcm=dots$D.gpcm)
-	if (length(dots$D.grm)) D <- c(D, D.grm=dots$D.grm)
-	if (is.null(D)) D <- c(D=1)
+	##   Based on the included models, determine the values that need to be returned for D
+	if (length(dots$D)==0) {
+		D <- NULL
+		if (length(dots$D.drm)) D <- c(D, D.drm=dots$D.drm)
+		if (length(dots$D.gpcm)) D <- c(D, D.gpcm=dots$D.gpcm)
+		if (length(dots$D.grm)) D <- c(D, D.grm=dots$D.grm)
+		if (is.null(D)) D <- 1
+	} else {
+		D <- dots$D
+	}
 	
 	##   Resort all of the items and categories using the original sort order
 	sort <- unlist(x@items)

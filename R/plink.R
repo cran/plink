@@ -966,11 +966,13 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		##   for each group of the adjacent paired groups
 		com[[i]] <- vector("list",2)
 		
-		##   Extract the common item parameterss for the lower group
+		##   Extract the common item parameters for the lower group
 		com[[i]][[1]] <- x@pars[[i]][it.com[,1],]
+		if (is.vector(com[[i]][[1]])) com[[i]][[1]] <- t(com[[i]][[1]][!is.na(com[[i]][[1]])]) 
 		
-		##   Extract the common item parameterss for the higher group
+		##   Extract the common item parameters for the higher group
 		com[[i]][[2]] <- x@pars[[i+1]][it.com[,2],]
+		if (is.vector(com[[i]][[2]])) com[[i]][[2]] <- t(com[[i]][[2]][!is.na(com[[i]][[2]])]) 
 		
 		##   Extract a vector of the number of response categories 
 		##   for the common items for the given pair of groups
@@ -1014,8 +1016,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		
 		##   Initialize an object to store the item numbers associated with
 		##   the item response models used for the common items
-		poly <- NULL
-		poly <- vector("list",1:5)
+		poly <- vector("list",5)
 	
 		##   Identify the common items associated with each model
 		##   Not all models need to have common items

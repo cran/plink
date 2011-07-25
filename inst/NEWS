@@ -1,3 +1,12 @@
+Changes in version: plink_1.3-1
+
+Bug Fixes:
+
+  o The value for D in {mixed} defaulted to 1 even when the 
+    argument was changed
+
+==============================
+
 Changes in version: plink_1.3-0
 
 Bug Fixes:
