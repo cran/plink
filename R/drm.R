@@ -1,12 +1,12 @@
 ##   This function computes response probabilities for items
 ##   modeled using the Rasch model, 1PL, 2PL, 3PL, M1PL, M2PL, or the M3PL
 
-setGeneric("drm", function(x, theta, dimensions=1, D=1, incorrect=FALSE, print.mod=FALSE, items, ...) standardGeneric("drm"))
+setGeneric("drm", function(x, theta, dimensions=1, D=1, incorrect=FALSE, print.mod=FALSE, items, information=FALSE, angle, ...) standardGeneric("drm"))
 
 
 ##   This method applies when {x} is a  vector of difficulty parameters
 
-setMethod("drm", signature(x="numeric"), function(x, theta, dimensions, D, incorrect, print.mod, items, ...) {
+setMethod("drm", signature(x="numeric"), function(x, theta, dimensions, D, incorrect, print.mod, items, information=FALSE, angle, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(length(x))
 	x <- sep.pars(x, poly.mod=poly.mod, dimensions=dimensions, ...)
@@ -16,7 +16,7 @@ setMethod("drm", signature(x="numeric"), function(x, theta, dimensions, D, incor
 
 
 
-setMethod("drm", signature(x="matrix"), function(x, theta, dimensions, D, incorrect, print.mod, items, ...) {
+setMethod("drm", signature(x="matrix"), function(x, theta, dimensions, D, incorrect, print.mod, items, information, angle, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x))
 	x <- sep.pars(x, poly.mod=poly.mod, dimensions=dimensions, ...)
@@ -26,7 +26,7 @@ setMethod("drm", signature(x="matrix"), function(x, theta, dimensions, D, incorr
 
 
 
-setMethod("drm", signature(x="data.frame"), function(x, theta, dimensions, D, incorrect, print.mod, items, ...) {
+setMethod("drm", signature(x="data.frame"), function(x, theta, dimensions, D, incorrect, print.mod, items, information, angle, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x))
 	x <- sep.pars(x, poly.mod=poly.mod, dimensions=dimensions, ...)
@@ -36,7 +36,7 @@ setMethod("drm", signature(x="data.frame"), function(x, theta, dimensions, D, in
 
 
 
-setMethod("drm", signature(x="list"), function(x, theta, dimensions, D, incorrect, print.mod, items, ...) {
+setMethod("drm", signature(x="list"), function(x, theta, dimensions, D, incorrect, print.mod, items, information, angle, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(as.matrix(x[[1]])))
 	x <- sep.pars(x, poly.mod=poly.mod, dimensions=dimensions, ...)
@@ -46,7 +46,7 @@ setMethod("drm", signature(x="list"), function(x, theta, dimensions, D, incorrec
 
 
 
-setMethod("drm", signature(x="irt.pars"), function(x, theta, dimensions, D, incorrect, print.mod, items, ...) {
+setMethod("drm", signature(x="irt.pars"), function(x, theta, dimensions, D, incorrect, print.mod, items, information, angle, ...) {
 	
 	##   Loop through all groups. In this scenario, a list of {irt.prob} objects will be returned
 	if (x@groups>1) {
@@ -66,7 +66,7 @@ setMethod("drm", signature(x="irt.pars"), function(x, theta, dimensions, D, inco
 
 
 
-setMethod("drm", signature(x="sep.pars"), function(x, theta, dimensions, D, incorrect, print.mod, items, ...) {
+setMethod("drm", signature(x="sep.pars"), function(x, theta, dimensions, D, incorrect, print.mod, items, information, angle, ...) {
 	
 	##   Number of dimensions
 	dimensions <- x@dimensions
@@ -147,20 +147,66 @@ setMethod("drm", signature(x="sep.pars"), function(x, theta, dimensions, D, inco
 	
 	if (length(x@model[x@model!="drm"])) warning("{x} contains mixed format items. Probabilities will only be computed for the dichotomous items.\nTo compute probabilities for mixed format items, use the function {mixed}.\n")
 	
-	##   Initialize object to hold the response probabilities
-	p <- NULL
+	##   Initialize object to hold the response probabilities (and information if applicable)
+	p <- p1 <- NULL
+	
+	##   Determine angles for computing information (in the multidimensional case)
+	if (information==TRUE) {
+		if (dimensions>1) {
+			if (missing(angle)) {
+				angle <- list()
+				for (i in 1:(dimensions-1)) {
+					angle[[i]] <- seq(0,90,10)
+				}
+				ang <- expand.grid(angle)
+				angle <- as.matrix(cbind(ang[,1],90-ang[,1],ang[,-1]))
+			} else {
+				if (is.vector(angle)) {
+					angle1 <- angle
+					angle <- list()
+					for (i in 1:(dimensions-1)) {
+						angle[[i]] <- angle1
+					}
+					ang <- expand.grid(angle)
+					angle <- as.matrix(cbind(ang[,1],90-ang[,1],ang[,-1]))
+				} else if (is.matrix(angle)) {
+					if (ncol(angle)!=dimensions) {
+						warning("The number of columns in {angle} does not match the number of dimensions in {x}. Default angles were used.")
+						angle <- list()
+						for (i in 1:(dimensions-1)) {
+							angle[[i]] <- seq(0,90,10)
+						}
+						ang <- expand.grid(angle)
+						angle <- as.matrix(cbind(ang[,1],90-ang[,1],ang[,-1]))
+					}
+				}
+			}
+			dcos <- cos((pi*angle)/180)
+		}
+	}
 	
 	##   Compute the response probabilities
 	for (i in 1:length(b)) {
 		if (dimensions==1) {
 			##   This is the equation for the 3PL
 			cp <- c[i]+(1-c[i])/(1+exp(-D*a[i]*(theta-b[i])))
+			
+			if (information==TRUE) {
+				cp1 <- (D*a[i]*(1-c[i])*exp(D*a[i]*(theta-b[i])))/(1+exp(D*a[i]*(theta-b[i])))^2
+				info <- (cp1^2)/(cp*(1-cp))
+			}
+			
 		} else {
 			##   In the multidimensional case D is typically set equal to 1
 			a[i,] <- a[i,]*D
 			
 			##   This is the equation for the M3PL
 			cp <- c[i]+(1-c[i])/(1+exp(-(theta %*% a[i,]+b[i])))
+			
+			if (information==TRUE) {
+				cp1 <- ((1-c[i])*exp(theta %*% a[i,]+b[i])/(1+exp(theta %*% a[i,]+b[i]))^2)%*%(a[i,]%*%t(dcos))
+				info <- as.matrix(cp1^2)/matrix(cp*(1-cp),length(cp),nrow(angle))
+			}
 		}
 		if (incorrect==TRUE) {
 			p <- cbind(p,(1-cp),cp)
@@ -168,6 +214,9 @@ setMethod("drm", signature(x="sep.pars"), function(x, theta, dimensions, D, inco
 		} else {
 			p <- cbind(p,cp)
 			colnames(p)[ncol(p)] <- paste("item_",items[i],".1",sep="")
+		}
+		if (information==TRUE) {
+			p1 <- cbind(p1,as.vector(info))
 		}
 	}
 	
@@ -178,7 +227,22 @@ setMethod("drm", signature(x="sep.pars"), function(x, theta, dimensions, D, inco
 	if (print.mod==TRUE) cat(paste(x@mod.lab,"\n"))
 	
 	##   Create and return the irt.prob object
-	p <- new("irt.prob", prob=p, p.cat=cat, mod.lab=x@mod.lab[x@model=="drm"], dimensions=dimensions, D=c(D.drm=D), pars=pars, model="drm", items=list(drm=1:n))
+	if (information==TRUE) {
+		if (dimensions>1) {
+			th <- NULL
+			for (i in 1:nrow(angle)) {
+				th <- rbind(th, cbind(theta,matrix(angle[i,],nrow(theta),dimensions,byrow=TRUE)))
+			}
+			colnames(th) <- c(paste("theta",1:dimensions,sep=""),paste("angle",1:dimensions,sep=""))
+			p1 <- data.frame(cbind(th,p1))
+			names(p1)[-c(1:(2*dimensions))] <- paste("item_",items,sep="")
+		} else {
+			p1 <- data.frame(cbind(theta,p1))
+			names(p1) <- c("theta",paste("item_",items,sep=""))
+		}
+		p <- new("irt.prob", prob=p, info=p1, p.cat=cat, mod.lab=x@mod.lab[x@model=="drm"], dimensions=dimensions, D=c(D.drm=D), pars=pars, model="drm", items=list(drm=1:n))
+	} else {
+		p <- new("irt.prob", prob=p, p.cat=cat, mod.lab=x@mod.lab[x@model=="drm"], dimensions=dimensions, D=c(D.drm=D), pars=pars, model="drm", items=list(drm=1:n))
+	}
 	return(p)
-	
 })

@@ -1,25 +1,89 @@
 ##   This function conducts IRT true-score and observed-score equating
 
-setGeneric("equate", function(x, method="TSE", true.scores, ts.low=TRUE, base.grp=1, score=1, startval, weights1, weights2, syn.weights, ...) standardGeneric("equate"))
+setGeneric("equate", function(x, method=c("TSE", "OSE"), true.scores, ts.low=TRUE, base.grp=1, score=1, startval, weights1, weights2, syn.weights, exclude, max.tse.iter, ...) standardGeneric("equate"))
 
 
 
-setMethod("equate", signature(x="list"), function(x, method, true.scores, ts.low, base.grp, score, startval, weights1, weights2, syn.weights, ...) {
+setMethod("equate", signature(x="list"), function(x, method, true.scores, ts.low, base.grp, score, startval, weights1, weights2, syn.weights, exclude, max.tse.iter, ...) {
 
 	##   Extract the rescaled item parameters from the object output by {plink}
-	if (length(x$pars)) {
-		x<- x$pars
-		callGeneric()
+	if (is.link(x[[1]])) {
+		if (length(x$pars)) {
+			x<- x$pars
+			callGeneric()
+		} else {
+			stop("There were no item parameters in {x}, re-run plink and specify and argument for {rescale} then try again.")
+		}
+	} else if (is.list(x[[1]])) {
+		if (is.link(x[[1]][[1]])) {
+			if (length(x)>1) {
+				if (is.irt.pars(x[[2]])) {
+					x<- x[[2]]
+					callGeneric()
+				} else {
+					stop("There were no item parameters in {x}, re-run plink and specify and argument for {rescale} then try again.")
+				}
+			} else {
+				stop("There were no item parameters in {x}, re-run plink and specify and argument for {rescale} then try again.")
+			}
+		}
 	} else {
-		stop("There were no parameters in {x}, re-run plink and specify and argument for {rescale} then try again.")
+		tmp <- tmp1 <- NULL
+		##   Check to ensure that all of the list objects are irt.pars or sep.pars objects
+		for (i in 1:length(x)) {
+			tmp <- c(tmp, is.irt.pars(x[[i]]))
+			tmp1 <- c(tmp1, is.sep.pars(x[[i]]))
+		}
+		tmp <- tmp+tmp1
+		
+		if (length(tmp[tmp==0])) stop(paste("Elments", c(1:length(tmp))[tmp==0], "are not {irt.pars} or {sep.pars} objects}."))
+		
+		##   Create a single irt.pars object with a dummy common item 
+		tmp.pars <- list(NULL)
+		index <- 1
+		for (i in 1:length(x)) {
+			if (is.irt.pars(x[[i]])) {
+				if (x[[i]]@groups==1) {
+					tmp.pars[[index]] <- x[[i]]
+					index <- index+1
+				} else {
+					tmp <- sep.pars(x[[i]])
+					for (j in 1:x[[i]]@groups) {
+						tmp.pars[[index]] <- as.irt.pars(tmp[[j]])
+						index <- index+1
+					}
+				}
+			} else if (is.sep.pars(x[[i]])) {
+				tmp.pars[[index]] <- as.irt.pars(x[[i]])
+				index <- index+1
+			}
+		}
+		
+		for (i in 1:length(tmp.pars)) {
+			if ("drm"%in%tmp.pars[[i]]@poly.mod@model) {
+				tmp.pars[[i]]@poly.mod@items$drm <- c(tmp.pars[[i]]@poly.mod@items$drm, nrow(tmp.pars[[i]]@pars)+1)
+			} else {
+				tmp.pars[[i]]@poly.mod@model <- c(tmp.pars[[i]]@poly.mod@model,"drm")
+				tmp.pars[[i]]@poly.mod@items$drm <- nrow(tmp.pars[[i]]@pars)+1
+			}
+			tmp.pars[[i]]@pars <- rbind(tmp.pars[[i]]@pars,c(1,0,0,rep(NA,ncol(tmp.pars[[i]]@pars)-3)))
+			tmp.pars[[i]]@cat <- c(tmp.pars[[i]]@cat,2)
+		}
+		
+		com <- vector("list",length(tmp.pars)-1)
+		for (i in 1:(length(tmp.pars)-1)) {
+			com[[i]] <- matrix(c(nrow(tmp.pars[[i]]@pars),nrow(tmp.pars[[i+1]]@pars)),1,2)
+		}
+		
+		x <- combine.pars(tmp.pars, com)
+		tmp <- deparse(match.call())
+		substring(tmp,nchar(tmp),nchar(tmp)) <- ","
+		eval(parse(text=paste(tmp,"exclude='all.common')",collapse="")))
 	}
-	
 })
 
 
-
-setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts.low, base.grp, score, startval, weights1, weights2, syn.weights, ...) {
-
+setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts.low, base.grp, score, startval, weights1, weights2, syn.weights, exclude, max.tse.iter, ...) {
 
 	##      Function that will be minimized for the True Score Equating
 	.TSE <- function(startval, truescore, pars, sc, ...) {
@@ -40,7 +104,6 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 		
 		return(new.ts)
 	}
-
 	
 	##   This is a modified version of the {mixed} function
 	.Mixed <- function(x, theta, ...) {
@@ -442,6 +505,90 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 		score <- tmp
 	}
 	
+	##   Remove items prior to computing true/observed scores
+	if (!missing(exclude)) {
+		
+		##   Check to see if {exclude} is formatted properly (if applicable)
+		if (is.list(exclude)) {
+			if (length(exclude)!=ng) stop("The {exclude} argument must be a list with length equal to the number of groups")
+			tmp <- length(exclude[[1]])
+		}
+		
+		if (is.character(exclude)) {
+			items <- vector("list",ng)
+			
+			##  Reformat {exclude} to remove all common items from the scoring
+			if (exclude=="all.common") {
+				if (ng==2) {
+					items <- list(x@common[,1],x@common[,2])
+				} else {
+					for (i in 1:(ng-1)) {
+						items[[i]] <- c(items[[i]],x@common[[i]][,1])
+						items[[i+1]] <- c(items[[i+1]],x@common[[i]][,2])
+					}
+				}
+			} else {
+				##   Exclude all items associated with the specified models
+				for (i in 1:ng) {
+					for (j in exclude) {
+						items[[i]] <- c(items[[i]],eval(parse(text=paste("x@poly.mod[[i]]@items$",j,sep=""))))
+					}
+				}
+			}
+			
+		} else {
+			items <- vector("list",ng)
+			
+			for (i in 1:ng) {
+				##   Exclude all items associated with the specified models
+				if (is.character(exclude[[i]])) {
+					tmp <- suppressWarnings(as.numeric(exclude[[i]]))
+					items.char <- exclude[[i]][is.na(tmp)]
+					for (j in items.char) {
+						items[[i]] <- c(items[[i]],eval(parse(text=paste("x@poly.mod[[i]]@items$",j,sep=""))))
+					}
+					
+					##   Check to see if there are additional items that should be excluded
+					items[[i]] <- c(items[[i]],tmp[!is.na(tmp)])
+				} else {
+					items <- exclude
+				}
+			}
+		}
+		
+		##  Remove the specified items
+		for (i in 1:ng) {
+			it.order <- unlist(x@poly.mod[[i]]@items)
+			ex.items <- c(1:length(it.order))[it.order %in% items[[i]][!is.na(items[[i]])]]
+			if (length(ex.items)) {
+				x@pars[[i]] <- x@pars[[i]][order(it.order),]
+				x@pars[[i]] <- x@pars[[i]][-ex.items,]
+				tmp <- apply(!is.na(x@pars[[i]]),2,sum)
+				x@pars[[i]] <- x@pars[[i]][,tmp>0]
+				
+				x@cat[[i]] <- x@cat[[i]][order(it.order)]
+				x@cat[[i]] <- x@cat[[i]][-ex.items]
+				mod <- NULL
+				mod.it <- list()
+				index <- 1
+				max.it <- 0
+				for (j in 1:length(x@poly.mod[[i]]@model)) {
+					tmp <- x@poly.mod[[i]]@items[[j]]
+					tmp <- tmp[(tmp %in% items[[i]])==FALSE]
+					if (length(tmp)) {
+						mod <- c(mod,x@poly.mod[[i]]@model[j])
+						mod.it[[index]] <- (max.it+1):(max.it+length(tmp))
+						index <- index+1
+						max.it <- max.it+length(tmp)
+					}
+				}
+				x@poly.mod[[i]]@model <- mod
+				x@poly.mod[[i]]@items <- mod.it
+				names(x@poly.mod[[i]]@items) <- mod
+			}
+		}
+	}
+	
 	##   TRUE SCORE EQUATING
 	if ("TSE" %in% method) {
 		
@@ -571,8 +718,9 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 			}
 			colnames(tse.out) <- c("theta",names(x@pars)[base.grp],names(x@pars)[-base.grp])
 		} else {
-			colnames(tse.out) <- c("theta","x")
+			colnames(tse.out) <- c("theta","true.score")
 		}
+		tse.out[,1] <- round(tse.out[,1],6)
 		
 		##   Use Kolen's (1981) approach to interpolate values
 		##   for equated true scores in the range of observed scores
@@ -607,7 +755,7 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 				
 				##   Check to see if there are any rows with NAs for theta after {start}
 				tmp <- tse.out[tse.out[,2]>start,]
-				if (nrow(tmp[is.na(tmp[,1]),]) >0){
+				if (length(tmp[is.na(tmp[,1]),1]) >0){
 					cat(paste("The maximum possible score is ",max(tse.out[,2])+1,", but theta equivalents cannot be computed for true scores greater than ",
 					max(tse.out[!is.na(tse.out[,1]),2]),"\n",sep=""))
 				}
@@ -636,136 +784,48 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 		##   Separate the item parameters for each of the groups
 		pars <- sep.pars(x)
 		
-		##   Identify the group names
 		if (ng==1) {
-			pars <- list(pars)
+			##   Identify the group names
 			nms <- "x"
-		} else {
-			nms <- names(x@pars)
-		}
-		
-		##   Initialize an object to store the compound binomial/multinomial
-		##   distributions for each group
-		dist <- dist1 <- dist2 <- dist1b <- dist2b <- vector("list",ng-1)
-		
-		##   Loop through all of the groups
-		for (i in 1:(ng-1)) {
-		
-			if (i>=base.grp) grp <- i+1 else grp <- i
 			
-			
-			##   Identify the weights to be used for population 1
+			##   Identify the population weights to be used
 			if (missing(weights1)) {
 				wgt1 <- as.weight(normal.wt=TRUE)
 			} else {
-				if (is.list(weights1[[1]])) wgt1 <- weights1[[i]] else wgt1 <- weights1
+				if (is.list(weights1[[1]])) wgt1 <- weights1[[1]] else wgt1 <- weights1
 			}
 			
-			##   Identify the weights to be used for population 2
-			if (missing(weights2)) {
-				wgt2 <- wgt1
-			} else {
-				if (is.list(weights2[[1]])) wgt2 <- weights2[[i]] else wgt2 <- weights2
-			}
-			
-			##   Extract the theta values that will be used for each population
+			##   Extract the theta values that will be used for the population
 			##   when computing the probabilities
 			theta1 <- wgt1[[1]]
-			theta2 <- wgt2[[1]]
-			
-			##   Identify the synthetic weights to be used
-			if (missing(syn.weights)) {
-				syn <- c(.5,.5)
-			} else {
-				if (is.list(syn.weights)) syn <- syn.weights[[i]] else syn <- syn.weights
-			}
 			
 			##   Compute response probabilities
-			prob.b1 <- .Mixed(pars[[base.grp]], theta1, incorrect=TRUE, ...)
-			prob.b2 <- .Mixed(pars[[base.grp]], theta2, incorrect=TRUE, ...)
-			
-			prob1 <- .Mixed(pars[[grp]], theta1, incorrect=TRUE, ...)
-			prob2 <- .Mixed(pars[[grp]], theta2, incorrect=TRUE, ...)
+			prob1 <- .Mixed(pars, theta1, incorrect=TRUE, ...)
 			
 			##   Extract the probabilities
-			pb1 <- prob.b1$p
-			pb2 <- prob.b2$p
-			
 			p1 <- prob1$p
-			p2 <- prob2$p
 			
 			##   Identify the number of columns of probabilities associated with each item
-			pb.cat <- prob.b1$p.cat
 			p.cat <- prob1$p.cat
 			
-			##   Identify the number of theta values used
-			##   to compute the probabilities
+			##   Identify the number of theta values used to compute the probabilities
 			n1 <- nrow(p1)
-			n2 <- nrow(p2)
 			
 			##   Maximum possible score
-			 cat.b <- pars[[base.grp]]@cat
-			 cat <- pars[[grp]]@cat
+			 cat <- pars@cat
 			
 			##   Correct the maximum possible score if there are MCM items
-			if ("mcm" %in% pars[[base.grp]]@model) cat.b[pars[[base.grp]]@items$mcm] <- cat.b[pars[[base.grp]]@items$mcm]-1
-			if ("mcm" %in% pars[[grp]]@model) cat.b[pars[[grp]]@items$mcm] <- cat.b[pars[[grp]]@items$mcm]-1
+			if ("mcm" %in% pars@model) cat[pars@items$mcm] <- cat[pars@items$mcm]-1
 			
 			
-			##   Initialize lists to store the distributions for each
-			##   observed score for each group
-			dist1b[[i]] <- vector("list",2)
-			dist2b[[i]] <- vector("list",2)
-			dist1[[i]] <- vector("list",2)
-			dist2[[i]] <- vector("list",2)
+			##   Initialize lists to store the compound binomial distributions for each observed score
+			dist1 <- vector("list",2)
 			
-			##   Create the compound binomial/multinomial distributions for the base group
-			for (j in 1:length(cat.b)) {
-			
-				if (j==1) {
-					dist1b[[i]][[1]] <- pb1[,1:pb.cat[j]]
-					dist2b[[i]][[1]] <- pb2[,1:pb.cat[j]]
-					
-					##  Minimum score for all further observed scores
-					min.scr <- 2
-					
-				} else {
-					
-					cols <- (sum(pb.cat[1:(j-1)])+1):sum(pb.cat[1:j])
-					
-					##   Identify the maximum score for the given set of items
-					max.scr <- max(cols)
-					
-					##   Initialize an object for the distribution for the given set of items
-					dist1b[[i]][[2]] <- matrix(0,n1,max.scr-min.scr+1)
-					dist2b[[i]][[2]] <- matrix(0,n2,max.scr-min.scr+1)
-					
-					##   Create the distributions
-					for (k in 1:pb.cat[j]) {
-						tmp <- dist1b[[i]][[1]]*pb1[,cols[k]]
-						dist1b[[i]][[2]][,k:(ncol(tmp)+k-1)] <- dist1b[[i]][[2]][,k:(ncol(tmp)+k-1)]+tmp
-						
-						tmp <- dist2b[[i]][[1]]*pb2[,cols[k]]
-						dist2b[[i]][[2]][,k:(ncol(tmp)+k-1)] <- dist2b[[i]][[2]][,k:(ncol(tmp)+k-1)]+tmp
-						
-					}
-					
-					##   Update the minimum score
-					min.scr <- min.scr+1
-					
-					##   Replace the distribution in the first list
-					##   element with the current distribution
-					dist1b[[i]][[1]] <- dist1b[[i]][[2]]
-					dist2b[[i]][[1]] <- dist2b[[i]][[2]]
-				}
-			}
-			
-			##   Create the compound binomial/multinomial distributions for the focal group
+			##   Create the compound binomial/multinomial distributions
 			for (j in 1:length(cat)) {
 			
 				if (j==1) {
-					dist1[[i]][[1]] <- p1[,1:p.cat[j]]
-					dist2[[i]][[1]] <- p2[,1:p.cat[j]]
+					dist1[[1]] <- p1[,1:p.cat[j]]
 					
 					##  Minimum score for all further observed scores
 					min.scr <- 2
@@ -778,95 +838,283 @@ setMethod("equate", signature(x="irt.pars"), function(x, method, true.scores, ts
 					max.scr <- max(cols)
 					
 					##   Initialize an object for the distribution for the given set of items
-					dist1[[i]][[2]] <- matrix(0,n1,max.scr-min.scr+1)
-					dist2[[i]][[2]] <- matrix(0,n2,max.scr-min.scr+1)
+					dist1[[2]] <- matrix(0,n1,max.scr-min.scr+1)
 					
 					##   Create the distributions
 					for (k in 1:p.cat[j]) {
-						tmp <- dist1[[i]][[1]]*p1[,cols[k]]
-						dist1[[i]][[2]][,k:(ncol(tmp)+k-1)] <- dist1[[i]][[2]][,k:(ncol(tmp)+k-1)]+tmp
-						
-						tmp <- dist2[[i]][[1]]*p2[,cols[k]]
-						dist2[[i]][[2]][,k:(ncol(tmp)+k-1)] <- dist2[[i]][[2]][,k:(ncol(tmp)+k-1)]+tmp
-						
+						tmp <- dist1[[1]]*p1[,cols[k]]
+						dist1[[2]][,k:(ncol(tmp)+k-1)] <- dist1[[2]][,k:(ncol(tmp)+k-1)]+tmp
 					}
 					
 					##   Update the minimum score
 					min.scr <- min.scr+1
 					
-					##   Replace the distribution in the first list
-					##   element with the current distribution
-					dist1[[i]][[1]] <- dist1[[i]][[2]]
-					dist2[[i]][[1]] <- dist2[[i]][[2]]
+					##   Replace the distribution in the first list element with the current distribution
+					dist1[[1]] <- dist1[[2]]
 				}
 			}
 			
 			##   Extract the last list element
 			##   This is the final distribution
-			dist1b[[i]] <- t(dist1b[[i]][[2]]) %*% wgt1[[2]]
-			dist2b[[i]] <- t(dist2b[[i]][[2]]) %*% wgt2[[2]]
-			dist1[[i]] <- t(dist1[[i]][[2]]) %*% wgt1[[2]]
-			dist2[[i]] <- t(dist2[[i]][[2]]) %*% wgt2[[2]]
-			
-			##   Create the synthetic distributions
-			s1 <- dist1b[[i]]*syn[1]+dist2b[[i]]*syn[2]
-			s2 <- dist1[[i]]*syn[1]+dist2[[i]]*syn[2]
+			dist1a <- t(dist1[[2]]) %*% wgt1[[2]]
+			eap.dist <- (t(dist1[[2]]*matrix(theta1,nrow(dist1[[2]]),ncol(dist1[[2]]))) %*% wgt1[[2]])/dist1a
+			eap.dif <- (theta1-t(matrix(eap.dist,length(eap.dist),length(theta1))))^2
+			eap.sd <-  sqrt((t(dist1[[2]]*eap.dif) %*% wgt1[[2]])/dist1a)
 			
 			##   Compile the distributions to be output
-			dist[[i]] <- list(cbind(0:(nrow(dist1b[[i]])-1),dist1b[[i]],dist2b[[i]],s1),cbind(0:(nrow(dist1[[i]])-1),dist1[[i]],dist2[[i]],s2))
-			names(dist[[i]]) <- c(nms[base.grp],nms[grp])
-			colnames(dist[[i]][[1]]) <- colnames(dist[[i]][[2]]) <- c("score","pop1","pop2","syn")
+			dist <- cbind(round(eap.dist,6), round(eap.sd,6), 0:(length(eap.dist)-1))
+			colnames(dist) <- c("eap.theta","eap.sd","score")
+			ose.out <- as.data.frame(dist)
 			
-			##   Compute cumulative proportions
-			F1 <- cumsum(s1)
-			F2 <- cumsum(s2)
+		} else {
+			##   Group names
+			nms <- names(x@pars)
+		
+			##   Flag to identify if EAP summed scores have already been computed
+			eap.flag <- FALSE
 			
-			##   Compute the percentile ranks for the base group
-			for (j in 1:length(F1)) {
-				if (j==1) {
-					pr <- 0
+			##   Initialize an object to store the compound binomial/multinomial
+			##   distributions for each group
+			dist <- dist1 <- dist2 <- dist1b <- dist2b <- vector("list",ng-1)
+			
+			##   Loop through all of the groups
+			for (i in 1:(ng-1)) {
+			
+				if (i>=base.grp) grp <- i+1 else grp <- i
+				
+				
+				##   Identify the weights to be used for population 1
+				if (missing(weights1)) {
+					wgt1 <- wgt.bg <- as.weight(normal.wt=TRUE)
 				} else {
-					pr <- c(pr, F1[j-1]+((j-1)-((j-1)-.5))*(F1[j]-F1[j-1]))
+					if (is.list(weights1[[1]])) {
+						wgt1 <- weights1[[i]]
+						wgt.bg <- weights1[[1]] 
+					} else {
+						wgt1 <- wgt.bg <- weights1
+					}
 				}
+				
+				##   Identify the weights to be used for population 2
+				if (missing(weights2)) {
+					wgt2 <- wgt1
+				} else {
+					if (is.list(weights2[[1]])) wgt2 <- weights2[[i]] else wgt2 <- weights2
+				}
+				
+				##   Extract the theta values that will be used for each population
+				##   when computing the probabilities
+				theta1 <- wgt1[[1]]
+				theta2 <- wgt2[[1]]
+				
+				##   Identify the synthetic weights to be used
+				if (missing(syn.weights)) {
+					syn <- c(.5,.5)
+				} else {
+					if (is.list(syn.weights)) syn <- syn.weights[[i]] else syn <- syn.weights
+				}
+				
+				##   Compute response probabilities
+				prob.b1 <- .Mixed(pars[[base.grp]], theta1, incorrect=TRUE, ...)
+				prob.b2 <- .Mixed(pars[[base.grp]], theta2, incorrect=TRUE, ...)
+				
+				prob1 <- .Mixed(pars[[grp]], theta1, incorrect=TRUE, ...)
+				prob2 <- .Mixed(pars[[grp]], theta2, incorrect=TRUE, ...)
+				
+				##   Extract the probabilities
+				pb1 <- prob.b1$p
+				pb2 <- prob.b2$p
+				
+				p1 <- prob1$p
+				p2 <- prob2$p
+				
+				##   Identify the number of columns of probabilities associated with each item
+				pb.cat <- prob.b1$p.cat
+				p.cat <- prob1$p.cat
+				
+				##   Identify the number of theta values used
+				##   to compute the probabilities
+				n1 <- nrow(p1)
+				n2 <- nrow(p2)
+				
+				##   Maximum possible score
+				 cat.b <- pars[[base.grp]]@cat
+				 cat <- pars[[grp]]@cat
+				
+				##   Correct the maximum possible score if there are MCM items
+				if ("mcm" %in% pars[[base.grp]]@model) cat.b[pars[[base.grp]]@items$mcm] <- cat.b[pars[[base.grp]]@items$mcm]-1
+				if ("mcm" %in% pars[[grp]]@model) cat.b[pars[[grp]]@items$mcm] <- cat.b[pars[[grp]]@items$mcm]-1
+				
+				
+				##   Initialize lists to store the distributions for each
+				##   observed score for each group
+				dist1b[[i]] <- vector("list",2)
+				dist2b[[i]] <- vector("list",2)
+				dist1[[i]] <- vector("list",2)
+				dist2[[i]] <- vector("list",2)
+				
+				##   Create the compound binomial/multinomial distributions for the base group
+				for (j in 1:length(cat.b)) {
+				
+					if (j==1) {
+						dist1b[[i]][[1]] <- pb1[,1:pb.cat[j]]
+						dist2b[[i]][[1]] <- pb2[,1:pb.cat[j]]
+						
+						##  Minimum score for all further observed scores
+						min.scr <- 2
+						
+					} else {
+						
+						cols <- (sum(pb.cat[1:(j-1)])+1):sum(pb.cat[1:j])
+						
+						##   Identify the maximum score for the given set of items
+						max.scr <- max(cols)
+						
+						##   Initialize an object for the distribution for the given set of items
+						dist1b[[i]][[2]] <- matrix(0,n1,max.scr-min.scr+1)
+						dist2b[[i]][[2]] <- matrix(0,n2,max.scr-min.scr+1)
+						
+						##   Create the distributions
+						for (k in 1:pb.cat[j]) {
+							tmp <- dist1b[[i]][[1]]*pb1[,cols[k]]
+							dist1b[[i]][[2]][,k:(ncol(tmp)+k-1)] <- dist1b[[i]][[2]][,k:(ncol(tmp)+k-1)]+tmp
+							
+							tmp <- dist2b[[i]][[1]]*pb2[,cols[k]]
+							dist2b[[i]][[2]][,k:(ncol(tmp)+k-1)] <- dist2b[[i]][[2]][,k:(ncol(tmp)+k-1)]+tmp
+							
+						}
+						
+						##   Update the minimum score
+						min.scr <- min.scr+1
+						
+						##   Replace the distribution in the first list
+						##   element with the current distribution
+						dist1b[[i]][[1]] <- dist1b[[i]][[2]]
+						dist2b[[i]][[1]] <- dist2b[[i]][[2]]
+					}
+				}
+				
+				##   Create the compound binomial/multinomial distributions for the focal group
+				for (j in 1:length(cat)) {
+				
+					if (j==1) {
+						dist1[[i]][[1]] <- p1[,1:p.cat[j]]
+						dist2[[i]][[1]] <- p2[,1:p.cat[j]]
+						
+						##  Minimum score for all further observed scores
+						min.scr <- 2
+						
+					} else {
+						
+						cols <- (sum(p.cat[1:(j-1)])+1):sum(p.cat[1:j])
+						
+						##   Identify the maximum score for the given set of items
+						max.scr <- max(cols)
+						
+						##   Initialize an object for the distribution for the given set of items
+						dist1[[i]][[2]] <- matrix(0,n1,max.scr-min.scr+1)
+						dist2[[i]][[2]] <- matrix(0,n2,max.scr-min.scr+1)
+						
+						##   Create the distributions
+						for (k in 1:p.cat[j]) {
+							tmp <- dist1[[i]][[1]]*p1[,cols[k]]
+							dist1[[i]][[2]][,k:(ncol(tmp)+k-1)] <- dist1[[i]][[2]][,k:(ncol(tmp)+k-1)]+tmp
+							
+							tmp <- dist2[[i]][[1]]*p2[,cols[k]]
+							dist2[[i]][[2]][,k:(ncol(tmp)+k-1)] <- dist2[[i]][[2]][,k:(ncol(tmp)+k-1)]+tmp
+							
+						}
+						
+						##   Update the minimum score
+						min.scr <- min.scr+1
+						
+						##   Replace the distribution in the first list
+						##   element with the current distribution
+						dist1[[i]][[1]] <- dist1[[i]][[2]]
+						dist2[[i]][[1]] <- dist2[[i]][[2]]
+					}
+				}
+				
+				##   Extract the last list element
+				##   This is the final distribution
+				d1a <- dist1b[[i]][[2]]
+				dist1b[[i]] <- t(dist1b[[i]][[2]]) %*% wgt1[[2]]
+				dist2b[[i]] <- t(dist2b[[i]][[2]]) %*% wgt2[[2]]
+				dist1[[i]] <- t(dist1[[i]][[2]]) %*% wgt1[[2]]
+				dist2[[i]] <- t(dist2[[i]][[2]]) %*% wgt2[[2]]
+				
+				if (eap.flag==FALSE) {
+					dist1a <- t(d1a) %*% wgt.bg[[2]]
+					eap.dist <- (t(d1a*matrix(theta1,nrow(d1a),ncol(d1a))) %*% wgt.bg[[2]])/dist1a
+					eap.dif <- (theta1-t(matrix(eap.dist,length(eap.dist),length(theta1))))^2
+					eap.sd <-  sqrt((t(d1a*eap.dif) %*% wgt.bg[[2]])/dist1a)
+					eap.flag <- TRUE
+				}
+				
+				##   Create the synthetic distributions
+				s1 <- dist1b[[i]]*syn[1]+dist2b[[i]]*syn[2]
+				s2 <- dist1[[i]]*syn[1]+dist2[[i]]*syn[2]
+				
+				##   Compile the distributions to be output
+				dist[[i]] <- list(cbind(0:(nrow(dist1b[[i]])-1),dist1b[[i]],dist2b[[i]],s1),cbind(0:(nrow(dist1[[i]])-1),dist1[[i]],dist2[[i]],s2))
+				names(dist[[i]]) <- c(nms[base.grp],nms[grp])
+				colnames(dist[[i]][[1]]) <- colnames(dist[[i]][[2]]) <- c("score","pop1","pop2","syn")
+				
+				##   Compute cumulative proportions
+				F1 <- cumsum(s1)
+				F2 <- cumsum(s2)
+				
+				##   Compute the percentile ranks for the base group
+				for (j in 1:length(F1)) {
+					if (j==1) {
+						pr <- 0
+					} else {
+						pr <- c(pr, F1[j-1]+((j-1)-((j-1)-.5))*(F1[j]-F1[j-1]))
+					}
+				}
+				
+				bd <- dist[[i]][[1]]
+				
+				##   Initialize an object to store the equated scores
+				if (i==1) OSE <- bd[,1]
+				
+				##   Conduct the equipercentile equating
+				tmp.ose <- NULL
+				for (j in 1:length(F1)) {
+						tmp <- 1:length(F2)
+						tmp <- min(tmp[F2>pr[j]])
+					if (tmp==1) {
+						tmp.ose <- c(tmp.ose, (pr[j]/F2[tmp])+(tmp-1.5))
+					} else {
+						tmp.ose <- c(tmp.ose, ((pr[j]-F2[tmp-1])/(F2[tmp]-F2[tmp-1]))+(tmp-1.5))
+					}
+				}
+				OSE <- cbind(OSE,tmp.ose)
+				colnames(OSE)[1] <- nms[base.grp]
+				colnames(OSE)[ncol(OSE)] <- nms[grp]
 			}
 			
-			bd <- dist[[i]][[1]]
+			##   Adjust the equated zero observed score for all groups
+			OSE[1,] <- 0
 			
-			##   Initialize an object to store the equated scores
-			if (i==1) OSE <- bd[,1]
+			##   Add EAP summed scores and SDs
+			OSE <- cbind(round(eap.dist,6), round(eap.sd,6), OSE)
+			colnames(OSE)[1:2] <- c(paste("eap.theta.",colnames(OSE)[3],sep=""),paste("eap.sd.",colnames(OSE)[3],sep=""))
 			
-			##   Conduct the equipercentile equating
-			tmp.ose <- NULL
-			for (j in 1:length(F1)) {
-					tmp <- 1:length(F2)
-					tmp <- min(tmp[F2>pr[j]])
-				if (tmp==1) {
-					tmp.ose <- c(tmp.ose, (pr[j]/F2[tmp])+(tmp-1.5))
-				} else {
-					tmp.ose <- c(tmp.ose, ((pr[j]-F2[tmp-1])/(F2[tmp]-F2[tmp-1]))+(tmp-1.5))
-				}
-			}
-			OSE <- cbind(OSE,tmp.ose)
-			colnames(OSE)[1] <- nms[base.grp]
-			colnames(OSE)[ncol(OSE)] <- nms[grp]
+			OSE <- as.data.frame(OSE)
+			if (length(dist)==1) dist <- dist[[1]]
+			ose.out <- list(scores=OSE,dist=dist)
 		}
-		
-		##   Adjust the equated zero observed score for all groups
-		OSE[1,] <- 0
-		
-		if (length(dist)==1) dist <- dist[[1]]
-		ose.out <- list(scores=OSE,dist=dist)
 	}
 	
 	##   Return the equated true scores and/or observed scores
 	if ("TSE" %in% method) {
 		if ("OSE" %in% method) {
-			return(list(tse=tse.out,ose=ose.out))
+			return(list(tse=as.data.frame(tse.out),ose=ose.out))
 		} else {
-			return(tse.out)
+			return(as.data.frame(tse.out))
 		}
 	} else {
 		return(ose.out)
 	}
-	
 })

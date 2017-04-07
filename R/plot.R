@@ -7,7 +7,8 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 	##   Delete plot history
 	if (!missing(save.hist)) {
 		if (save.hist==FALSE) {
-			if (exists(".SavedPlots",where=1)) rm(".SavedPlots",pos=1)
+			## Removed from the current version
+			# if (exists(".SavedPlots",where=1)) rm(".SavedPlots",pos=1)
 		}
 	}
 	
@@ -167,12 +168,15 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 								##   has already been initialized (from a previous group)
 								if (record.flag==FALSE) {
 								
+									## REMOVED FROM THE CURRENT VERSION
 									##   If not, record the plot history (this only works for Windows)
-									if (Sys.info()["sysname"] == "Windows") {
-										cat("Use PgUp and PgDn to view different plot pages\n")
-										windows(record=TRUE)
-										record.flag <- TRUE
-									}
+									#if (Sys.info()["sysname"] == "Windows") {
+									
+									#if(.Platform$OS.type=="windows") {
+										#cat("Use PgUp and PgDn to view different plot pages\n")
+										#windows(record=TRUE)
+										#record.flag <- TRUE
+									#}
 								}
 							}
 						}
@@ -187,12 +191,15 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 							##   has already been initialized (from a previous group)
 							if (record.flag==FALSE) {
 							
+								## REMOVED FROM THE CURRENT VERSION
 								##   If not, record the plot history (this only works for Windows)
-								if (Sys.info()["sysname"] == "Windows") {
-									cat("Use PgUp and PgDn to view different plot pages\n")
-									windows(record=TRUE)
-									record.flag <- TRUE
-								}
+								#if (Sys.info()["sysname"] == "Windows") {
+								
+								#if(.Platform$OS.type=="windows") {
+									#cat("Use PgUp and PgDn to view different plot pages\n")
+									#windows(record=TRUE)
+									#record.flag <- TRUE
+								#}
 							}
 						}
 					}
@@ -338,6 +345,9 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 								suppressWarnings(arrows(x1,y1,x2,y2,length=.1))
 								arrows(max(par("usr")[c(1,3)])*ref[1],max(par("usr")[c(1,3)])*ref[2],min(par("usr")[c(2,4)])*ref[1],
 									min(par("usr")[c(2,4)])*ref[2],lwd=3,length=.2,col="darkred")
+									slope <- ref[2]/ref[1]
+									if (slope==Inf) slope <- 10000
+									text(.5, par("usr")[1]+.5, paste("Composite Angle =", round((180*atan(slope)/pi),2)), pos=4)
 							} else if (type=="vectorplot3") {
 								tmp <- rep(0,length(mdisc))
 								suppressWarnings(arrows(tmp,tmp,x1,y1,length=.1))
@@ -453,14 +463,17 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 			##   Check to see is a graphics device has already been initialized
 			if (names(dev.cur())=="null device") {
 			
+				## REMOVED FROM THE CURRENT VERSION
 				##   For Windows, save the plot history so that different plot
 				##   windows can be seen using PgUp and PgDn
-				if (Sys.info()["sysname"] == "Windows") {
-					if (length(groups)>1|length(drift)>1) {
-						cat("Use PgUp and PgDn to view different plot pages\n")
-						windows(record=TRUE)
-					}
-				}
+				#if (Sys.info()["sysname"] == "Windows") {
+				
+				#if(.Platform$OS.type=="windows") {
+					#if (length(groups)>1|length(drift)>1) {
+						#cat("Use PgUp and PgDn to view different plot pages\n")
+						#windows(record=TRUE)
+					#}
+				#}
 			}
 			
 			##   The bult-in SD function R uses n-1 in the denominator
@@ -1034,13 +1047,17 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 					
 						if (dimensions==1) {
 							if (np>panels) {
-							
+								
 								##   Check to see if a graphics device is already open
 								if (names(dev.cur())=="null device") {
-									if (Sys.info()["sysname"] == "Windows") {
-										cat("Use PgUp and PgDn to view different plot pages\n")
-										windows(record=TRUE)
-									}
+
+									## REMOVED FROM THE CURRENT VERSION
+									#if (Sys.info()["sysname"] == "Windows") {
+									
+									#if(.Platform$OS.type=="windows") {
+										#cat("Use PgUp and PgDn to view different plot pages\n")
+										#windows(record=TRUE)
+									#}
 								}
 								
 								##   Create the multi-page plot
@@ -1310,10 +1327,14 @@ plot.irt.prob <- function(x, y, ..., type, separate, combine, items, item.names,
 			
 				##   Check to see if a graphics device is already open
 				if (names(dev.cur())=="null device") {
-					if (Sys.info()["sysname"] == "Windows") {
-						cat("Use PgUp and PgDn to view different plot pages\n")
-						windows(record=TRUE)
-					}
+
+					## REMOVED FROM THE CURRENT VERSION
+					#if (Sys.info()["sysname"] == "Windows") {
+					
+					#if(.Platform$OS.type=="windows") {
+						#cat("Use PgUp and PgDn to view different plot pages\n")
+						#windows(record=TRUE)
+					#}
 				}
 				
 				##   Create the multi-page plot
@@ -1345,10 +1366,14 @@ plot.irt.prob <- function(x, y, ..., type, separate, combine, items, item.names,
 				
 				##   Check to see if a graphics device is already open
 				if (names(dev.cur())=="null device") {
-					if (Sys.info()["sysname"] == "Windows") {
-						cat("Use PgUp and PgDn to view different plot pages\n")
-						windows(record=TRUE)
-					}
+
+					## REMOVED FROM THE CURRENT VERSION
+					#if (Sys.info()["sysname"] == "Windows") {
+					
+					#if(.Platform$OS.type=="windows") {
+						#cat("Use PgUp and PgDn to view different plot pages\n")
+						#windows(record=TRUE)
+					#}
 				}
 				
 				##   Create the multi-page plot

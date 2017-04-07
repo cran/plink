@@ -3,6 +3,10 @@ import("lattice")
 importFrom("MASS", "ginv")
 importFrom("MASS", "mvrnorm")
 importFrom('statmod', "gauss.quad.prob")
+importFrom("grDevices", "dev.cur", "windows")
+importFrom("utils", "read.fwf", "read.table", "stack")
+importFrom("graphics", "arrows", "axis", "par", "plot", "text")
+importFrom("stats", "as.formula", "coef", "dnorm", "sd")
 
 export(
     "combine.pars",

@@ -7,6 +7,7 @@
 \alias{num.null-class}
 \alias{list.null-class}
 \alias{pars.null-class}
+\alias{dat.null-class}
 \title{Class Combinations}
 \description{These classes are combinations of classes}
 \section{Objects from the Class}{A virtual Class: No objects may be created from it.}
@@ -26,6 +27,8 @@
     \item{list.null:}{combines class \code{list} and class \code{NULL} }
 
     \item{pars.null:}{combines class \code{irt.pars} and class \code{NULL} }
+
+    \item{dat.null:}{combines class \code{data.frame} and class \code{NULL} }
   }
 }
 

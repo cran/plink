@@ -273,7 +273,7 @@ setMethod("sep.pars", signature(x="matrix"), function(x, cat, poly.mod, dimensio
 					if (np==1) pb <- t(pb)
 					
 				} else {
-					pb <- matrix(poly[,dimensions+1],np,mc-1)+poly[,(dimensions+2):(dimensions+mc)]
+					pb <- matrix(poly[,dimensions+1],np,mc-1)-poly[,(dimensions+2):(dimensions+mc)]
 				}
 				
 				if (dimensions==1) pmod <- "Graded Response Model" else pmod <- "Multidimensional Graded Response Model"
@@ -316,14 +316,14 @@ setMethod("sep.pars", signature(x="matrix"), function(x, cat, poly.mod, dimensio
 				} else {
 					if (len.p==pcat[1]) { 
 						pa <- matrix(1,np,dimensions)
-						pb <- matrix(poly[,1],np,mc-1)+poly[,2:mc]
+						pb <- matrix(poly[,1],np,mc-1)-poly[,2:mc]
 						if (np==1) pb <- t(pb)
 						if (dimensions==1) pmod <- "Partial Credit Model" else pmod <- "Multidimensional Partial Credit Model"
 						
 					} else if (len.p==pcat[1]+dimensions) {
 						pa <- as.matrix(poly[,1:dimensions])
 						if (np==1) pa <- t(pa)
-						pb <- matrix(poly[,dimensions+1],np,mc-1)+poly[,(dimensions+2):(dimensions+mc)]
+						pb <- matrix(poly[,dimensions+1],np,mc-1)-poly[,(dimensions+2):(dimensions+mc)]
 						
 						if (length(pa[pa==pa[1]])==np*dimensions) {         
 							if (dimensions==1) pmod <- "Partial Credit Model" else pmod <- "Multidimensional Partial Credit Model"
@@ -344,7 +344,7 @@ setMethod("sep.pars", signature(x="matrix"), function(x, cat, poly.mod, dimensio
 			if (mod[i]=="gpcm"|mod[i]=="grm") {
 				if (loc.out==TRUE) {
 					pbm <- apply(pb,1,mean,na.rm=TRUE)
-					pb <- cbind(pbm,pb-pbm)
+					pb <- cbind(pbm,pbm-pb)
 				}
 			}
 			
@@ -689,7 +689,7 @@ setMethod("sep.pars", signature(x="list"), function(x, cat, poly.mod, dimensions
 				}
 				
 				if (location==TRUE) {
-					pb <- matrix(pb[,1],nrow(pb),ncol(pb)-1)+pb[,-1]
+					pb <- matrix(pb[,1],nrow(pb),ncol(pb)-1)-pb[,-1]
 				}
 				
 				if (dimensions==1) pmod <- "Graded Response Model" else pmod <- "Multidimensional Graded Response Model"
@@ -708,7 +708,7 @@ setMethod("sep.pars", signature(x="list"), function(x, cat, poly.mod, dimensions
 					if (np==1) pb <- t(pb)
 					
 					if (location==TRUE) {
-						pb <- matrix(pb[,1],nrow(pb),ncol(pb)-1)+pb[,-1]
+						pb <- matrix(pb[,1],nrow(pb),ncol(pb)-1)-pb[,-1]
 					}
 					
 					if (dimensions==1) pmod <- "Partial Credit Model" else pmod <- "Multidimensional Partial Credit Model"
@@ -724,7 +724,7 @@ setMethod("sep.pars", signature(x="list"), function(x, cat, poly.mod, dimensions
 					}
 					
 					if (location==TRUE) {
-						pb <- matrix(pb[,1],nrow(pb),ncol(pb)-1)+pb[,-1]
+						pb <- matrix(pb[,1],nrow(pb),ncol(pb)-1)-pb[,-1]
 					}
 					
 					if (length(pa[pa==pa[1]])==np*dimensions) {         
@@ -743,7 +743,7 @@ setMethod("sep.pars", signature(x="list"), function(x, cat, poly.mod, dimensions
 			if (mod[i]=="gpcm"|mod[i]=="grm") {
 				if (loc.out==TRUE) {
 					pbm <- apply(pb,1,mean,na.rm=TRUE)
-					pb <- cbind(pbm,pb-pbm)
+					pb <- cbind(pbm,pbm-pb)
 				}
 			}
 			
@@ -793,7 +793,7 @@ setMethod("sep.pars", signature(x="list"), function(x, cat, poly.mod, dimensions
 		}
 	
 	##   If there are no polytomous items set the following objects equal to NULL
-	##   This is necessary for compiling the outpur
+	##   This is necessary for compiling the output
 	} else {
 		pmod <- NULL
 		ppars <- NULL

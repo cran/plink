@@ -14,22 +14,22 @@ items for a given set of theta values using the multiple-choice model or multidi
 multiple-choice model.}
 
 \usage{
-mcm(x, cat, theta, dimensions = 1, items, ...)
+mcm(x, cat, theta, dimensions = 1, items, information = FALSE, angle, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
-mcm(x, cat, theta, dimensions, items, ...)
+mcm(x, cat, theta, dimensions, items, information, angle, ...)
 
 ## S4 method for signature 'data.frame', 'numeric'
-mcm(x, cat, theta, dimensions, items, ...)
+mcm(x, cat, theta, dimensions, items, information, angle, ...)
 
 ## S4 method for signature 'list', 'numeric'
-mcm(x, cat, theta, dimensions, items, ...)
+mcm(x, cat, theta, dimensions, items, information, angle, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
-mcm(x, cat, theta, dimensions, items, ...)
+mcm(x, cat, theta, dimensions, items, information, angle, ...)
 
 ## S4 method for signature 'sep.pars', 'ANY'
-mcm(x, cat, theta, dimensions, items, ...)
+mcm(x, cat, theta, dimensions, items, information, angle, ...)
 }
 
 \arguments{
@@ -45,6 +45,14 @@ mcm(x, cat, theta, dimensions, items, ...)
   \item{dimensions}{number of modeled dimensions }
 
   \item{items}{numeric vector identifying the items for which probabilities should be computed}
+
+  \item{information}{logical value. If \code{TRUE} compute item information. In the multidimensional
+    case, information will be computed in the directions specified by \code{angle} or default angles
+    of 0 - 90 in increments of 10 degrees.}
+
+  \item{angle}{vector or matrix of angles between the dimension 1 axis and the corresponding axes for each 
+    of the other dimensions for which information will be computed. When there are more than two dimensions 
+    and \code{angle} is a vector, the same set of angles will be used relative to each of the corresponding axes.}
 
   \item{...}{further arguments passed to or from other methods }
 }
@@ -151,7 +159,9 @@ are ordered from dimension 1 to m.
 
 \note{No multidimensional extension of the multiple-choice model has officially been presented in
 the literature; however, this model is consistent with how the 3PL and nominal response model
-were extended to the multidimensional context.
+were extended to the multidimensional context. Additionally, item information is not currently
+available for the multiple-choice model even though the arguments are included in the function. 
+Information will be available in a later release.
 }
 
 \author{ Jonathan P. Weeks \email{weeksjp@gmail.com} }

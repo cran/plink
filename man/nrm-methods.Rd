@@ -15,22 +15,22 @@ nominal response model.
 }
 
 \usage{
-nrm(x, cat, theta, dimensions = 1, items, ...)
+nrm(x, cat, theta, dimensions = 1, items, information = FALSE, angle, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
-nrm(x, cat, theta, dimensions, items, ...)
+nrm(x, cat, theta, dimensions, items, information, angle, ...)
 
 ## S4 method for signature 'data.frame', 'numeric'
-nrm(x, cat, theta, dimensions, items, ...)
+nrm(x, cat, theta, dimensions, items, information, angle, ...)
 
 ## S4 method for signature 'list', 'numeric'
-nrm(x, cat, theta, dimensions, items, ...)
+nrm(x, cat, theta, dimensions, items, information, angle, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
-nrm(x, cat, theta, dimensions, items, ...)
+nrm(x, cat, theta, dimensions, items, information, angle, ...)
 
 ## S4 method for signature 'sep.pars', 'ANY'
-nrm(x, cat, theta, dimensions, items, ...)
+nrm(x, cat, theta, dimensions, items, information, angle, ...)
 }
 
 \arguments{
@@ -45,6 +45,14 @@ nrm(x, cat, theta, dimensions, items, ...)
   \item{dimensions}{number of modeled dimensions }
 
   \item{items}{numeric vector identifying the items for which probabilities should be computed}
+
+  \item{information}{logical value. If \code{TRUE} compute item information. In the multidimensional
+    case, information will be computed in the directions specified by \code{angle} or default angles
+    of 0 - 90 in increments of 10 degrees.}
+
+  \item{angle}{vector or matrix of angles between the dimension 1 axis and the corresponding axes for each 
+    of the other dimensions for which information will be computed. When there are more than two dimensions 
+    and \code{angle} is a vector, the same set of angles will be used relative to each of the corresponding axes.}
 
   \item{...}{further arguments passed to or from other methods }
 }

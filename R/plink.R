@@ -1,20 +1,11 @@
 ##   This function estimates the linking constants between two or
 ##   more groups of tests and can rescale item and/or ability parameters
 
-setGeneric("plink", function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score=1, base.grp=1, symmetric=FALSE, rescale.com=TRUE, grp.names=NULL, dilation="LL",  dim.order=NULL, ...) standardGeneric("plink"))
+setGeneric("plink", function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score=1, base.grp=1, symmetric=FALSE, rescale.com=TRUE, grp.names=NULL, dilation="oblique",  md.center=FALSE, dim.order=NULL, ...) standardGeneric("plink"))
 
 
 
-setMethod("plink", signature(x="list", common="list"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score, base.grp, symmetric, rescale.com,  grp.names, dilation, dim.order, ...) {
-
-	x <- combine.pars(x, common, ...)
-	callGeneric()
-	
-})
-
-
-
-setMethod("plink", signature(x="list", common="matrix"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score, base.grp, symmetric, rescale.com, grp.names, dilation, dim.order, ...) {
+setMethod("plink", signature(x="list", common="list"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score, base.grp, symmetric, rescale.com,  grp.names, dilation, md.center, dim.order, ...) {
 
 	x <- combine.pars(x, common, ...)
 	callGeneric()
@@ -23,7 +14,16 @@ setMethod("plink", signature(x="list", common="matrix"), function(x, common, res
 
 
 
-setMethod("plink", signature(x="list", common="data.frame"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score, base.grp, symmetric, rescale.com, grp.names, dilation, dim.order, ...) {
+setMethod("plink", signature(x="list", common="matrix"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score, base.grp, symmetric, rescale.com, grp.names, dilation, md.center, dim.order, ...) {
+
+	x <- combine.pars(x, common, ...)
+	callGeneric()
+	
+})
+
+
+
+setMethod("plink", signature(x="list", common="data.frame"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score, base.grp, symmetric, rescale.com, grp.names, dilation, md.center, dim.order, ...) {
 	
 	x <- combine.pars(x, common, ...)
 	callGeneric()
@@ -32,7 +32,7 @@ setMethod("plink", signature(x="list", common="data.frame"), function(x, common,
 
 
 
-setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score, base.grp, symmetric, rescale.com, grp.names, dilation, dim.order, ...) {
+setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, rescale, ability, method, weights.t, weights.f, startvals, exclude, score, base.grp, symmetric, rescale.com, grp.names, dilation, md.center, dim.order, ...) {
 
 
 	##################################################################
@@ -78,18 +78,8 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		
 		if (dimensions==1) {
 			##   Assign the vector of startvals (sv) to meaningful objects
-			
-			##   This parameterization is for the Rasch model
-			##   where only the difficulties are transformed
-			if (length(sv)==1) {
-				alpha <- 1
-				beta <- sv[1]
-				
-			##   This parameterization is for all other models
-			} else {
-				alpha <- sv[1]
-				beta <- sv[2]
-			}
+			alpha <- sv[1]
+			beta <- sv[2]
 			
 			##   Identify the nrm and mcm items
 			mcnr <- NULL
@@ -119,31 +109,23 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			}
 		} else {
 		
-			if (length(sv)==dimensions) {
-				##   This parameterization is for the multidimensional Rasch case
-				A <- diag(rep(1,dimensions))
-				m <- sv
+			##   Assign the vector of startvals (sv) to meaningful objects
+			##   It differs depending on the specified dilation approach
+			if (dilation=="oblique") {
+				A <- matrix(sv[1:(dimensions^2)],dimensions,dimensions)
+				m <- sv[(dimensions^2+1):length(sv)]
 				
-			} else {
-				##   This parameterization is used for all other models
-				##   although it differs depending on the specified dilation
-				if (dilation=="ODL") {
-					A <- matrix(sv[1:(dimensions^2)],dimensions,dimensions)
-					m <- sv[(dimensions^2+1):length(sv)]
-					
-				##   For the LL and MIN approaches, the starting values need
-				##   to be rotated using the orthogonal rotation matrix T
-				##   prior to transforming any of the parameters. This makes it
-				##   so that parameters only capture changes in variability
-				} else if (dilation=="LL") {
-					A <- diag(rep(sv[1],dimensions))%*%T
-					m <- sv[2:length(sv)]
-					
-				} else if (dilation=="MIN") {
-					A <- diag(sv[1:dimensions])%*%T
-					m <- sv[(dimensions+1):length(sv)]
-				} 
+			##   For the orth.fd and orth.vd approaches, the starting values need
+			##   to be rotated using the orthogonal rotation matrix T
+			##   prior to transforming any of the parameters. This makes it
+			##   so that parameters only capture changes in variability
+			} else if (dilation=="orth.fd"|dilation=="orth.fdc") {
+				A <- diag(rep(sv[1],dimensions))%*%T
+				m <- sv[2:length(sv)]
 				
+			} else if (dilation=="orth.vd"|dilation=="orth.vdc") {
+				A <- diag(sv[1:dimensions])%*%T
+				m <- sv[(dimensions+1):length(sv)]
 			}
 			
 			##   Transform the FROM scale parameters onto the TO scale
@@ -277,34 +259,46 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	
 	##   This function is used to compute either the  orthogonal or 
 	##   oblique rotation matrix for the multidimensional approaches
-	.Rotate <- function(to, from, orthogonal) {
+	.Rotate <- function(to, from, orthogonal=FALSE, symmetric=FALSE, center=FALSE, allow.reflection=TRUE) {
+	
+		##  Function to be minimized for two-sided oblique Procrustes rotation
+		ob.rot <- function(sv,to,from) {
+			
+			A <- matrix(sv,ncol(to),ncol(to))
+			SS <- sum((from%*%A-to)^2)+sum((to%*%ginv(A)-from)^2)
+			return(SS)
+		}
+
+		if (center==TRUE) {
+			to <- to-matrix(apply(to,2,mean,na.rm=TRUE),nrow(to),ncol(to),byrow=TRUE)
+			from <- from-matrix(apply(from,2,mean,na.rm=TRUE),nrow(from),ncol(from),byrow=TRUE)
+		}
+		
 		if (orthogonal==TRUE) {
 			##   Orthogonal procrustes rotation
 			M <- svd(t(to)%*%from)
+			if (allow.reflection==FALSE) {
+				if (det(M$v)<0) M$v[,ncol(M$v)] <- M$v[,ncol(M$v)]*-1
+			}
 			T <- M$v%*%t(M$u)
 			
 		} else {
 			##   Oblique procrustes rotation
 			T <- ginv(t(from) %*% from) %*% t(from) %*% to
+
+			if (symmetric==TRUE) {
+				tmp <- nlminb(diag(rep(1,ncol(to))), ob.rot, to=to, from=from)
+				T <- matrix(tmp$par,ncol(to),ncol(to))
+			}
 			
 			##   Check to see if X'X is positive definite
 			tmp <- eigen(t(from) %*% from)$values
 			if (min(tmp)<0) warning("The rotation matrix is not positive definite. Be hesitant in trusting these results")
 		}
 		
-		TF <- T
-		mn <- sum((to-from%*%ginv(T))^2)
-		##   Due to indeterminacies in the sign of eigenvectors, 
-		##   adjust the rotation matrix to get the matrix that truly minimizes the 
-		##   difference between the two sets of slopes
-		tmp <- sum((to-from%*%ginv(T*-1))^2)
-		if (mn>tmp) {
-			mn <- tmp
-			T <- T*-1
-		}
-		
 		return(T)
 	}
+	
 	
 	
 	###########################################################
@@ -895,6 +889,14 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	##   the common items for each pair of adjacent groups
 	pm <- vector("list",ng-1)
 	
+	##   Initialize an object to store the dimensions for
+	##   the common items for each pair of adjacent groups
+	dims <- vector("list",ng-1)
+	
+	##   Initialize an object to store the location parameter flags
+	##   for the common items for each pair of adjacent groups
+	locations <- vector("list",ng-1)
+	
 	##   Loop through all of the groups (minus 1)
 	for (i in 1:(ng-1)) {
 	
@@ -978,6 +980,12 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		##   for the common items for the given pair of groups
 		catci[[i]] <- x@cat[[i]][it.com[,1]]
 		
+		##   Identify the dimensions for the common items for the given pair of groups
+		dims[[i]] <- x@dimensions[c(i,i+1)]
+		
+		##   Identify whether location parameters were used
+		##   for the common items for the given pair of groups
+		locations[[i]] <- x@location[c(i,i+1)]
 		
 		##   The ordering of parameters in com[[i]] should be such that
 		##   the first element is the "To" set and the second is the "From" set
@@ -992,7 +1000,11 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 		##   for G2 and the second includes the parameters for G1
 		
 		##   Perform the switch (if necessary)
-		if (i<base.grp) com[[i]] <- com[[i]][c(2,1)] 
+		if (i<base.grp) {
+			com[[i]] <- com[[i]][c(2,1)] 
+			dims[[i]] <- dims[[i]][c(2,1)]
+			locations[[i]] <- locations[[i]][c(2,1)]
+		}
 		
 		##   Identify all of the item response models used 
 		##   (for both common and unique items)
@@ -1060,14 +1072,14 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 	for (i in 1:(ng-1)) {
 	
 		##   The "To" parameters
-		tmp1 <- sep.pars(com[[i]][[1]],catci[[i]],pm[[i]],x@dimensions[i],x@location[i])
+		tmp1 <- sep.pars(com[[i]][[1]],catci[[i]],pm[[i]],dims[[i]][1],locations[[i]][1])
 		
 		##   The "From" parameters
-		tmp2 <- sep.pars(com[[i]][[2]],catci[[i]],pm[[i]],x@dimensions[i+1],x@location[i+1])
+		tmp2 <- sep.pars(com[[i]][[2]],catci[[i]],pm[[i]],dims[[i]][2],locations[[i]][2])
 		
 		##   The maximum number of dimensions across both groups
 		##   (the dimensions can differ from group to group)
-		tmp.md <- max(c(x@dimensions[i],x@dimensions[i+1]))
+		tmp.md <- max(dims[[i]])
 		
 		##############################################
 		##                Identify common dimensions
@@ -1104,7 +1116,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 					for (k in 1:length(pm[[i]]@model)) {
 						if (pm[[i]]@model[k]=="drm"|pm[[i]]@model[k]=="grm"|pm[[i]]@model[k]=="gpcm") {
 							tmp1@b[pm[[i]]@items[[k]],] <- as.matrix(tmp1@b[pm[[i]]@items[[k]],]*-as.vector(tmp1@a)[pm[[i]]@items[[k]]])
-							tmp2@b[pm[[i]]@items[[k]],] <- as.matrix(tmp2@b[pm[[i]]@items[[k]],]*-as.vector(tmp2@a)[pm[[i]]@items[[k]]])
+							#tmp2@b[pm[[i]]@items[[k]],] <- as.matrix(tmp2@b[pm[[i]]@items[[k]],]*-as.vector(tmp2@a)[pm[[i]]@items[[k]]])
 						}
 					}
 				}
@@ -1213,9 +1225,6 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			##   Mean/Sigma  - A
 			A2 <- descrip$all[4,2]/descrip$all[5,2]
 			
-			##   If the Rasch model or PCM is used, set the A2 constant equal to A1
-			if (rasch.flag==TRUE) A2 <- A1
-			
 			##   Mean/Mean - B
 			B1 <- descrip$all[2,2]-A1*descrip$all[3,2]
 			
@@ -1239,7 +1248,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			
 			##   Determine starting values for the characteristic curve methods
 			if (is.null(startvals[[i]])) {
-				##   Use the Mean/Sigma values
+				##   Use the Mean/Mean values
 				sv <- mm
 			} else {
 				if (is.character(startvals[[i]])) {
@@ -1248,11 +1257,6 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				} else {
 					sv <- startvals[[i]]
 				}
-			}
-			
-			if (rasch.flag==TRUE) {
-				##   Only include starting values for the B constant
-				sv <- sv[2]
 			}
 			
 		##   Multidimensional case
@@ -1290,75 +1294,117 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			
 			##   Compute linking constants using the least squares (LS) method (oblique or orthogonal)
 			##   Create the rotation matrix
-			tmp <- as.vector(a1)
-			if (rasch.flag==TRUE) {
-				A <- diag(rep(1,dimensions))
-			} else {
-				##   Oblique procrustes method
-				if (dilation=="ODL") {
+			#tmp <- as.vector(a1)
+			
+			##   Oblique procrustes method
+			if (dilation=="oblique") {
+				if (symmetric==TRUE) {
+					##  Center the slopes
+					if (md.center==TRUE) {
+						a1c <- a1-matrix(apply(a1,2,mean,na.rm=TRUE),nrow(a1),ncol(a1),byrow=TRUE)
+						a2c <- a2-matrix(apply(a2,2,mean,na.rm=TRUE),nrow(a2),ncol(a2),byrow=TRUE)
+					} else {
+						a1c <- a1
+						a2c <- a2
+					}
+					
+					##  Estimate the rotation matrix and dilation vector
+					T <- .Rotate(a1,a2,symmetric=TRUE,center=md.center)
+					K <- diag(diag(t(a1c)%*%a2c%*%T))%*%ginv(diag(diag(t(T)%*%t(a2c)%*%a2c%*%T)))
+					K <- ginv(K)
+					
+					##   Estimate the translation vector 
+					y <- tmp.b2-tmp.b1 
+					X <- tmp.a2
+					m <- ginv(t(X)%*%X)%*%t(X)%*%y
+					
+					m <- as.vector(m)
+					rownames(T) <- rownames(K) <- rep("",dimensions)
+					colnames(T) <- c(rep("",dimensions-1),"T")
+					colnames(K) <- c(rep("",dimensions-1),"K")
+					
+				} else {
 					# This actually estimates the inverse of A
-					A <- .Rotate(a1,a2,FALSE)
+					A <- .Rotate(a1,a2)
 					
 					##   Compute the translation vector 
 					y <- tmp.b2-tmp.b1 
-					X <- tmp.a2%*%A
+					X <- tmp.a2
 					m <- ginv(t(X)%*%X)%*%t(X)%*%y
 					
 					m <- as.vector(m)
 					A <- ginv(A)
 					rownames(A) <- rep("",dimensions)
 					colnames(A) <- c(rep("",dimensions-1),"A")
-					names(m) <- paste("m",1:dimensions,sep="")
-					
-					if ("LS" %in% method) {
-						##   When there are two or more common dimensions between the groups
-						if (dim.flag==FALSE) {
+				}
+				names(m) <- paste("m",1:dimensions,sep="")
+				
+				if ("LS" %in% method) {
+					##   When there are two or more common dimensions between the groups
+					if (dim.flag==FALSE) {
+						if (symmetric==TRUE) {
+							constants$LS <- list(T=round(T,6),K=round(K,6),m=round(m,6))
+						} else {
 							constants$LS <- list(A=round(A,6),m=round(m,6))
-							
-						##   When there is only one common dimension between the groups
+						}
+						
+					##   When there is only one common dimension between the groups
+					} else {
+						if (symmetric==TRUE) {
+							constants$LS <- c(round(T[1,1]*K[1,1],6),round(m[1],6))
 						} else {
 							constants$LS <- c(round(A[1,1],6),round(m[1],6))
-							names(constants$LS) <- c("A","m")
 						}
+						names(constants$LS) <- c("A","m")
 					}
-					
-				##   Orthogonal procrustes method
-				} else {
+				}
 				
+			##   Orthogonal procrustes methods
+			} else {
+				##  Center the slopes
+				if (md.center==TRUE) {
 					a1c <- a1-matrix(apply(a1,2,mean,na.rm=TRUE),nrow(a1),ncol(a1),byrow=TRUE)
 					a2c <- a2-matrix(apply(a2,2,mean,na.rm=TRUE),nrow(a2),ncol(a2),byrow=TRUE)
-					T <- .Rotate(a1,a2,TRUE)
-					
-					##   Estimate the translation vector 
-					y <- tmp.b2-tmp.b1 
-					X <- tmp.a2%*%T
-					m <- ginv(t(X)%*%X)%*%t(X)%*%y
-					
-					##   Estimate the dilation parameter(s)
-					if (dilation=="LL") {
-						k <- sum(diag(t(T)%*%t(a2c)%*%a1c))/sum(diag(t(a2c)%*%a2c))
-						K <- diag(rep(k,dimensions))
-					} else if (dilation=="MIN") {
-						K <- diag(diag(t(a1c)%*%a2c%*%T))%*%solve(diag(diag(t(T)%*%t(a2c)%*%a2c%*%T)))
-					}
-					
-					K <- ginv(K)
-					m <- as.vector(m)
-					rownames(T) <- rownames(K) <- rep("",dimensions)
-					colnames(T) <- c(rep("",dimensions-1),"T")
-					colnames(K) <- c(rep("",dimensions-1),"K")
-					names(m) <- paste("m",1:dimensions,sep="")
-					
-					if ("LS" %in% method) {
-						##   When there are two or more common dimensions between the groups
-						if (dim.flag==FALSE) {
-							constants$LS <- list(T=round(T,6),K=round(K,6),m=round(m,6))
-							
-						##   When there is only one common dimension between the groups
-						} else {
-							constants$LS <- c(round(T[1,1]*K[1,1],6),round(m[1],6))
-							names(constants$LS) <- c("A","m")
-						}
+				} else {
+					a1c <- a1
+					a2c <- a2
+				}
+				
+				if (dilation=="orth.fdc"|dilation=="orth.vdc") {
+					T <- .Rotate(a1,a2,orthogonal=TRUE, allow.reflection=FALSE,center=md.center)
+				} else {
+					T <- .Rotate(a1,a2,orthogonal=TRUE,center=md.center)
+				}
+				
+				##   Estimate the dilation parameter(s)
+				if (dilation=="orth.fd"|dilation=="orth.fdc") {
+					k <- sum(diag(t(a1c)%*%a2c%*%T))/sum(diag(t(T)%*%t(a2c)%*%a2c%*%T))
+					K <- diag(rep(k,dimensions))
+				} else if (dilation=="orth.vd"|dilation=="orth.vdc") {
+					K <- diag(diag(t(a1c)%*%a2c%*%T))%*%ginv(diag(diag(t(T)%*%t(a2c)%*%a2c%*%T)))
+				}
+				K <- ginv(K)
+				
+				##   Estimate the translation vector 
+				y <- tmp.b2-tmp.b1 
+				X <- tmp.a2
+				m <- ginv(t(X)%*%X)%*%t(X)%*%y
+				
+				m <- as.vector(m)
+				rownames(T) <- rownames(K) <- rep("",dimensions)
+				colnames(T) <- c(rep("",dimensions-1),"T")
+				colnames(K) <- c(rep("",dimensions-1),"K")
+				names(m) <- paste("m",1:dimensions,sep="")
+				
+				if ("LS" %in% method) {
+					##   When there are two or more common dimensions between the groups
+					if (dim.flag==FALSE) {
+						constants$LS <- list(T=round(T,6),K=round(K,6),m=round(m,6))
+						
+					##   When there is only one common dimension between the groups
+					} else {
+						constants$LS <- c(round(T[1,1]*K[1,1],6),round(m[1],6))
+						names(constants$LS) <- c("A","m")
 					}
 				}
 			}
@@ -1366,52 +1412,43 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			
 			if ("HB" %in% method | "SL" %in% method) {
 				##   Determine starting values for the characteristic curve methods
-				if (rasch.flag==TRUE) {
-					if (is.null(startvals[[i]])) {
+				if (is.null(startvals[[i]])) {
+				
+					##   Oblique Procrustes method
+					if (dilation=="oblique") {
 						##   Use the values from the LS method
-						sv <- m 
-					} else {
-						sv <- startvals[[i]][((length(startvals[[i]])-dimensions)+1):length(startvals[[i]])]
-					}
+						sv <- c(as.vector(A),m) 
+						
+					##   Orthogonal Procrustes fixed dilation method
+					} else if (dilation=="orth.fd"|dilation=="orth.fdc") {
+						##   Use the values from the LS method
+						sv <- c(K[1,1],m)
+						
+					##   Orthogonal Procrustes variable dilation method
+					} else if (dilation=="orth.vd"|dilation=="orth.vdc") {
+						##   Use the values from the LS method
+						sv <- c(diag(K),m)
+					
+					} 
 				} else {
-					if (is.null(startvals[[i]])) {
+				
+					sv <- startvals[[i]]
 					
-						##   Oshima, Davey, & Lee method
-						if (dilation=="ODL") {
-							##   Use the values from the LS method
+					##   Check to see if the correct number of starting values have been specified
+					if (dilation=="oblique") {
+						if ((length(sv))!=dimensions+dimensions^2) {
 							sv <- c(as.vector(A),m) 
-							
-						##   Li & Lissitz method
-						} else if (dilation=="LL") {
-							##   Use the values from the LS method
+							warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions+dimensions^2,". The default values were used>"))
+						}
+					} else if (dilation=="orth.fd"|dilation=="orth.fdc") {
+						if ((length(sv))!=dimensions+1) {
 							sv <- c(K[1,1],m)
-							
-						##   Min method
-						} else if (dilation=="MIN") {
-							##   Use the values from the LS method
+							warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions+1,". The default values were used>"))
+						}
+					} else if (dilation=="orth.vd"|dilation=="orth.vdc") {
+						if ((length(sv))!=dimensions*2) {
 							sv <- c(diag(K),m)
-						
-						} 
-					} else {
-					
-						sv <- startvals[[i]]
-						
-						##   Check to see if the correct number of starting values have been specified
-						if (dilation=="ODL") {
-							if ((length(sv))!=dimensions+dimensions^2) {
-								sv <- c(as.vector(A),m) 
-								warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions+dimensions^2,". The default values were used>"))
-							}
-						} else if (dilation=="LL") {
-							if ((length(sv))!=dimensions+1) {
-								sv <- c(K[1,1],m)
-								warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions+1,". The default values were used>"))
-							}
-						} else if (dilation=="MIN") {
-							if ((length(sv))!=dimensions*2) {
-								sv <- c(diag(K),m)
-								warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions*2,". The default values were used>"))
-							}
+							warning(paste("The number of elements in {startvals} for groups",i,"and",i+1,"does not equal",dimensions*2,". The default values were used>"))
 						}
 					}
 				}
@@ -1430,34 +1467,33 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			##   Reformat the information from the estimation (as necessary)
 			##   to prepare it for being output
 			if (dimensions==1) { 
-				if (rasch.flag==TRUE) hb$par <- c(1,hb$par)
 				names(hb$par) <- c("A","B")
 				constants$HB <- round(hb$par,6)
 			} else {
-				if (dilation=="ODL") {
+				if (dilation=="oblique") {
 					##   Reformat the estimated values for the rotation matrix as a matrix
-					if (rasch.flag==TRUE) A <- diag(rep(1,dimensions)) else A <- matrix(hb$par[1:(dimensions^2)],dimensions,dimensions)
+					A <- matrix(hb$par[1:(dimensions^2)],dimensions,dimensions)
 					
 					##   Extract the constants for the translation vector
 					m <- hb$par[-c(1:(dimensions^2))]
 					
-				} else if (dilation=="LL") {
+				} else if (dilation=="orth.fd"|dilation=="orth.fdc") {
 					##   Reformat the single dilation parameter as a diagonal matrix
-					if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(rep(hb$par[1],dimensions))
+					K <- diag(rep(hb$par[1],dimensions))
 					
 					##   Extract the constants for the translation vector
 					m <- hb$par[-1]
 					
-				} else if (dilation=="MIN") {
+				} else if (dilation=="orth.vd"|dilation=="orth.vdc") {
 					##   Reformat the dilation parameters as a diagonal matrix
-					if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(hb$par[1:dimensions])
+					K <- diag(hb$par[1:dimensions])
 					
 					##   Extract the constants for the translation vector
 					m <- hb$par[-c(1:dimensions)]
 				} 
 				
 				names(m) <- paste("m",1:dimensions,sep="")
-				if (dilation=="ODL") {
+				if (dilation=="oblique") {
 					rownames(A) <-rep("",dimensions)
 					colnames(A) <- c(rep("",dimensions-1),"A")
 					constants$HB <- list(A=round(A,6), m=round(m,6))
@@ -1490,34 +1526,33 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			##   Reformat the information from the estimation (as necessary)
 			##   to prepare it for being output
 			if (dimensions==1) { 
-				if (rasch.flag==TRUE) sl$par <- c(1,sl$par)
 				names(sl$par) <- c("A","B")
 				constants$SL <- round(sl$par,6)
 			} else {
-				if (dilation=="ODL") {
+				if (dilation=="oblique") {
 					##   Reformat the estimated values for the rotation matrix as a matrix
-					if (rasch.flag==TRUE) A <- diag(rep(1,dimensions)) else A <- matrix(sl$par[1:(dimensions^2)],dimensions,dimensions)
+					A <- matrix(sl$par[1:(dimensions^2)],dimensions,dimensions)
 					
 					##   Extract the constants for the translation vector
 					m <- sl$par[-c(1:(dimensions^2))]
 					
-				} else if (dilation=="LL") {
+				} else if (dilation=="orth.fd"|dilation=="orth.fdc") {
 					##   Reformat the single dilation parameter as a diagonal matrix
-					if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(rep(sl$par[1],dimensions))
+					K <- diag(rep(sl$par[1],dimensions))
 					
 					##   Extract the constants for the translation vector
 					m <- sl$par[-1]
 					
-				} else if (dilation=="MIN") {
+				} else if (dilation=="orth.vd"|dilation=="orth.vdc") {
 					##   Reformat the dilation parameters as a diagonal matrix
-					if (rasch.flag==TRUE) K <- diag(rep(1,dimensions)) else K <- diag(sl$par[1:dimensions])
+					K <- diag(sl$par[1:dimensions])
 					
 					##   Extract the constants for the translation vector
 					m <- sl$par[-c(1:dimensions)]
 				} 
 				
 				names(m) <- paste("m",1:dimensions,sep="")
-				if (dilation=="ODL") {
+				if (dilation=="oblique") {
 					rownames(A) <-rep("",dimensions)
 					colnames(A) <- c(rep("",dimensions-1),"A")
 					constants$SL <- list(A=round(A,6), m=round(m,6))
@@ -1600,7 +1635,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 				if (x@dimensions[i]==1) {
 					tmp.con[[i]] <- c(1,0) 
 				} else {
-					if (dilation=="ODL") {
+					if (dilation=="oblique" & symmetric==FALSE) {
 						tmp.con[[i]] <- list(A=diag(rep(1,x@dimensions[i])),m=rep(0,x@dimensions[i]))
 					} else {
 						tmp.con[[i]] <- list(T=diag(rep(1,x@dimensions[i])), K=diag(rep(1,x@dimensions[i])),m=rep(0,x@dimensions[i]))
@@ -1655,7 +1690,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 			##   Perform j iterations to place the parameters for the given group on the base group scale
 			for (j in tmp.j) {
 				if (dimensions==1) {
-					tmp1@a <- as.matrix(tmp1@a/tmp.con[[j]][1])
+					if (rasch.flag==TRUE) tmp1@a <- as.matrix(tmp1@a) else tmp1@a <- as.matrix(tmp1@a/tmp.con[[j]][1])
 					tmp1@b <-  as.matrix(tmp.con[[j]][1]*tmp1@b + tmp.con[[j]][2])
 					tmp1@b[mcnr,] <- tmp@b[mcnr,]-(tmp.con[[j]][2]/tmp.con[[j]][1])*tmp@a[mcnr,]
 					tmp@b[mcnr,] <- tmp1@b[mcnr,]
@@ -1685,7 +1720,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 							tmp1@b <- tmp1@b-matrix(tmp1@a[,do1]*tmp.con[[j]][2],nrow(tmp1@b),ncol(tmp1@b))
 							if (!missing(ability)) tmpa[,do1] <- tmp.con[[j]][1]*tmpa[,do1] + tmp.con[[j]][2]
 						} else {
-							if (dilation=="ODL") {
+							if (dilation=="oblique" & symmetric==FALSE) {
 								tmp1@a[,do1] <- tmp1@a[,do1]%*%ginv(tmp.con[[j]]$A[do4,do4])
 								tmp1@b <- tmp1@b-matrix(tmp1@a[,do1]%*%tmp.con[[j]]$m[do4],nrow(tmp1@b),ncol(tmp1@b))
 								if (!missing(ability)) tmpa[,do1] <- t(tmp.con[[j]]$A[do4,do4]%*%t(tmpa[,do1]) + tmp.con[[j]]$m[do4])
@@ -1698,7 +1733,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 							}
 						}
 					} else {
-						if (dilation=="ODL") {
+						if (dilation=="oblique" & symmetric==FALSE) {
 							tmp1@a[,do1] <- tmp1@a[,do1]%*%ginv(tmp.con[[j]]$A[do4,do4])
 							tmp1@b <- tmp1@b-matrix(tmp1@a[,do1]%*%tmp.con[[j]]$m[do4],nrow(tmp1@b),ncol(tmp1@b))
 							if (!missing(ability)) tmpa[,do1] <- t(tmp.con[[j]]$A[do4,do4]%*%t(tmpa[,do1]) + tmp.con[[j]]$m[do4])
@@ -1710,6 +1745,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 							if (!missing(ability)) tmpa[,do1] <- t(tmp.con[[j]]$T[do4,do4]%*%tmp.con[[j]]$K[do4,do4]%*%t(tmpa[,do1]) + as.vector(tmp.con[[j]]$K[do4,do4]%*%tmp.con[[j]]$m[do4]))
 						}
 					}
+					if (rasch.flag==TRUE) tmp1@a <- matrix(1,nrow(tmp1@a),ncol(tmp1@a))
 				}
 			}
 			
@@ -1818,7 +1854,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 					if (dimensions==1) {
 						tmp.con[[i]] <- c(1,0) 
 					} else {
-						if (dilation=="ODL") {
+						if (dilation=="oblique") {
 							tmp.con[[i]] <- list(A=diag(rep(1,dimensions)),m=rep(0,dimensions))
 						} else {
 							tmp.con[[i]] <- list(T=diag(rep(1,dimensions)),K=diag(rep(1,dimensions)),m=rep(0,dimensions))
@@ -1869,7 +1905,7 @@ setMethod("plink", signature(x="irt.pars", common="ANY"), function(x, common, re
 						if (length(do1)==1) {
 							tmpa[,do1] <- tmp.con[[j]][1]*tmpa[,do1] + tmp.con[[j]][2]
 						} else {
-							if (dilation=="ODL") {
+							if (dilation=="oblique") {
 								tmpa[,do1] <- t(tmp.con[[j]]$A%*%t(tmpa[,do1]) + tmp.con[[j]]$m)
 							} else {
 								tmpa[,do1] <- t(tmp.con[[j]]$T%*%tmp.con[[j]]$K%*%t(tmpa[,do1]) + as.vector(tmp.con[[j]]$K%*%tmp.con[[j]]$m))

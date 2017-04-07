@@ -17,6 +17,8 @@ not encouraged.  Use one of the functions \code{drm}, \code{gpcm}, \code{grm}, \
       \item{\code{prob}:}{data.frame of item probabilities with n rows and j+m columns for n theta 
         values and j items (the first m column contains theta values for m dimensions)}
 
+      \item{\code{info}:}{data.frame of item information}
+
       \item{\code{p.cat}:}{vector identifying the number of categories for each item for which 
         probabilities were computed}
 

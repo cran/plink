@@ -14,36 +14,36 @@ unidimensional methods include the Mean/Mean, Mean/Sigma, Haebara, and Stocking-
 methods.  The multidimensional methods include a least squares approach (Li & Lissitz,
 2000; Min, 2003; Reckase & Martineau, 2004) and extensions of the Haebara and 
 Stocking-Lord method using a single dilation parameter (Li & Lissitz, 2000), multiple 
-dilation parameters (Min, 2003), or the Oshima, Davey, & Lee (2000) approach.  The 
-methods allow for symmetric and non-symmetric optimization and chain-linked rescaling 
-of item and ability parameters.
+dilation parameters (Min, 2003), or an oblique Procrustes approach (Oshima, Davey, & 
+Lee, 2000; Reckase, 2009). The methods allow for symmetric and non-symmetric 
+optimization and chain-linked rescaling of item and ability parameters.
 }
 
 \usage{
 plink(x, common, rescale, ability, method, weights.t, weights.f, 
   startvals, exclude, score = 1, base.grp = 1, symmetric = FALSE, 
-  rescale.com = TRUE, grp.names = NULL, dilation = "LL", 
-  dim.order = NULL, ...)
+  rescale.com = TRUE, grp.names = NULL, dilation = "oblique", 
+  md.center = FALSE, dim.order = NULL, ...)
 
 ## S4 method for signature 'list', 'matrix'
 plink(x, common, rescale, ability, method, weights.t, weights.f, 
   startvals, exclude, score, base.grp, symmetric, rescale.com, 
-  grp.names, dilation, dim.order, ...)
+  grp.names, dilation, md.center, dim.order, ...)
 
 ## S4 method for signature 'list', 'data.frame'
 plink(x, common, rescale, ability, method, weights.t, weights.f, 
   startvals, exclude, score, base.grp, symmetric, rescale.com, 
-  grp.names, dilation, dim.order, ...)
+  grp.names, dilation, md.center, dim.order, ...)
 
 ## S4 method for signature 'list', 'list'
 plink(x, common, rescale, ability, method, weights.t, weights.f, 
   startvals, exclude, score, base.grp, symmetric, rescale.com, 
-  grp.names, dilation, dim.order, ...)
+  grp.names, dilation, md.center, dim.order, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
 plink(x, common, rescale, ability, method, weights.t, weights.f, 
   startvals, exclude, score, base.grp, symmetric, rescale.com, 
-  grp.names, dilation, dim.order, ...)
+  grp.names, dilation, md.center, dim.order, ...)
 }
 
 \arguments{
@@ -101,10 +101,16 @@ plink(x, common, rescale, ability, method, weights.t, weights.f,
 
   \item{grp.names}{character vector of group names }
 
-  \item{dilation}{character value identifying whether the Oshima, Davey, & Lee (2000)
-    approach \code{"ODL"}, the Li and Lissitz (2000) approach \code{"LL"}, or the Min (2003)
-    approach \code{"MIN"} should be used to estimate the linking constants for the 
-    multidimensional Haebara and Stocking-Lord methods.}
+  \item{dilation}{character value identifying whether an oblique Procrustes approach
+    (Oshima, Davey, & Lee, 2000; Reckase 2009) \code{"oblique"}, an orthogonal Procrustes 
+    approach with a fixed dilation parameter (Li & Lissitz, 2000) \code{"orth.fd"}, or an
+    orthogonal Procrustes approach with variable dilations (Min, 2003) \code{"orth.vd"} 
+    should be used to estimate the linking constants for the multidimensional methods. Both
+    orthogonal approaches can be constrained to exclude reflections by using \code{"orth.fdc"}
+    or \code{"orth.vdc"}.}
+
+  \item{md.center}{if \code{TRUE} mean center the slope matrices prior to estimating the 
+    rotation matrix and dilation constants}
 
   \item{dim.order}{matrix for identifying the ordering of factors across groups.  See 
     below for details.}
@@ -132,12 +138,12 @@ used) or a list of vectors/character values can be supplied with the number of l
 equal to the number of groups minus one. For the multidimensional methods, the same general 
 structure applies (a vector or character value for a single group or a vector, character value 
 or list for multiple groups); however, the length of the vector will vary depending on the 
-dilation approach used. If \code{dilation} is "ODL", the first m*m values in \code{startvals}, 
+dilation approach used. If \code{dilation} is "obliquw", the first m*m values in \code{startvals}, 
 for m dimensions, should correspond to the values in the transformation matrix (starting with 
 the value in the upper-left corner, then the next value in the column, ..., then the first value 
 in the next column, etc.). The remaining m values should be for the translation vector. If 
-\code{dilation} is "LL", the first value will be the slope parameter and the remaining m values 
-will be for the translation vector. If \code{dilation} is "MIN", the first m values are the 
+\code{dilation} is "orth.fd", the first value will be the slope parameter and the remaining m values 
+will be for the translation vector. If \code{dilation} is "orth.vd", the first m values are the 
 slopes for each dimension and the remaining m values are for the translation vector. 
 
 \code{weights.t} can be a list or a list of lists.  The purpose of this object is to specify
@@ -277,6 +283,10 @@ set equal to \code{D}. If only \code{D.drm} is specified, the values for \code{D
   Multidimensional linking: Four practical approaches. 
   \emph{Journal of Educational Measurement}, \emph{37}(4), 357-373.
 
+  Reckase, M. D. (2009).
+  \emph{Multidimensional item response theory}
+  New York, Springer
+
   Reckase, M. D., & Martineau, J. A. (2004). 
   \emph{The vertical scaling of science achievement tests}.
   Research report for the Center for Education and National Research Council.
@@ -308,8 +318,8 @@ using the argument \code{control=list(rel.tol=0.001)}.}
 # and exclude item 27 from the common item set
 pm <- as.poly.mod(36)
 x <- as.irt.pars(KB04$pars, KB04$common, cat=list(rep(2,36),rep(2,36)), 
-  poly.mod=list(pm,pm), exclude=list(27,NA))
-out <- plink(x, rescale="MS", base.grp=2, D=1.7)
+  poly.mod=list(pm,pm))
+out <- plink(x, rescale="MS", base.grp=2, D=1.7, exclude=list(27,NA))
 summary(out, descrip=TRUE)
 pars.out <- link.pars(out)
 
@@ -394,24 +404,25 @@ pm <- as.poly.mod(80, "drm", list(1:80))
 x <- as.irt.pars(reckase9$pars, reckase9$common, 
   list(rep(2,80),rep(2,80)), list(pm,pm), dimensions=2)
 # Compute constants using the least squares method and 
-# the Min (2003) dilation. Rescale the item parameters 
-# using the LS method
-out <- plink(x, dilation="MIN", rescale="LS")
+# the orthongal rotation with variable dilation. 
+# Rescale the item parameters using the LS method
+out <- plink(x, dilation="orth.vd", rescale="LS")
 summary(out, descrip=TRUE)
 # Extract the rescaled item parameters
 pars.out <- link.pars(out)
 
-# Compute constants using Oshima, Davey, Lee (2000)
+# Compute constants using an oblique Procrustes method
 # Display output and descriptives
-out <- plink(x, dilation="ODL")
+out <- plink(x, dilation="oblique")
 summary(out, descrip=TRUE)
 
-# Compute constants using Li & Lissitz (2000)
-# Rescale item parameters and ability estimates 
+# Compute constants using and orthogonal rotation with
+# a fixed dilation parameter 
+# Rescale the item parameters and ability estimates 
 # using the "HB" and "LS" methods.
 # Display the optimization iterations
 ability <- matrix(rnorm(40),20,2)
-out <- plink(x, method=c("HB","LS"), dilation="LL", 
+out <- plink(x, method=c("HB","LS"), dilation="orth.fd", 
    rescale="HB", ability=list(ability,ability),
    control=list(trace=1,rel.tol=0.001))
 summary(out)
@@ -421,13 +432,13 @@ ability.out <- out$ability
 
 # Compute linking constants for two groups using mixed-format items 
 # modeled with the M3PL and MGPCM. Only compute constants using the 
-# MIN dilation.
+# orth.vd dilation.
 pm <- as.poly.mod(60,c("drm","gpcm"), list(c(1:60)[md.mixed$cat==2],
   c(1:60)[md.mixed$cat>2]))
 x <- as.irt.pars(md.mixed$pars, matrix(1:60,60,2), 
   list(md.mixed$cat, md.mixed$cat), 
   list(pm, pm), dimensions=4, grp.names=c("Form.X","Form.Y"))
-out <- plink(x,dilation="MIN")
+out <- plink(x,dilation="orth.vd")
 summary(out, descrip=TRUE)
 
 
@@ -437,7 +448,7 @@ pars <- cbind(round(runif(80),2),reckase9$pars[[1]])
 x <- as.irt.pars(list(pars,reckase9$pars[[2]]), reckase9$common, 
 list(rep(2,80),rep(2,80)), list(pm,pm), dimensions=c(3,2))
 dim.order <- matrix(c(1,2,3,NA,1,2),2,3,byrow=TRUE)
-out <- plink(x, dilation="ODL", dim.order=dim.order, rescale="LS")
+out <- plink(x, dilation="oblique", dim.order=dim.order, rescale="LS")
 summary(out)
 pars.out <- link.pars(out)
 

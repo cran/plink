@@ -3,11 +3,11 @@
 ##   partial credit model, multidimensional partial credit model,
 ##   and the multidimensional generalized partial credit model
 
-setGeneric("gpcm", function(x, cat, theta, dimensions=1, D=1, location=FALSE, print.mod=FALSE, items, ...) standardGeneric("gpcm"))
+setGeneric("gpcm", function(x, cat, theta, dimensions=1, D=1, location=FALSE, print.mod=FALSE, items, information=FALSE, angle, ...) standardGeneric("gpcm"))
 
 
 
-setMethod("gpcm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, D, location, print.mod, items, ...) {
+setMethod("gpcm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, D, location, print.mod, items, information, angle, ...) {
 
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"gpcm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, location, loc.out=FALSE, ...)
@@ -17,7 +17,7 @@ setMethod("gpcm", signature(x="matrix", cat="numeric"), function(x, cat, theta, 
 
 
 
-setMethod("gpcm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, dimensions, D, location, print.mod, items, ...) {
+setMethod("gpcm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, dimensions, D, location, print.mod, items, information, angle, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"gpcm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, location, loc.out=FALSE, ...)
@@ -27,7 +27,7 @@ setMethod("gpcm", signature(x="data.frame", cat="numeric"), function(x, cat, the
 
 
 
-setMethod("gpcm", signature(x="list", cat="numeric"), function(x, cat, theta, dimensions, D, location, print.mod, items, ...) {
+setMethod("gpcm", signature(x="list", cat="numeric"), function(x, cat, theta, dimensions, D, location, print.mod, items, information, angle, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(as.matrix(x[[1]])),"gpcm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, location, loc.out=FALSE, ...)
@@ -39,7 +39,7 @@ setMethod("gpcm", signature(x="list", cat="numeric"), function(x, cat, theta, di
 
 ##   For this method the objects, cat, dimensions, and location are contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("gpcm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dimensions, D, location, print.mod, items, ...) {
+setMethod("gpcm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dimensions, D, location, print.mod, items, information, angle, ...) {
 	
 	##   Loop through all groups. In this scenario, a list of {irt.prob} objects will be returned
 	if (x@groups>1) {
@@ -61,7 +61,7 @@ setMethod("gpcm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, di
 
 ##   For this method the objects, cat, dimensions, and location are contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("gpcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dimensions, D, location, print.mod, items, ...) {
+setMethod("gpcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dimensions, D, location, print.mod, items, information, angle, ...) {
 	
 	##   The equation to compute probabilities is not (actually) parameterized using
 	##   the location/step-deviation formulation. As such, in instances where a location
@@ -162,14 +162,55 @@ setMethod("gpcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, di
 	if (length(x@model[x@model!="gpcm"])) warning("{x} contains mixed format items. Probabilities will only be computed for the gpcm polytomous items.\nTo compute probabilities for mixed format items, use the function {mixed}.\n")
 	
 	##   Initialize object to hold the response probabilities
-	p <- NULL 
+	##   Initialize object to hold the response probabilities
+	p <- p1 <- NULL
 	
+	##   Determine angles for computing information (in the multidimensional case)
+	if (information==TRUE) {
+		if (dimensions>1) {
+			if (missing(angle)) {
+				angle <- list()
+				for (i in 1:(dimensions-1)) {
+					angle[[i]] <- seq(0,90,10)
+				}
+				ang <- expand.grid(angle)
+				angle <- as.matrix(cbind(ang[,1],90-ang[,1],ang[,-1]))
+			} else {
+				if (is.vector(angle)) {
+					angle1 <- angle
+					angle <- list()
+					for (i in 1:(dimensions-1)) {
+						angle[[i]] <- angle1
+					}
+					ang <- expand.grid(angle)
+					angle <- as.matrix(cbind(ang[,1],90-ang[,1],ang[,-1]))
+				} else if (is.matrix(angle)) {
+					if (ncol(angle)!=dimensions) {
+						warning("The number of columns in {angle} does not match the number of dimensions in {x}. Default angles were used.")
+						angle <- list()
+						for (i in 1:(dimensions-1)) {
+							angle[[i]] <- seq(0,90,10)
+						}
+						ang <- expand.grid(angle)
+						angle <- as.matrix(cbind(ang[,1],90-ang[,1],ang[,-1]))
+					}
+				}
+			}
+			dcos <- cos((pi*angle)/180)
+		}
+	}
+	
+	##   Compute the response probabilities
 	for (i in 1:nrow(b)) {
 		##   Object used to accumulate step parameters
 		dif <- 0 
 		
 		##   Object for the denominator in the final equation
 		den <- NULL 
+		
+		if (dimensions>1) {
+			a[i,] <- a[i,]*D
+		}
 		
 		##   Compute the denominator
 		for (k in 0:(cat[i]-1)) {
@@ -183,6 +224,8 @@ setMethod("gpcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, di
 		}
 		den <- apply(den,1,sum)
 		
+		tmp.p1 <- tmp.p2 <- rep(0,nrow(theta))
+		
 		##   Compute the response probabilities
 		dif <- 0
 		for (k in 0:(cat[i]-1)) {
@@ -194,15 +237,43 @@ setMethod("gpcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, di
 				##   This is the equation for the MD generalized partial credit model
 				cp <- exp(k*(theta %*% a[i,])+dif)/den
 			}
+			if (information==TRUE) {
+				tmp.p1 <- tmp.p1+(cp*k^2)
+				tmp.p2 <- tmp.p2+(cp*k)
+			}
 			p <- cbind(p,cp)
 			colnames(p)[ncol(p)] <- paste("item_",items[i],".",k,sep="")
+		}
+		if (information==TRUE) {
+			if (dimensions==1) {
+				info <- (tmp.p1-tmp.p2^2)*a[i]^2
+			} else {
+				info <- (tmp.p1-tmp.p2^2)%*%(a[i,]%*%t(dcos))^2
+			}
+			p1 <- cbind(p1, as.vector(info))
 		}
 	}
 		
 	p <- data.frame(cbind(theta,p))
 	if (print.mod==TRUE) cat(paste(x@mod.lab,"\n"))
 	
-	p <- new("irt.prob", prob=p, p.cat=cat, mod.lab=x@mod.lab[x@model=="gpcm"], dimensions=dimensions, D=c(D.gpcm=D), pars=pars, model="gpcm", items=list(gpcm=1:n))
+	##   Create and return the irt.prob object
+	if (information==TRUE) {
+		if (dimensions>1) {
+			th <- NULL
+			for (i in 1:nrow(angle)) {
+				th <- rbind(th, cbind(theta,matrix(angle[i,],nrow(theta),dimensions,byrow=TRUE)))
+			}
+			colnames(th) <- c(paste("theta",1:dimensions,sep=""),paste("angle",1:dimensions,sep=""))
+			p1 <- data.frame(cbind(th,p1))
+			names(p1)[-c(1:(2*dimensions))] <- paste("item_",items,sep="")
+		} else {
+			p1 <- data.frame(cbind(theta,p1))
+			names(p1) <- c("theta",paste("item_",items,sep=""))
+		}
+		p <- new("irt.prob", prob=p, info=p1, p.cat=cat, mod.lab=x@mod.lab[x@model=="gpcm"], dimensions=dimensions, D=c(D.gpcm=D), pars=pars, model="gpcm", items=list(gpcm=1:n))
+	} else {
+		p <- new("irt.prob", prob=p, p.cat=cat, mod.lab=x@mod.lab[x@model=="gpcm"], dimensions=dimensions, D=c(D.gpcm=D), pars=pars, model="gpcm", items=list(gpcm=1:n))
+	}
 	return(p)
-	
 })

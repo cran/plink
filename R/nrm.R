@@ -2,11 +2,11 @@
 ##   modeled using the nominal response model and the
 ##   multidimensional nominal response model
 
-setGeneric("nrm", function(x, cat, theta, dimensions=1, items, ...) standardGeneric("nrm"))
+setGeneric("nrm", function(x, cat, theta, dimensions=1, items, information=FALSE, angle, ...) standardGeneric("nrm"))
 
 
 
-setMethod("nrm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, items, ...) {
+setMethod("nrm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, items, information, angle, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"nrm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, ...)
@@ -16,17 +16,15 @@ setMethod("nrm", signature(x="matrix", cat="numeric"), function(x, cat, theta, d
 
 
 
-setMethod("nrm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, dimensions, items, ...) {
+setMethod("nrm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, dimensions, items, information, angle, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"nrm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, ...)
 	callGeneric()
-	
 })
 
 
-
-setMethod("nrm", signature(x="list", cat="numeric"), function(x, cat, theta, dimensions, items, ...) {
+setMethod("nrm", signature(x="list", cat="numeric"), function(x, cat, theta, dimensions, items, information, angle, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(as.matrix(x[[1]])),"nrm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, ...)
@@ -36,9 +34,9 @@ setMethod("nrm", signature(x="list", cat="numeric"), function(x, cat, theta, dim
 
 
 
-##   For this method the objects, cat and dimensionsare contained in {x} 
+##   For this method the objects, cat and dimensions are contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("nrm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dimensions, items, ...) {
+setMethod("nrm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dimensions, items, information, angle, ...) {
 	
 	##   Loop through all groups. In this scenario, a list of {irt.prob} objects will be returned
 	if (x@groups>1) {
@@ -60,7 +58,7 @@ setMethod("nrm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dim
 
 ##   For this method the objects, cat and dimensionsare contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("nrm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dimensions, items, ...) {
+setMethod("nrm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dimensions, items, information, angle, ...) {
 
 	##   Identify the nrm items
 	if (missing(items)) items <- 1:x@n[1]
@@ -153,38 +151,114 @@ setMethod("nrm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dim
 	if (length(x@model[x@model!="nrm"])) warning("{x} contains mixed format items. Probabilities will only be computed for the nrm polytomous items.\nTo compute probabilities for mixed format items, use the function {mixed}.\n")
 	
 	##   Initialize object to hold the response probabilities
-	p <- NULL 
+	p <- p1 <- NULL
 	
-	for (i in 1:n) {
-		##   Object for the denominator in the final MMCM equation
+	##   Determine angles for computing information (in the multidimensional case)
+	if (information==TRUE) {
+		if (dimensions>1) {
+			if (missing(angle)) {
+				angle <- list()
+				for (i in 1:(dimensions-1)) {
+					angle[[i]] <- seq(0,90,10)
+				}
+				ang <- expand.grid(angle)
+				angle <- as.matrix(cbind(ang[,1],90-ang[,1],ang[,-1]))
+			} else {
+				if (is.vector(angle)) {
+					angle1 <- angle
+					angle <- list()
+					for (i in 1:(dimensions-1)) {
+						angle[[i]] <- angle1
+					}
+					ang <- expand.grid(angle)
+					angle <- as.matrix(cbind(ang[,1],90-ang[,1],ang[,-1]))
+				} else if (is.matrix(angle)) {
+					if (ncol(angle)!=dimensions) {
+						warning("The number of columns in {angle} does not match the number of dimensions in {x}. Default angles were used.")
+						angle <- list()
+						for (i in 1:(dimensions-1)) {
+							angle[[i]] <- seq(0,90,10)
+						}
+						ang <- expand.grid(angle)
+						angle <- as.matrix(cbind(ang[,1],90-ang[,1],ang[,-1]))
+					}
+				}
+			}
+			dcos <- cos((pi*angle)/180)
+		}
+	}
+	
+	
+	for (i in 1:nrow(b)) {
+		##   Object for the denominator in the final NRM equation
 		den <- NULL
+		
+		info <- rep(0,nrow(theta))
 		
 		##   Because of how the parameters are organized in {x}
 		##   there may be NAs in various rows. Remove these NAs
-		##   before computing the response probabilites
+		##   before computing the response probabilities
 		a1 <- a[i,][!is.na(a[i,])]
 		b1 <- b[i,][!is.na(b[i,])]
 		
 		##   Compute the denominator
 		for (k in 1:cat[i]) {
-			tmp <- (k-1)*dimensions
-			tmp1 <- tmp+dimensions
-			d <- exp((theta %*% a1[(tmp+1):tmp1])+b1[k])
+			k1 <- seq(k,cat[i]*dimensions,cat[i])
+			d <- exp((theta %*% a1[k1])+b1[k])
 			den <- cbind(den, d)
 		}
+		
 		den <- apply(den,1,sum)
 		
 		##   Compute the response probabilities
 		for (k in 1:cat[i]) {
-			tmp <- (k-1)*dimensions
-			tmp1 <- tmp+dimensions
-			cp <- exp((theta %*% a1[(tmp+1):tmp1])+b1[k])/den
+			k1 <- seq(k,cat[i]*dimensions,cat[i])
+			cp <- exp((theta %*% a1[k1])+b1[k])/den
+			
+			if (information==TRUE) {
+				tmp.p1 <- tmp.p2 <- tmp.p3 <- rep(0,nrow(theta))
+				for (v in 1:cat[i]) {
+					if (dimensions==1) {
+						tmp.p1 <- tmp.p1+exp((theta*a1[v])+b1[v])*a1[v]
+						tmp.p2 <- tmp.p2+exp((theta*a1[v])+b1[v])*(a1[k]-a1[v])
+						tmp.p3 <- tmp.p3+exp((theta*a1[v])+b1[v])*(a1[k]^2-a1[v]^2)
+					} else {
+						v1 <- seq(v,cat[i]*dimensions,cat[i])
+						tmp.p1 <- tmp.p1+exp((theta%*%a1[v1])+b1[v])%*%(a1[v1]%*%t(dcos))
+						tmp.p2 <- tmp.p2+exp((theta%*%a1[v1])+b1[v])%*%(a1[k1]%*%t(dcos)-a1[v1]%*%t(dcos))
+						tmp.p3 <- tmp.p3+exp((theta%*%a1[v1])+b1[v])%*%((a1[k1]%*%t(dcos))^2-(a1[v1]%*%t(dcos))^2)
+					}
+				}
+				
+				cp1 <- (as.vector(exp((theta%*%a1[k1])+b1[k]))*tmp.p2)/den^2
+				cp2 <- ((den^2)*as.vector(exp((theta%*%a1[k1])+b1[k]))*tmp.p3-as.vector(exp((theta%*%a1[k1])+b1[k]))*tmp.p2*2*den*tmp.p1)/den^4
+				tmp.info <- ((cp1^2)/as.vector(cp))-cp2
+			}
 			p <- cbind(p,cp)
 			colnames(p)[ncol(p)] <- paste("item_",items[i],".",k,sep="")
+			if (information==TRUE) info <- info+tmp.info
 		}
+		if (information==TRUE) p1 <- cbind(p1, as.vector(info))
 	}
 	p <- data.frame(cbind(theta,p))
 	
-	p <- new("irt.prob", prob=p, p.cat=cat, mod.lab=x@mod.lab[x@model=="nrm"], dimensions=dimensions, D=c(D=1), pars=pars, model="nrm", items=list(nrm=1:n))
+	##   Create and return the irt.prob object
+	if (information==TRUE) {
+		if (dimensions>1) {
+			th <- NULL
+			for (i in 1:nrow(angle)) {
+				th <- rbind(th, cbind(theta,matrix(angle[i,],nrow(theta),dimensions,byrow=TRUE)))
+			}
+			colnames(th) <- c(paste("theta",1:dimensions,sep=""),paste("angle",1:dimensions,sep=""))
+			p1 <- data.frame(cbind(th,p1))
+			names(p1)[-c(1:(2*dimensions))] <- paste("item_",items,sep="")
+		} else {
+			p1 <- data.frame(cbind(theta,p1))
+			names(p1) <- c("theta",paste("item_",items,sep=""))
+		}
+		p <- new("irt.prob", prob=p, info=p1, p.cat=cat, mod.lab=x@mod.lab[x@model=="nrm"], dimensions=dimensions, D=c(D=1), pars=pars, model="nrm", items=list(nrm=1:n))
+	} else {
+		p <- new("irt.prob", prob=p, p.cat=cat, mod.lab=x@mod.lab[x@model=="nrm"], dimensions=dimensions, D=c(D=1), pars=pars, model="nrm", items=list(nrm=1:n))
+	}
 	return(p)
 })

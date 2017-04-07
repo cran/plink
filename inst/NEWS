@@ -1,3 +1,42 @@
+Changes in version: plink_1.5-0
+
+    o The vignette was cleaned up and the package was re-added to CRAN
+
+==============================
+
+Changes in version: plink_1.4-0
+
+Bug Fixes:
+  o A correction was made to the sep.pars function. An incorrect sign
+    was used to tranform item parameters with a location parameter to
+    parameters without a location parameter, and vice versa.
+
+  o A correction was made to the linking function when there is only
+    one common dimension between multidimensional tests (or when
+    linking a unidimensional and multidimensional test
+
+  o The function {read.ltm} was not importing all of the 
+    threshold parameters for the graded response model.
+
+Added Functionality:
+
+  o The functions {drm}, {grm}, {gpcm}, {nrm}, and {mixed} can now
+    be used to compute unidimensional and multidimensional item information
+
+  o An argument {exclude} was added to the equate function to allow
+    items to be removed before computing total scores
+
+Misc:
+
+  o The composite angle is now printed when vectorplot2 is used
+
+  o Output for observed score equating now includes EAP equivalents
+    (and standard deviations) for each of the observed scores
+
+  o Some corrections/additions to the .Rd files
+
+==============================
+
 Changes in version: plink_1.3-1
 
 Bug Fixes:

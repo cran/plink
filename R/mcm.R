@@ -2,21 +2,11 @@
 ##   modeled using the multiple-choice model and the 
 ##   multidimensional multiple-choice model
 
-setGeneric("mcm", function(x, cat, theta, dimensions=1, items, ...) standardGeneric("mcm"))
+setGeneric("mcm", function(x, cat, theta, dimensions=1, items, information=FALSE, angle, ...) standardGeneric("mcm"))
 
 
 
-setMethod("mcm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, items, ...) {
-
-	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"mcm")
-	x <- sep.pars(x, cat, poly.mod, dimensions, ...)
-	callGeneric()
-	
-})
-
-
-
-setMethod("mcm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, dimensions, items, ...) {
+setMethod("mcm", signature(x="matrix", cat="numeric"), function(x, cat, theta, dimensions, items, information, angle, ...) {
 
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"mcm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, ...)
@@ -26,7 +16,17 @@ setMethod("mcm", signature(x="data.frame", cat="numeric"), function(x, cat, thet
 
 
 
-setMethod("mcm", signature(x="list", cat="numeric"), function(x, cat, theta, dimensions, items, ...) {
+setMethod("mcm", signature(x="data.frame", cat="numeric"), function(x, cat, theta, dimensions, items, information, angle, ...) {
+
+	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(x),"mcm")
+	x <- sep.pars(x, cat, poly.mod, dimensions, ...)
+	callGeneric()
+	
+})
+
+
+
+setMethod("mcm", signature(x="list", cat="numeric"), function(x, cat, theta, dimensions, items, information, angle, ...) {
 	
 	if(!hasArg(poly.mod)) poly.mod <- as.poly.mod(nrow(as.matrix(x[[1]])),"mcm")
 	x <- sep.pars(x, cat, poly.mod, dimensions, ...)
@@ -38,7 +38,7 @@ setMethod("mcm", signature(x="list", cat="numeric"), function(x, cat, theta, dim
 
 ##   For this method the objects, cat and dimensionsare contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("mcm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dimensions, items, ...) {
+setMethod("mcm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dimensions, items, information, angle, ...) {
 
 	##   Loop through all groups. In this scenario, a list of {irt.prob} objects will be returned
 	if (x@groups>1) {
@@ -60,7 +60,7 @@ setMethod("mcm", signature(x="irt.pars", cat="ANY"), function(x, cat, theta, dim
 
 ##   For this method the objects, cat and dimensionsare contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("mcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dimensions, items, ...) {
+setMethod("mcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dimensions, items, information, angle, ...) {
 
 	##   Identify the mcm items
 	if (missing(items)) items <- 1:x@n[1]
@@ -156,7 +156,43 @@ setMethod("mcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dim
 	if (length(x@model[x@model!="mcm"])) warning("{x} contains mixed format items. Probabilities will only be computed for the mcm polytomous items.\nTo compute probabilities for mixed format items, use the function {mixed}.\n")
 	
 	##   Initialize object to hold the response probabilities
-	p <- NULL 
+	p <- p1 <- NULL
+	
+	##   Determine angles for computing information (in the multidimensional case)
+	if (information==TRUE) {
+		if (dimensions>1) {
+			if (missing(angle)) {
+				angle <- list()
+				for (i in 1:(dimensions-1)) {
+					angle[[i]] <- seq(0,90,10)
+				}
+				ang <- expand.grid(angle)
+				angle <- as.matrix(cbind(ang[,1],90-ang[,1],ang[,-1]))
+			} else {
+				if (is.vector(angle)) {
+					angle1 <- angle
+					angle <- list()
+					for (i in 1:(dimensions-1)) {
+						angle[[i]] <- angle1
+					}
+					ang <- expand.grid(angle)
+					angle <- as.matrix(cbind(ang[,1],90-ang[,1],ang[,-1]))
+				} else if (is.matrix(angle)) {
+					if (ncol(angle)!=dimensions) {
+						warning("The number of columns in {angle} does not match the number of dimensions in {x}. Default angles were used.")
+						angle <- list()
+						for (i in 1:(dimensions-1)) {
+							angle[[i]] <- seq(0,90,10)
+						}
+						ang <- expand.grid(angle)
+						angle <- as.matrix(cbind(ang[,1],90-ang[,1],ang[,-1]))
+					}
+				}
+			}
+			dcos <- cos((pi*angle)/180)
+		}
+	}
+	
 	
 	for (i in 1:n) {
 		##   Object for the denominator in the final MMCM equation
@@ -164,7 +200,7 @@ setMethod("mcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dim
 		
 		##   Because of how the parameters are organized in {x}
 		##   there may be NAs in various rows. Remove these NAs
-		##   before computing the response probabilites
+		##   before computing the response probabilities
 		a1 <- a[i,][!is.na(a[i,])]
 		b1 <- b[i,][!is.na(b[i,])]
 		c1 <- c[i,][!is.na(c[i,])]
@@ -193,7 +229,24 @@ setMethod("mcm", signature(x="sep.pars", cat="ANY"), function(x, cat, theta, dim
 	}
 	p <- data.frame(cbind(theta,p))
 	
-	p <- new("irt.prob", prob=p, p.cat=cat, mod.lab=x@mod.lab[x@model=="mcm"], dimensions=dimensions, D=c(D=1), pars=pars, model="mcm", items=list(mcm=1:n))
+	##   Create and return the irt.prob object
+	if (information==TRUE) {
+		cat("Item information for the multiple-choice model is not currently implemented. It will be available in a later version of the package.\n")
+		if (dimensions>1) {
+			th <- NULL
+			for (i in 1:nrow(angle)) {
+				th <- rbind(th, cbind(theta,matrix(angle[i,],nrow(theta),dimensions,byrow=TRUE)))
+			}
+			colnames(th) <- c(paste("theta",1:dimensions,sep=""),paste("angle",1:dimensions,sep=""))
+			p1 <- data.frame(cbind(th,matrix(NA,nrow(th),n)))
+			names(p1)[-c(1:(2*dimensions))] <- paste("item_",items,sep="")
+		} else {
+			p1 <- data.frame(cbind(theta,matrix(NA,length(theta),n)))
+			names(p1) <- c("theta",paste("item_",items,sep=""))
+		}
+		p <- new("irt.prob", prob=p, info=p1, p.cat=cat, mod.lab=x@mod.lab[x@model=="mcm"], dimensions=dimensions, D=c(D=1), pars=pars, model="mcm", items=list(mcm=1:n))
+	} else {
+		p <- new("irt.prob", prob=p, p.cat=cat, mod.lab=x@mod.lab[x@model=="mcm"], dimensions=dimensions, D=c(D=1), pars=pars, model="mcm", items=list(mcm=1:n))
+	}
 	return(p)
-	
 })

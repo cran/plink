@@ -15,25 +15,25 @@ items for a given set of theta values when the items are from a mixed-format tes
 }
 
 \usage{
-mixed(x, cat, poly.mod, theta, dimensions = 1, items, ...)
+mixed(x, cat, poly.mod, theta, dimensions = 1, items, information = FALSE, angle, ...)
 
 ## S4 method for signature 'numeric', 'numeric'
-mixed(x, cat, poly.mod, theta, dimensions, items, ...)
+mixed(x, cat, poly.mod, theta, dimensions, items, information, angle, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
-mixed(x, cat, poly.mod, theta, dimensions, items, ...)
+mixed(x, cat, poly.mod, theta, dimensions, items, information, angle, ...)
 
 ## S4 method for signature 'data.frame', 'numeric'
-mixed(x, cat, poly.mod, theta, dimensions, items, ...)
+mixed(x, cat, poly.mod, theta, dimensions, items, information, angle, ...)
 
 ## S4 method for signature 'list', 'numeric'
-mixed(x, cat, poly.mod, theta, dimensions, items, ...)
+mixed(x, cat, poly.mod, theta, dimensions, items, information, angle, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
-mixed(x, cat, poly.mod, theta, dimensions, items, ...)
+mixed(x, cat, poly.mod, theta, dimensions, items, information, angle, ...)
 
 ## S4 method for signature 'sep.pars', 'ANY'
-mixed(x, cat, poly.mod, theta, dimensions, items, ...)
+mixed(x, cat, poly.mod, theta, dimensions, items, information, angle, ...)
 }
 
 \arguments{
@@ -54,6 +54,14 @@ mixed(x, cat, poly.mod, theta, dimensions, items, ...)
   \item{dimensions}{number of modeled dimensions }
 
   \item{items}{numeric vector identifying the items for which probabilities should be computed}
+
+  \item{information}{logical value. If \code{TRUE} compute item information. In the multidimensional
+    case, information will be computed in the directions specified by \code{angle} or default angles
+    of 0 - 90 in increments of 10 degrees.}
+
+  \item{angle}{vector or matrix of angles between the dimension 1 axis and the corresponding axes for each 
+    of the other dimensions for which information will be computed. When there are more than two dimensions 
+    and \code{angle} is a vector, the same set of angles will be used relative to each of the corresponding axes.}
 
   \item{...}{further arguments passed to or from other methods. See details below. }
 }

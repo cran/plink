@@ -54,7 +54,7 @@ is.poly.mod <- function(x) {
 ##   equal {n}. It also checks to make sure that the number of model labels is the same as the 
 ##   number of models (from the {poly.mod} class).
 
-setClass("sep.pars", representation(a="matrix", b="matrix", c="matrix", cat="numeric", n="numeric", mod.lab="character", location="logical", dimensions="numeric"), prototype(loc.out=FALSE, dimensions=1), contains="poly.mod")
+setClass("sep.pars", representation(a="matrix", b="matrix", c="matrix", cat="numeric", n="numeric", mod.lab="character", location="logical", dimensions="numeric"), prototype(location=FALSE, dimensions=1), contains="poly.mod")
 .Valid.sep.pars <- function(object) {
 	out <- TRUE
 	if (nrow(object@a)!=object@n[1])  paste("The number of a-parameters does not match the total number of items.")
@@ -84,7 +84,8 @@ is.sep.pars <- function(x) {
 ##   the modeled items, the number of dimensions, and a list of item parameters. This class also
 ##   extends the {poly.mod} class.
 
-setClass("irt.prob",representation(prob="data.frame", p.cat="numeric", mod.lab="character", dimensions="numeric", D="numeric", pars="list"), contains="poly.mod")
+setClassUnion("dat.null",c("data.frame","NULL"))
+setClass("irt.prob",representation(prob="data.frame", info="dat.null", p.cat="numeric", mod.lab="character", dimensions="numeric", D="numeric", pars="list"), prototype(info=NULL), contains="poly.mod")
 .Valid.irt.prob<- function(object) {
 	
 	out <- TRUE
@@ -106,7 +107,7 @@ is.irt.prob <- function(x) {
 ##   {irt.pars} class
 ##   This class stores information for one or more sets of item parameters. It uses
 ##   three union classes {list.num}, {list.mat}, and {list.poly}. It includes slots for
-##   item parameters, numbers of response categores, {poly.mod} objects, common
+##   item parameters, numbers of response categories, {poly.mod} objects, common
 ##   item matrices, whether location parameters are used, the number of groups, and
 ##   numbers of dimensions. The item parameters are stored as a matrix when there
 ##   is one group or as a list of matrices when there are multiple groups. Similarly,
@@ -315,7 +316,6 @@ setMethod("initialize", "irt.pars", function(.Object, pars, cat, poly.mod, commo
 			}
 		}
 	}
-	
 	
 	##   Check the correspondence between the number of response categories in {cat}
 	##   and the number of item parameters in {pars}

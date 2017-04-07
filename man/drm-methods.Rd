@@ -18,25 +18,25 @@ number of dimensions.
 
 \usage{
 drm(x, theta, dimensions = 1, D = 1, incorrect = FALSE, 
-  print.mod = FALSE, items, ...)
+  print.mod = FALSE, items, information = FALSE, angle, ...)
 
 ## S4 method for signature 'numeric'
-drm(x, theta, dimensions, D, incorrect, print.mod, items, ...)
+drm(x, theta, dimensions, D, incorrect, print.mod, items, information, angle, ...)
 
 ## S4 method for signature 'matrix'
-drm(x, theta, dimensions, D, incorrect, print.mod, items, ...)
+drm(x, theta, dimensions, D, incorrect, print.mod, items, information, angle, ...)
 
 ## S4 method for signature 'data.frame'
-drm(x, theta, dimensions, D, incorrect, print.mod, items, ...)
+drm(x, theta, dimensions, D, incorrect, print.mod, items, information, angle, ...)
 
 ## S4 method for signature 'list'
-drm(x, theta, dimensions, D, incorrect, print.mod, items, ...)
+drm(x, theta, dimensions, D, incorrect, print.mod, items, information, angle, ...)
 
 ## S4 method for signature 'irt.pars'
-drm(x, theta, dimensions, D, incorrect, print.mod, items, ...)
+drm(x, theta, dimensions, D, incorrect, print.mod, items, information, angle, ...)
 
 ## S4 method for signature 'sep.pars'
-drm(x, theta, dimensions, D, incorrect, print.mod, items, ...)
+drm(x, theta, dimensions, D, incorrect, print.mod, items, information, angle, ...)
 }
 
 \arguments{
@@ -57,6 +57,14 @@ drm(x, theta, dimensions, D, incorrect, print.mod, items, ...)
   \item{print.mod}{if \code{TRUE}, print the model that was used (i.e., 1PL, 2PL, 3PL, M1PL, M2PL, or M3PL) }
 
   \item{items}{numeric vector identifying the items for which probabilities should be computed}
+
+  \item{information}{logical value. If \code{TRUE} compute item information. In the multidimensional
+    case, information will be computed in the directions specified by \code{angle} or default angles
+    of 0 - 90 in increments of 10 degrees.}
+
+  \item{angle}{vector or matrix of angles between the dimension 1 axis and the corresponding axes for each 
+    of the other dimensions for which information will be computed. When there are more than two dimensions 
+    and \code{angle} is a vector, the same set of angles will be used relative to each of the corresponding axes.}
 
   \item{...}{further arguments passed to or from other methods }
 }
@@ -306,8 +314,10 @@ pars <- matrix(c(0.5038,2.1910,1.1317,0.2493,0.5240,0.1763,
 2.3428,1.1530,0.3577,0.4240,-1.4971,0.3641),4,6,byrow=TRUE)
 colnames(pars) <- c("a1","a2","a3","a4","d","c")
 x <- drm(pars, dimensions=4, print.mod=TRUE)
-# Plot the item response surfaces for item 4
+
+
 \dontrun{
+# Plot the item response surfaces for item 4
 plot(x,items=4,item.names="Item 4",drape=TRUE)
 }
 }

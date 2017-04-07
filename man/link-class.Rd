@@ -31,9 +31,7 @@ not encouraged.  Use the function \code{\link[=plink-methods]{plink}} instead.
       of convergence for the Haebara and Stocking-Lord methods}
 
     \item{\code{convergence}:}{character vector identifying the type of convergence
-      reached under the Haebara or Stocking-Lord optimizations.
-      (see \url{http://netlib.bell-labs.com/cm/cs/cstr/153.pdf} for more
-      information on the output values)}
+      reached under the Haebara or Stocking-Lord optimizations.}
 
     \item{\code{base.grp}:}{numeric value indicating the base group for the calibration}
 

@@ -164,6 +164,7 @@ out <- plink(x, rescale="SL", base.grp=2, D=1.7)
 plot(out$pars, drift="all", grp.names=c("Form X","Form Y"), 
 item.nums=TRUE)
 
+\dontrun{
 # Compute linking constants for six groups using mixed-format items 
 # Create drift plots with distinct markers for the two response models
 pm1 <- as.poly.mod(41, c("drm", "gpcm"), reading$items[[1]])
@@ -176,6 +177,7 @@ pm <- list(pm1, pm2, pm3, pm4, pm5, pm6)
 x <- as.irt.pars(reading$pars, reading$common, reading$cat, pm, base.grp=4)
 out <- plink(x, rescale="HB")
 plot(out$pars, drift=c("a","b"), sep.mod=TRUE)
+}
 
 ###### Multidimensional Examples ######
 # Compute response probabilities for 20 items from the 
@@ -211,9 +213,11 @@ x <- gpcm(pars,3,dimensions=3,theta=-4:4)
 # screen argument
 plot(x, screen=list(z=-30,x=-60))
 
+\dontrun{
 # plot separated item category surfaces
 x <- gpcm(pars,3,dimensions=3)
 plot(x,separate=TRUE,drape=TRUE,panels=1)
+}
 }
 
 \keyword{ misc }

@@ -867,7 +867,7 @@ read.ltm <- function(x, loc.out=FALSE, as.irt.pars=TRUE) {
 			pars<- pars[,c(ncol(pars),1:(ncol(pars)-1))]
 			
 			##   Identify the number of response categories
-			cat <- rep(ncol(pars)-1,nrow(pars))
+			cat <- rep(ncol(pars),nrow(pars))
 			cat[cat==1] <- 2
 		
 		##   There are different numbers of response
@@ -904,8 +904,7 @@ read.ltm <- function(x, loc.out=FALSE, as.irt.pars=TRUE) {
 			pars<- pars[,c(ncol(pars),1:(ncol(pars)-1))]
 			
 			##   Identify the number of response categories
-			cat <- rep(ncol(pars)-1,nrow(pars))
-			cat[cat==1] <- 2
+			cat <- rep(ncol(pars),nrow(pars))
 			
 		##   There are different numbers of response
 		##   categories across items

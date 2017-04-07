@@ -17,22 +17,22 @@ response model.
 
 \usage{
 grm(x, cat, theta, dimensions = 1, catprob = FALSE, D = 1, 
-  location = FALSE, items, ...)
+  location = FALSE, items, information = FALSE, angle, ...)
 
 ## S4 method for signature 'matrix', 'numeric'
-grm(x, cat, theta, dimensions, catprob, D, location, items, ...)
+grm(x, cat, theta, dimensions, catprob, D, location, items, information, angle, ...)
 
 ## S4 method for signature 'data.frame', 'numeric'
-grm(x, cat, theta, dimensions, catprob, D, location, items, ...)
+grm(x, cat, theta, dimensions, catprob, D, location, items, information, angle, ...)
 
 ## S4 method for signature 'list', 'numeric'
-grm(x, cat, theta, dimensions, catprob, D, location, items, ...)
+grm(x, cat, theta, dimensions, catprob, D, location, items, information, angle, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
-grm(x, cat, theta, dimensions, catprob, D, location, items, ...)
+grm(x, cat, theta, dimensions, catprob, D, location, items, information, angle, ...)
 
 ## S4 method for signature 'sep.pars', 'ANY'
-grm(x, cat, theta, dimensions, catprob, D, location, items, ...)
+grm(x, cat, theta, dimensions, catprob, D, location, items, information, angle, ...)
 }
 
 \arguments{
@@ -58,6 +58,14 @@ grm(x, cat, theta, dimensions, catprob, D, location, items, ...)
     parameter }
 
   \item{items}{numeric vector identifying the items for which probabilities should be computed}
+
+  \item{information}{logical value. If \code{TRUE} compute item information. In the multidimensional
+    case, information will be computed in the directions specified by \code{angle} or default angles
+    of 0 - 90 in increments of 10 degrees.}
+
+  \item{angle}{vector or matrix of angles between the dimension 1 axis and the corresponding axes for each 
+    of the other dimensions for which information will be computed. When there are more than two dimensions 
+    and \code{angle} is a vector, the same set of angles will be used relative to each of the corresponding axes.}
 
   \item{...}{further arguments passed to or from other methods }
 }

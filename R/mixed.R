@@ -2,11 +2,11 @@
 ##   modeled using any combination of the models available 
 ##   in the functions {drm}, {gpcm}, {grm}, {mcm}, and {nrm}
 
-setGeneric("mixed", function(x, cat, poly.mod, theta, dimensions=1, items, ...) standardGeneric("mixed"))
+setGeneric("mixed", function(x, cat, poly.mod, theta, dimensions=1, items, information=FALSE, angle, ...) standardGeneric("mixed"))
 
 
 
-setMethod("mixed", signature(x="numeric", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, items, ...) {
+setMethod("mixed", signature(x="numeric", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, items, information, angle, ...) {
 	
 	x <- sep.pars(x, cat, poly.mod, dimensions, loc.out=FALSE, ...)
 	callGeneric()
@@ -15,7 +15,7 @@ setMethod("mixed", signature(x="numeric", cat="numeric"), function(x, cat, poly.
 
 
 
-setMethod("mixed", signature(x="matrix", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, items, ...) {
+setMethod("mixed", signature(x="matrix", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, items, information, angle, ...) {
 	
 	x <- sep.pars(x, cat, poly.mod, dimensions, loc.out=FALSE, ...)
 	callGeneric()
@@ -24,7 +24,15 @@ setMethod("mixed", signature(x="matrix", cat="numeric"), function(x, cat, poly.m
 
 
 
-setMethod("mixed", signature(x="data.frame", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, items, ...) {
+setMethod("mixed", signature(x="data.frame", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, items, information, angle, ...) {
+	
+	x <- sep.pars(x, cat, poly.mod, dimensions, loc.out=FALSE, ...)
+	callGeneric()
+})
+
+
+
+setMethod("mixed", signature(x="list", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, items, information, angle, ...) {
 	
 	x <- sep.pars(x, cat, poly.mod, dimensions, loc.out=FALSE, ...)
 	callGeneric()
@@ -33,18 +41,9 @@ setMethod("mixed", signature(x="data.frame", cat="numeric"), function(x, cat, po
 
 
 
-setMethod("mixed", signature(x="list", cat="numeric"), function(x, cat, poly.mod, theta, dimensions, items, ...) {
-	
-	x <- sep.pars(x, cat, poly.mod, dimensions, loc.out=FALSE, ...)
-	callGeneric()
-	
-})
-
-
-
-##   For this method the objects, cat and dimensionsare contained in {x} 
+##   For this method the objects, cat and dimensions are contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("mixed", signature(x="irt.pars", cat="ANY"), function(x, cat, poly.mod, theta, dimensions, items, ...) {
+setMethod("mixed", signature(x="irt.pars", cat="ANY"), function(x, cat, poly.mod, theta, dimensions, items, information, angle, ...) {
 	
 	##   Loop through all groups. In this scenario, a list of {irt.prob} objects will be returned
 	if (x@groups>1) {
@@ -65,7 +64,7 @@ setMethod("mixed", signature(x="irt.pars", cat="ANY"), function(x, cat, poly.mod
 
 ##   For this method the objects, cat and dimensionsare contained in {x} 
 ##   As such, these arguments are treated as missing in the signature
-setMethod("mixed", signature(x="sep.pars", cat="ANY"), function(x, cat, poly.mod, theta, dimensions, items, ...) {
+setMethod("mixed", signature(x="sep.pars", cat="ANY"), function(x, cat, poly.mod, theta, dimensions, items, information, angle, ...) {
 
 	##   The equation to compute probabilities is not (actually) parameterized using
 	##   the location/(step or threshold)-deviation formulation. As such, in instances where a location
@@ -176,18 +175,34 @@ setMethod("mixed", signature(x="sep.pars", cat="ANY"), function(x, cat, poly.mod
 	}
 	
 	##   Initialize object to hold the response probabilities
-	p <- NULL
+	p <- p1 <- NULL
 	
 	##   Loop through all of the item response models and compute response probabilities
 	for (i in 1:length(mod)) {
-		if (mod[i]=="drm") tmp <- suppressWarnings(plink::drm(x, theta=theta, dimensions=dimensions, items=items, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="gpcm") tmp <- suppressWarnings(plink::gpcm(x, theta=theta, dimensions=dimensions, items=items, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="grm") tmp <- suppressWarnings(plink::grm(x, theta=theta, dimensions=dimensions, items=items, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="mcm") tmp <- suppressWarnings(plink::mcm(x, theta=theta, dimensions=dimensions, items=items, ...)@prob[,-c(1:dimensions)])
-		if (mod[i]=="nrm") tmp <- suppressWarnings(plink::nrm(x, theta=theta, dimensions=dimensions, items=items, ...)@prob[,-c(1:dimensions)])
-		p <- cbind(p,as.matrix(tmp))
+		if (mod[i]=="drm") tmp <- suppressWarnings(plink::drm(x, theta=theta, dimensions=dimensions, items=items, information=information, angle=angle, ...))
+		if (mod[i]=="gpcm") tmp <- suppressWarnings(plink::gpcm(x, theta=theta, dimensions=dimensions, items=items, information=information, angle=angle, ...))
+		if (mod[i]=="grm") tmp <- suppressWarnings(plink::grm(x, theta=theta, dimensions=dimensions, items=items, information=information, angle=angle, ...))
+		if (mod[i]=="mcm") tmp <- suppressWarnings(plink::mcm(x, theta=theta, dimensions=dimensions, items=items, information=information, angle=angle, ...))
+		if (mod[i]=="nrm") tmp <- suppressWarnings(plink::nrm(x, theta=theta, dimensions=dimensions, items=items, information=information, angle=angle, ...))
+		p <- cbind(p,as.matrix(tmp@prob[,-c(1:dimensions)]))
+		if (information==TRUE) {
+			if (dimensions>1) {
+				p1 <- cbind(p1,as.matrix(tmp@info[,-c(1:(dimensions*2))]))
+			} else {
+				p1 <- cbind(p1,as.matrix(tmp@info[,-1]))
+			}
+		}
 	}
-	
+	##  Extract the theta values and angles used to compute the information
+	if (information==TRUE) {
+		if (dimensions>1) {
+			th.lab <- data.frame(as.matrix(tmp@info[,c(1:(dimensions*2))]))
+			names(th.lab) <- c(paste("theta",1:dimensions,sep=""),paste("angle",1:dimensions,sep=""))
+		} else {
+			th.lab <- data.frame(as.matrix(tmp@info[,1]))
+			names(th.lab) <- "theta"
+		}
+	}
 	
 	##   When the argument incorrect is included, two columns of
 	##   probabilities are created for each dichotomous items. The 
@@ -229,23 +244,36 @@ setMethod("mixed", signature(x="sep.pars", cat="ANY"), function(x, cat, poly.mod
 	cat1 <- cat[sort]
 	
 	##   Sort the columns in p so they correspond to the original ordering of the items
+	if (information==TRUE) {
+		p1 <- p1[,order(sort)]
+	}
 	sort <- rep(sort,cat1)
 	p <- p[,order(sort)]
 	
 	##   Label the items and categories
-	lab=NULL
+	lab <- NULL
 	for(i in 1:length(cat1)) {
-		lab=c(lab,paste("item_",item.nms[i],".",seq(1,cat[i]),sep=""))
+		lab <- c(lab,paste("item_",item.nms[i],".",seq(1,cat[i]),sep=""))
 	}
+	lab.info <- paste("item_",item.nms,sep="")
 	
 	##   If there is only a single polytomous item, p needs to be transposed
 	if (is.vector(p) & length(cat)>1) p <- t(p)
+	if (is.vector(p1) & length(cat)>1) p1 <- t(p1)
 	
 	p <- data.frame(p)
 	names(p) <- lab
 	p <- cbind(theta,p)
 	
-	p <- new("irt.prob", p.cat=cat, prob=p, mod.lab=x@mod.lab, dimensions=dimensions, D=D, pars=pars, model=x@model, items=x@items)
+	if (information==TRUE) {
+		p1 <- data.frame(p1)
+		names(p1) <- lab.info
+		p1 <- cbind(th.lab,p1)
+		p <- new("irt.prob", prob=p,  info=p1, p.cat=cat, mod.lab=x@mod.lab, dimensions=dimensions, D=D, pars=pars, model=x@model, items=x@items)
+	} else {
+		p <- new("irt.prob", prob=p,  info=NULL, p.cat=cat, mod.lab=x@mod.lab, dimensions=dimensions, D=D, pars=pars, model=x@model, items=x@items)
+	}
+	
 	return(p)
 	
 })

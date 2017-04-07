@@ -13,21 +13,22 @@ the multiple-choice model.
 }
 
 \usage{
-equate(x, method="TSE", true.scores, ts.low, base.grp=1, score=1, 
-  startval, weights1, weights2, syn.weights, ...) 
+equate(x, method=c("TSE", "OSE"), true.scores, ts.low, base.grp=1, score=1, 
+  startval, weights1, weights2, syn.weights, exclude, max.tse.iter, ...) 
 
 ## S4 method for signature 'list'
 equate(x, method, true.scores, ts.low, base.grp, score, startval, 
-  weights1, weights2, syn.weights, ...)
+  weights1, weights2, syn.weights, exclude, max.tse.iter, ...)
 
 ## S4 method for signature 'irt.pars', 'ANY'
 equate(x, method, true.scores, ts.low, base.grp, score, startval, 
-  weights1, weights2, syn.weights, ...)
+  weights1, weights2, syn.weights, exclude, max.tse.iter, ...)
 }
 
 \arguments{
-  \item{x}{an object of class \code{\linkS4class{irt.pars}} with two or more groups
-    or the output from \code{plink} containing rescaled item parameters. }
+  \item{x}{an object of class \code{\linkS4class{irt.pars}} with one or more groups,
+    a list containing two or more \code{\linkS4class{irt.pars}} objects (e.g., when there
+    are no common items), or the output from \code{plink} containing rescaled item parameters. }
 
   \item{method}{character vector identifying the equating method(s) to use. 
     Values can include \code{"TSE"} and \code{"OSE"}.}
@@ -62,6 +63,12 @@ equate(x, method, true.scores, ts.low, base.grp, score, startval,
     1 and 2 respectively. If missing, weights of 0.5 will be used for both populations
     for all groups.  If \code{syn.weights} is a list, there should be k-1 elements for
     k groups.}
+
+  \item{exclude}{character vector or list identifying common items that should be
+    excluded when estimating the linking constants. See below for more details.}
+
+  \item{max.tse.iter}{maximum number of iterations to identify the theta value associated
+    with each true score. The default is 50.}
 
   \item{...}{further arguments passed to or from other methods. See below for details.}
 }
@@ -100,11 +107,26 @@ that will be applied to all applicable models, or arguments \code{D.drm}, \code{
 and, say \code{D.drm}, the values for \code{D.grm} and \code{D.gpcm} (if applicable) will be
 set equal to \code{D}. If only \code{D.drm} is specified, the values for \code{D.grm} and 
 \code{D.gpcm} (if applicable) will be set to 1.
+
+There are instances where certain items should not be included in the computation of total scores
+(e.g., when the common items correspond to an external anchor test or when using field test items)
+The \code{exclude} argument can be used to remove these items prior to conducting the equationg. 
+\code{exclude} can be specified as a character vector or a list. In the former case, a single value
+"all.common" can be used to remove all common items or a vector of model names (i.e., "drm", "grm", 
+"gpcm", "nrm", "mcm") can be supplied, indicating that any item on any test associated with the given 
+model(s) would be excluded. If the argument is specified as a list, \code{exclude} should have as 
+any elements as groups in \code{x}. Each list element can include model names and/or item numbers 
+corresponding to the items on each test that should be excluded. If no items need to be excluded for 
+a given group, the list element should be equal NA. For example, say we have two groups and we would 
+like to exclude the GRM items and item 23 from the first group, we would specify \code{exclude} as 
+\code{exclude <- list(c("grm",23),NA)}.
 }
 
 \value{
-  Returns a matrix of equated true scores or a list of equated observed scores with associated
-marginal distributions or a list combining these two objects}
+  Returns a matrix of equated true scores and/or a list of equated observed scores with associated
+marginal distributions or a list combining these two objects. The output for the observed-score
+equating also includes EAP scores and SDs for each of the observed scores (Thissen & Orlando, 2001).
+}
 
 \references{ 
   Kolen, M. J. (1981). 
@@ -114,6 +136,12 @@ marginal distributions or a list combining these two objects}
   Kolen, M. J. & Brennan, R. L. (2004)
   \emph{Test Equating, Scaling, and Linking} (2nd ed.).
   New York: Springer
+
+  Thissen, D. & Orlando, M. (2001)
+  Item response theory for items scored in two categories.
+  In D. Thissen & H. Wainer (Eds.)
+  \emph{Test Scoring} (p. 23 - 72).
+  Hillsdale, NJ: Lawrence Erlbaum Associates.
 
   Weeks, J. P. (2010) 
   \bold{plink}: An R package for linking mixed-format tests using IRT-based methods. 
@@ -127,9 +155,9 @@ marginal distributions or a list combining these two objects}
 # IRT true score and observed score examples from 
 # Kolen & Brennan (2004, ch. 6)
 pm <- as.poly.mod(36)
-x <- as.irt.pars(KB04$pars, KB04$common, exclude=list(27,NA),
+x <- as.irt.pars(KB04$pars, KB04$common,
   cat=list(rep(2,36),rep(2,36)), poly.mod=list(pm,pm))
-out <- plink(x, rescale="MS", base.grp=2, D=1.7)
+out <- plink(x, rescale="MS", base.grp=2, D=1.7, exclude=list(27,NA))
 
 # Create the quadrature points and weights
 wt <- as.weight(
@@ -139,10 +167,13 @@ wt <- as.weight(
     0.1542,0.03596,0.003925,0.000186))
 
 # Conduct the equating
-equate(out,method=c("TSE","OSE"),weights1=wt, synth.weights=c(1,0),D=1.7)
+equate(out,weights1=wt, synth.weights=c(1,0),D=1.7)
 
 # Conduct true score equating for specific true scores
 equate(out, true.scores=7:15, ts.low=FALSE, D=1.7)
+
+# Exclude all common items (assume they correspond to an external anchor)
+equate(out, D=1.7, exclude="all.common")
 
 
 # Observed score equating for mixed-format tests
@@ -154,7 +185,6 @@ OSE <- equate(out, method="OSE", score=2)
 
 # Display the equated scores
 OSE[[1]]
-
 
 # Multiple group equating
 pars <- TK07$pars
@@ -172,10 +202,10 @@ out <- plink(x, rescale="SL")
 
 
 # True score equating
-equate(out)
+equate(out, method="TSE")
 
 # True score equating with the base group changed to 3
-equate(out, base.grp=3)
+equate(out, method="TSE", base.grp=3)
 
 # Observed score equating (These data are for non-equivalent groups, but
 # this example is included to illustrate the multigroup capabilities)
