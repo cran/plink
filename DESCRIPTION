@@ -1,6 +1,6 @@
 Package: plink
-Version: 1.5-0
-Date: 2017-04-04
+Version: 1.5-1
+Date: 2017-04-26
 Title: IRT Separate Calibration Linking Methods
 Depends: R (>= 3.3.3), methods, lattice
 Imports: MASS, statmod
@@ -27,6 +27,6 @@ LazyLoad: Yes
 LazyData: Yes
 License: GPL (>= 2)
 NeedsCompilation: no
-Packaged: 2017-04-07 14:33:11 UTC; Jonathan
+Packaged: 2017-04-26 11:36:15 UTC; Jonathan
 Repository: CRAN
-Date/Publication: 2017-04-07 17:05:38 UTC
+Date/Publication: 2017-04-26 16:36:59 UTC

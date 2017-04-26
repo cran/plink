@@ -158,51 +158,9 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 						
 						##   If there are fewer permutations, set the number
 						##   of panels equal to the number of permutations
-						panels <- perm
-						
-						##   Check to see if another graphics device is already open
-						if (dev.flag==FALSE) {
-							if (ng>1) {
-							
-								##   Check to see if the saving of plot histories
-								##   has already been initialized (from a previous group)
-								if (record.flag==FALSE) {
-								
-									## REMOVED FROM THE CURRENT VERSION
-									##   If not, record the plot history (this only works for Windows)
-									#if (Sys.info()["sysname"] == "Windows") {
-									
-									#if(.Platform$OS.type=="windows") {
-										#cat("Use PgUp and PgDn to view different plot pages\n")
-										#windows(record=TRUE)
-										#record.flag <- TRUE
-									#}
-								}
-							}
-						}
+						panels <- perm									
 					
-					##   If there are more permutations than panels or the same number
-					} else {
-						
-						##   Check to see if another graphics device is already open
-						if (dev.flag==FALSE) {
-						
-							##   Check to see if the saving of plot histories
-							##   has already been initialized (from a previous group)
-							if (record.flag==FALSE) {
-							
-								## REMOVED FROM THE CURRENT VERSION
-								##   If not, record the plot history (this only works for Windows)
-								#if (Sys.info()["sysname"] == "Windows") {
-								
-								#if(.Platform$OS.type=="windows") {
-									#cat("Use PgUp and PgDn to view different plot pages\n")
-									#windows(record=TRUE)
-									#record.flag <- TRUE
-								#}
-							}
-						}
-					}
+					} 
 					
 					##   Reset the number of panels if greater than 36
 					if (panels>36) {
@@ -459,22 +417,6 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 			if (is.matrix(x@common)) x@common <- list(x@common)
 			
 			if (missing(grp.names)) nms <- names(x@pars) else nms <- grp.names
-			
-			##   Check to see is a graphics device has already been initialized
-			if (names(dev.cur())=="null device") {
-			
-				## REMOVED FROM THE CURRENT VERSION
-				##   For Windows, save the plot history so that different plot
-				##   windows can be seen using PgUp and PgDn
-				#if (Sys.info()["sysname"] == "Windows") {
-				
-				#if(.Platform$OS.type=="windows") {
-					#if (length(groups)>1|length(drift)>1) {
-						#cat("Use PgUp and PgDn to view different plot pages\n")
-						#windows(record=TRUE)
-					#}
-				#}
-			}
 			
 			##   The bult-in SD function R uses n-1 in the denominator
 			##   This function uses n in the denominator
@@ -1048,18 +990,6 @@ plot.irt.pars <- function(x, y, ..., type, separate, combine, items, item.names,
 						if (dimensions==1) {
 							if (np>panels) {
 								
-								##   Check to see if a graphics device is already open
-								if (names(dev.cur())=="null device") {
-
-									## REMOVED FROM THE CURRENT VERSION
-									#if (Sys.info()["sysname"] == "Windows") {
-									
-									#if(.Platform$OS.type=="windows") {
-										#cat("Use PgUp and PgDn to view different plot pages\n")
-										#windows(record=TRUE)
-									#}
-								}
-								
 								##   Create the multi-page plot
 								pl.out[[i]][[pl]] <- xyplot(values~theta1|id,out,type="l",
 								as.table=TRUE,
@@ -1325,18 +1255,6 @@ plot.irt.prob <- function(x, y, ..., type, separate, combine, items, item.names,
 		if (dimensions==1) {
 			if (np>panels) {
 			
-				##   Check to see if a graphics device is already open
-				if (names(dev.cur())=="null device") {
-
-					## REMOVED FROM THE CURRENT VERSION
-					#if (Sys.info()["sysname"] == "Windows") {
-					
-					#if(.Platform$OS.type=="windows") {
-						#cat("Use PgUp and PgDn to view different plot pages\n")
-						#windows(record=TRUE)
-					#}
-				}
-				
 				##   Create the multi-page plot
 				pl.out <- xyplot(values~theta1|id,out,type="l",
 				as.table=TRUE,
@@ -1363,18 +1281,6 @@ plot.irt.prob <- function(x, y, ..., type, separate, combine, items, item.names,
 			}
 		} else if (dimensions>1) {
 			if (np>panels) {
-				
-				##   Check to see if a graphics device is already open
-				if (names(dev.cur())=="null device") {
-
-					## REMOVED FROM THE CURRENT VERSION
-					#if (Sys.info()["sysname"] == "Windows") {
-					
-					#if(.Platform$OS.type=="windows") {
-						#cat("Use PgUp and PgDn to view different plot pages\n")
-						#windows(record=TRUE)
-					#}
-				}
 				
 				##   Create the multi-page plot
 				mlab <- "Probability"

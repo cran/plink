@@ -1,5 +1,5 @@
-c2f02926a36411c61f58ab478d365f23 *DESCRIPTION
-60e383d400901d405f97ba62015c2206 *NAMESPACE
+4ad06c18b30b88e7d9bf517bc94786d2 *DESCRIPTION
+754a6f6d6cc264c95dc6905bbd82dace *NAMESPACE
 aa34d220ad778662dd1c4b88e0b4554c *R/classes.R
 3d5fab39834b90a28f9b6041c78db5ed *R/drm.R
 f26614f5b7c87f55ce712b347c2b7a1b *R/equate.R
@@ -11,7 +11,7 @@ ae6eee29cb4f106df56089e52956cab4 *R/mcm.R
 688dc0cd10aa4accbd1aa4885768a1a0 *R/mixed.R
 de43c2ded412f7e34dba962487be7088 *R/nrm.R
 1c31bb2fae4cb30988a51c3ed287d41e *R/plink.R
-c6e11e4d447400e4d09958fa0ec9b23f *R/plot.R
+4c79fff9895de1ffd41ab35fb9aa6713 *R/plot.R
 5df5c149eced9e70bbc82bb26f06f89c *R/read.bilog.R
 025ed0b51cefcedb35e7cc4ab4cad475 *R/sep.pars.R
 33981872daaaab3746506a840530c0b0 *R/summary.R
@@ -19,10 +19,10 @@ c6e11e4d447400e4d09958fa0ec9b23f *R/plot.R
 530ebe57a44ece227598d47a8066a834 *build/vignette.rds
 d6a4d106a3f749f1d2c7469546af80df *data/plink.RData
 74e41c0cbe0a8760db514cfdf389ea88 *inst/CITATION
-a2e0dee02ede25ac912133fdbc99d37c *inst/NEWS
+a49d656deef8b52b41cc00020639396f *inst/NEWS
 a35622b9375d4e40c6cec148f0085eee *inst/doc/plink-UD.R
 b56a15e7b42db9a8b96d45b679b66d0c *inst/doc/plink-UD.Rnw
-aa8669b1e4908449aae82467dc51dc66 *inst/doc/plink-UD.pdf
+f3e89e33f0ccb43ae11fc633ca75ae8a *inst/doc/plink-UD.pdf
 51489f26c80a9da21a3ee275983f2f6a *inst/doc/plink.bib
 1cf1d522e622f1d43697ec84af6f31dd *man/KB04.Rd
 062b428568eb3bca524a67ed2316ffd0 *man/TK07.Rd
